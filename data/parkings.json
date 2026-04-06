@@ -1,0 +1,374 @@
+[
+  {
+    "id": 1,
+    "name": "Emil Cioran ",
+    "lat": 45.790048,
+    "lng": 24.147038,
+    "totalSpots": 54,
+    "freeSpots": 54,
+    "pricePerHour": 1.5,
+    "openHours": "08:00-22:00"
+  },
+  {
+    "id": 2,
+    "name": "Victoriei ",
+    "lat": 45.790667,
+    "lng": 24.145435,
+    "totalSpots": 50,
+    "freeSpots": 50,
+    "pricePerHour": 1.5,
+    "openHours": "08:00-22:00"
+  },
+  {
+    "id": 3,
+    "name": "Ilie Macelaru ",
+    "lat": 45.789624,
+    "lng": 24.145266,
+    "totalSpots": 41,
+    "freeSpots": 41,
+    "pricePerHour": 1.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 4,
+    "name": "Piata Unirii ",
+    "lat": 45.789350,
+    "lng":  24.147780,
+    "totalSpots": 42,
+    "freeSpots": 42,
+    "pricePerHour": 1.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 5,
+    "name": "Casa Modei ",
+    "lat": 45.790079, 
+    "lng": 24.149500,
+    "totalSpots": 20,
+    "freeSpots": 20,
+    "pricePerHour": 1.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 6,
+    "name": "Radu Stanca Theatre ",
+    "lat": 45.791601, 
+    "lng": 24.150402,
+    "totalSpots": 160,
+    "freeSpots": 160,
+    "pricePerHour": 3,
+    "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 7,
+    "name": "Cazarma 90 ",
+    "lat": 45.792077, 
+    "lng": 24.149272,
+    "totalSpots": 205,
+    "freeSpots": 205,
+    "pricePerHour": 3,
+    "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 8,
+    "name": "Piata Unirii - Boulevard",
+    "lat": 45.792314, 
+    "lng":  24.148347,
+    "totalSpots": 112,
+    "freeSpots": 112,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 9,
+    "name": "Luther Hospital",
+    "lat": 45.792920,
+    "lng": 24.147692,
+    "totalSpots": 30,
+    "freeSpots": 30,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 10,
+    "name": "Ioan Lupas",
+    "lat": 45.793483,
+    "lng": 24.147706,
+    "totalSpots": 72,
+    "freeSpots": 72,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 11,
+    "name": "Tribunei",
+    "lat": 45.793819,
+    "lng": 24.147993,
+    "totalSpots": 72,
+    "freeSpots": 72,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 12,
+    "name": "Mitropoliei",
+    "lat": 45.795050,
+    "lng": 24.148117,
+    "totalSpots": 113,
+    "freeSpots": 113,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 13,
+    "name": "Al. Xenopol",
+    "lat": 45.794887,
+    "lng": 24.149379,
+    "totalSpots": 79,
+    "freeSpots": 79,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 14,
+    "name": "Bastionului",
+    "lat": 45.795082,
+    "lng": 24.145641,
+    "totalSpots": 27,
+    "freeSpots": 27,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 15,
+    "name": "Gong Theatre",
+    "lat": 45.796594,
+    "lng": 24.147519,
+    "totalSpots": 65,
+    "freeSpots": 65,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 16,
+    "name": "Mos Ion Roata",
+    "lat": 45.797208,
+    "lng": 24.147916,
+    "totalSpots": 31,
+    "freeSpots": 31,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 17,
+    "name": "Turnului",
+    "lat": 45.798863,
+    "lng": 24.146827,
+    "totalSpots": 51,
+    "freeSpots": 51,
+    "pricePerHour": 2.5,
+    "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 18,
+    "name": "Faurului",
+    "lat": 45.798859,
+    "lng": 24.149443,
+    "totalSpots": 47,
+    "freeSpots": 47,
+    "pricePerHour": 2.5,
+    "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 19,
+    "name": "Ocnei",
+    "lat": 45.801177,
+    "lng": 24.150437,
+    "totalSpots": 69,
+    "freeSpots": 69,
+    "pricePerHour": 2.5,
+    "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 20,
+    "name": "Sibiu Court",
+    "lat": 45.802393,
+    "lng": 24.150762,
+    "totalSpots": 102,
+    "freeSpots": 102,
+    "pricePerHour": 3.5,
+    "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 21,
+    "name": "9 Mai",
+    "lat": 45.800018,
+    "lng": 24.153338,
+    "totalSpots": 147,
+    "freeSpots": 147,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 22,
+    "name": "Constitutiei",
+    "lat": 45.798064,
+    "lng": 24.157469,
+    "totalSpots": 60,
+    "freeSpots": 60,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 23,
+    "name": "Magheru",
+    "lat": 45.798557,
+    "lng": 24.156139,
+    "totalSpots": 51,
+    "freeSpots": 51,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 24,
+    "name": "Avram Iancu",
+    "lat": 45.798270,
+    "lng": 24.154025,
+    "totalSpots": 33,
+    "freeSpots": 33,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 25,
+    "name": "Pompeiu Onofreiu",
+    "lat": 45.795872,
+    "lng": 24.156092,
+    "totalSpots": 25,
+    "freeSpots": 25,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 26,
+    "name": "Coposu-Haller",
+    "lat": 45.795254,
+    "lng": 24.156274,
+    "totalSpots": 27,
+    "freeSpots": 27,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+{
+    "id": 27,
+    "name": "Coposu-Thalia",
+    "lat": 45.794487,
+    "lng": 24.154690,
+    "totalSpots": 30,
+    "freeSpots": 30,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 28,
+    "name": "Coposu-Cetatii",
+    "lat": 45.793380,
+    "lng": 24.152733,
+    "totalSpots": 29,
+    "freeSpots": 29,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 29,
+    "name": "Cetatii",
+    "lat": 45.793211,
+    "lng": 24.150993,
+    "totalSpots": 44,
+    "freeSpots": 44,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 30,
+    "name": "Tipografilor",
+    "lat": 45.794362,
+    "lng": 24.152473,
+    "totalSpots": 91,
+    "freeSpots": 91,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 31,
+    "name": "Arhivelor",
+    "lat": 45.795477, 
+    "lng": 24.152309,
+    "totalSpots": 16,
+    "freeSpots": 16,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 32,
+    "name": "Timotei Popovici",
+    "lat": 45.795432, 
+    "lng": 24.153237,
+    "totalSpots": 66,
+    "freeSpots": 66,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 33,
+    "name": "Gheorhe Lazar",
+    "lat": 45.796152,  
+    "lng": 24.153790,
+    "totalSpots": 28,
+    "freeSpots": 28,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 34,
+    "name": "Filarmonicii",
+    "lat": 45.796360, 
+    "lng": 24.154962,
+    "totalSpots": 43,
+    "freeSpots": 43,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  }
+  
+]

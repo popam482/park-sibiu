@@ -545,6 +545,105 @@
     "freeSpots": 41,
     "pricePerHour": 3,
     "openHours": "00:00-24:00"
-  }
+  },
+
+  {
+    "id": 51,
+    "name": "Constantin Noica",
+    "lat": 45.791131,
+    "lng": 24.154489, 
+     "totalSpots": 76,
+     "freeSpots": 76,
+     "pricePerHour": 1.5,
+     "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 52,
+    "name": "Stefan cel Mare",
+    "lat": 45.790127,
+    "lng": 24.155038,
+    "totalSpots": 86,
+    "freeSpots": 86,
+    "pricePerHour": 1.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 53,
+    "name": "Revolutiei - Police Station",
+    "lat": 45.789312,
+    "lng": 24.153397,
+     "totalSpots": 51,
+     "freeSpots": 51,
+     "pricePerHour": 1.5,
+     "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 54,
+    "name": "Dumbravii 1",
+    "lat": 45.786809,
+    "lng": 24.149333,
+     "totalSpots": 148,
+     "freeSpots": 148,
+     "pricePerHour": 1.5,
+     "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 55,
+    "name": "O. Goga - Transylvania Hall",
+    "lat": 45.782651,
+    "lng": 24.145124,
+     "totalSpots": 127,
+     "freeSpots": 127,
+     "pricePerHour": 2.5,
+     "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 56,
+    "name": "Mihai Viteazu 1",
+    "lat": 45.781237,
+    "lng": 24.151123,
+     "totalSpots": 216,
+     "freeSpots": 216,
+     "pricePerHour": 1.5,
+     "openHours": "08:00-22:00"
+  },
+
+    {
+    "id": 57,
+    "name": "Dumbravii 2",
+    "lat": 45.774250, 
+    "lng": 24.141413,
+     "totalSpots": 120,
+     "freeSpots": 120,
+     "pricePerHour": 1.5,
+     "openHours": "08:00-22:00"
+  },
   
+  {
+    "id": 58,
+    "name": "Mihai Viteazu 2",
+    "lat": 45.778987, 
+    "lng": 24.155411,
+     "totalSpots": 128,
+     "freeSpots": 128,
+     "pricePerHour": 1.5,
+     "openHours": "08:00-22:00" 
+  },
+
+  {
+    "id": 59,
+    "name": "Hipodrom Parking Lot",
+    "lat": 45.778069, 
+    "lng": 24.155952,
+     "totalSpots": 227,
+     "freeSpots": 227,
+     "pricePerHour": 1.5,
+     "openHours": "08:00-22:00"
+  }
+
 ]

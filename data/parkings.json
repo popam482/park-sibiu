@@ -369,6 +369,72 @@
     "freeSpots": 43,
     "pricePerHour": 2.5,
     "openHours": "08:00-22:00"
+  },
+  
+  {
+    "id": 35,
+    "name": "Turnului - Cibin",
+    "lat": 45.799405, 
+    "lng": 24.145585,
+    "totalSpots": 5,
+    "freeSpots": 5,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 36,
+    "name": "Piata Cibin",
+    "lat": 45.799382, 
+    "lng": 24.144020,
+    "totalSpots": 91,
+    "freeSpots": 91,
+    "pricePerHour": 2.5,
+    "openHours": "08:00-22:00"
+  },
+
+  {
+    "id": 37,
+    "name": "Masarilor",
+    "lat": 45.798103, 
+    "lng": 24.144796,
+    "totalSpots": 19,
+    "freeSpots": 19,
+    "pricePerHour": 2.5,
+    "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 38,
+    "name": "Darstelor",
+    "lat": 45.797874, 
+    "lng": 24.144290,
+    "totalSpots": 48,
+    "freeSpots": 48,
+    "pricePerHour": 2.5,
+    "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 39,
+    "name": "Morilor",
+    "lat": 45.797822, 
+    "lng": 24.143722,
+    "totalSpots": 53,
+    "freeSpots": 53,
+    "pricePerHour": 2.5,
+    "openHours": "00:00-24:00"
+  },
+
+  {
+    "id": 40,
+    "name": "Malului",
+    "lat": 45.798236,
+    "lng": 24.143134,
+    "totalSpots": 33,
+    "freeSpots": 33,
+    "pricePerHour": 2.5,
+    "openHours": "00:00-24:00"
   }
   
 ]

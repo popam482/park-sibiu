@@ -5,6 +5,9 @@
 import { db } from "./firebase-config.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
+// --- 1. ADAUGĂ ASTA AICI (Variabila globală pentru preț) ---
+var currentPricePerHour = 0; 
+
 async function loadParkings() {
     var listElement = document.getElementById("parkingList");
     
@@ -56,6 +59,10 @@ async function loadParkings() {
             var btn = li.querySelector(".booking-button");
             btn.addEventListener("click", function(event) {
                 event.stopPropagation(); // This stops the list from closing
+                
+                // --- 2. ADAUGĂ ASTA AICI (Salvăm prețul parcării selectate) ---
+                currentPricePerHour = parking.pricePerHour;
+
                 document.getElementById("reservationModal").style.display = "block";
                 document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
             });
@@ -93,19 +100,37 @@ document.getElementById("editBtn").addEventListener("click", function() {
     document.getElementById("modalTitle").innerText = "Edit your time";
 });
 
-//  Update the Confirm button logic 
-
+// This button confirms the booking and calculates the cost
 document.getElementById("confirmBooking").addEventListener("click", function() {
     var timeChosen = document.getElementById("startTime").value;
+    var hoursAmount = document.getElementById("duration").value;
     
     if (timeChosen !== "") {
-        // Show the manage box and update the text
-        manageBox.style.display = "block";
-        resInfo.innerText = "You have a spot reserved at " + timeChosen;
+        // Price * Hours
+        var totalCost = hoursAmount * currentPricePerHour;
 
-        alert("Success! Reservation updated to " + timeChosen);
+        manageBox.style.display = "block";
+        resInfo.innerText = "Reserved at " + timeChosen + " for " + hoursAmount + " hours.";
+        
+        // Show the price and set status to unpaid
+        document.getElementById("costText").innerText = "Total to pay: " + totalCost + " RON";
+        document.getElementById("statusText").innerText = "Status: NOT PAID";
+        document.getElementById("statusText").style.color = "blue";
+        document.getElementById("payBtn").style.display = "inline-block";
+
+        alert("Reservation saved! Total cost: " + totalCost + " RON");
         document.getElementById("reservationModal").style.display = "none";
     }
+});
+
+// This button simulates the payment
+document.getElementById("payBtn").addEventListener("click", function() {
+    alert("Connecting to bank...");
+    alert("Payment successful! Thank you.");
+    
+    document.getElementById("statusText").innerText = "Status: PAID ✅";
+    document.getElementById("statusText").style.color = "green";
+    document.getElementById("payBtn").style.display = "none";
 });
 
 // Start everything

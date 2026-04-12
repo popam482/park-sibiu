@@ -21,6 +21,29 @@
     }
     ul { list-style: none; padding: 0; }
     li { margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+  /* Hover effect for list items */
+li:hover {
+    background-color: #eef2f7;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* Styling for the hidden details section */
+.details-box {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    border-left: 4px solid #3498db; /* O dungă albastră în stânga */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    animation: fadeIn 0.4s ease;
+}
+
+/* Simple animation for when details appear */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
   </style>
 </head>
 <body>

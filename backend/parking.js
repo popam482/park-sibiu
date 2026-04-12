@@ -73,13 +73,37 @@ document.getElementById("closeModal").addEventListener("click", function() {
     document.getElementById("reservationModal").style.display = "none";
 });
 
+/* * Functions to Edit or Cancel the reservation */
+
+var manageBox = document.getElementById("manageReservation");
+var resInfo = document.getElementById("resInfo");
+
+// Function to Cancel
+document.getElementById("cancelBtn").addEventListener("click", function() {
+    var sure = confirm("Are you sure you want to cancel your booking?");
+    if (sure) {
+        manageBox.style.display = "none";
+        alert("Reservation cancelled successfully.");
+    }
+});
+
+//  Function to Edit
+document.getElementById("editBtn").addEventListener("click", function() {
+    document.getElementById("reservationModal").style.display = "block";
+    document.getElementById("modalTitle").innerText = "Edit your time";
+});
+
+//  Update the Confirm button logic 
+
 document.getElementById("confirmBooking").addEventListener("click", function() {
     var timeChosen = document.getElementById("startTime").value;
     
-    if (timeChosen === "") {
-        alert("Please select a time first!");
-    } else {
-        alert("Success! Your spot is reserved for " + timeChosen);
+    if (timeChosen !== "") {
+        // Show the manage box and update the text
+        manageBox.style.display = "block";
+        resInfo.innerText = "You have a spot reserved at " + timeChosen;
+
+        alert("Success! Reservation updated to " + timeChosen);
         document.getElementById("reservationModal").style.display = "none";
     }
 });

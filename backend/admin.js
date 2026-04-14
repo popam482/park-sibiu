@@ -1,6 +1,5 @@
 import { db } from "./firebase-config.js";
-import { collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-
+import { collection, addDoc, getDocs, doc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 var parkingTable = collection(db, "parkings");
 
 // add a new parking 
@@ -86,6 +85,57 @@ async function showParkings() {
         listArea.appendChild(newElement);
     });
 }
-
-// run the display function when the script starts
 showParkings();
+
+// user management and booking history
+
+var usersTable = collection(db, "users");
+var bookingsTable = collection(db, "bookings");
+
+// function to show users and their history
+async function showUsersAndHistory() {
+    // get all users from firebase
+    var allUsers = await getDocs(usersTable);
+    var userArea = document.getElementById("userList");
+    
+    // clear the "Loading..." text
+    userArea.innerHTML = "";
+
+    // loop through each user
+    allUsers.forEach(async function(userDoc) {
+        var userData = userDoc.data();
+        var userId = userDoc.id;
+
+        // create a simple box for this user
+        var userBox = document.createElement("div");
+        userBox.className = "user-box"; 
+        userBox.style.border = "1px solid #007bff";
+        userBox.style.padding = "10px";
+        userBox.style.marginTop = "15px";
+        userBox.style.borderRadius = "5px";
+
+        userBox.innerHTML = "<strong>User Email:</strong> " + userData.email;
+
+        // search for this user's bookings 
+        // we look in "bookings" for documents where "userId" matches
+        var bookingQuery = query(bookingsTable, where("userId", "==", userId));
+        var userBookings = await getDocs(bookingQuery);
+        
+        var historyHtml = "<br><span style='color: #555;'>History:</span>";
+
+        if (userBookings.empty) {
+            historyHtml += " No bookings found.";
+        } else {
+            // loop through each booking found
+            userBookings.forEach(function(bookingDoc) {
+                var b = bookingDoc.data();
+                historyHtml += "<br> • " + b.parkingName + " | Total: " + b.totalCost + " RON";
+            });
+        }
+
+        // add history to the box and the box to the page
+        userBox.innerHTML += historyHtml;
+        userArea.appendChild(userBox);
+    });
+}
+showUsersAndHistory();

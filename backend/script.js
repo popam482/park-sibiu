@@ -50,26 +50,35 @@ async function displayParkingsFromFirebase() {
 }
 displayParkingsFromFirebase();
 
-// filterint and search logic
 
-
+//filter + sorting functions
 function filterParkings() {
     const searchText = document.getElementById("searchInput").value.toLowerCase();
     const maxPrice = document.getElementById("priceFilter").value;
     const onlyFree = document.getElementById("availableOnly").checked;
+    
+    const sortType = document.getElementById("sortOptions").value;
 
-    const filteredResults = allParkings.filter(parking => {
+    let results = allParkings.filter(parking => {
         const matchesName = parking.name.toLowerCase().includes(searchText);
         const matchesPrice = maxPrice === "all" || parking.pricePerHour <= parseInt(maxPrice);
         const matchesAvailable = !onlyFree || parking.freeSpots > 0;
-
         return matchesName && matchesPrice && matchesAvailable;
     });
 
-    renderFilteredList(filteredResults);
+
+    if (sortType === "priceAsc") {
+        results.sort((a, b) => a.pricePerHour - b.pricePerHour);
+    } else if (sortType === "priceDesc") {
+        results.sort((a, b) => b.pricePerHour - a.pricePerHour);
+    } else if (sortType === "spots") {
+        results.sort((a, b) => b.freeSpots - a.freeSpots);
+    }
+
+    renderFilteredList(results);
 }
 
-// function to update only the List UI when filtering
+// function to update only the List UI
 function renderFilteredList(dataList) {
     const listArea = document.getElementById("parkingList");
     if (!listArea) return;
@@ -83,7 +92,7 @@ function renderFilteredList(dataList) {
     });
 }
 
-// function to attach listeners to the HTML elements
 document.getElementById("searchInput").addEventListener("keyup", filterParkings);
 document.getElementById("priceFilter").addEventListener("change", filterParkings);
 document.getElementById("availableOnly").addEventListener("change", filterParkings);
+document.getElementById("sortOptions").addEventListener("change", filterParkings);

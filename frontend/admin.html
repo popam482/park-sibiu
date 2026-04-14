@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - Park Sibiu</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .box { border: 1px solid #ccc; padding: 15px; border-radius: 5px; max-width: 500px; margin-bottom: 20px; }
+        input { width: 90%; padding: 8px; margin: 5px 0; }
+        button { padding: 10px; cursor: pointer; }
+        .delete-btn { background: #ff4d4d; color: white; border: none; border-radius: 3px; }
+        .parking-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+    <a href="index.html">Back to Map</a>
+    <h1>Admin Dashboard</h1>
+
+    <div class="box">
+        <h3>Add New Parking Spot</h3>
+        <input type="text" id="pName" placeholder="Parking Name"><br>
+        <input type="number" id="pTotal" placeholder="Total Spots"><br>
+        <input type="number" id="pPrice" placeholder="Price (RON/hour)"><br>
+        <button id="saveBtn" style="background: #28a745; color: white; border: none;">Save Parking</button>
+    </div>
+
+    <div class="box">
+        <h3>Manage Parkings</h3>
+        <div id="adminList">
+            <p>Loading list...</p>
+        </div>
+    </div>
+
+    <script type="module" src="../backend/admin.js"></script>
+    <script type="module" src="../backend/script.js"></script>
+    <script type="module" src="../backend/parking.js"></script>
+</body>
+</html>

@@ -123,15 +123,44 @@ document.getElementById("confirmBooking").addEventListener("click", function() {
     }
 });
 
-// This button simulates the payment
+// logic for the "pay now" button with receipt generation
 document.getElementById("payBtn").addEventListener("click", function() {
-    alert("Connecting to bank...");
-    alert("Payment successful! Thank you.");
+    alert("Connecting to the bank... 💳");
+    alert("Payment successful!");
     
-    document.getElementById("statusText").innerText = "Status: PAID ✅";
+    // update the status in the management box
+    document.getElementById("statusText").innerText = "Status: PAID";
     document.getElementById("statusText").style.color = "green";
     document.getElementById("payBtn").style.display = "none";
+
+    //  generate the receipt with all the details
+    // we get the data we already have in the interface
+    var parkingName = document.getElementById("selectedParkingName").innerText;
+    var timeInfo = document.getElementById("resInfo").innerText;
+    var costInfo = document.getElementById("costText").innerText;
+    var today = new Date().toLocaleString(); // Get current date and time
+
+    // we put the data into the receipt fields
+    document.getElementById("receiptDate").innerText = "Date: " + today;
+    document.getElementById("receiptParking").innerText = parkingName;
+    document.getElementById("receiptHours").innerText = timeInfo;
+    document.getElementById("receiptCost").innerText = "TOTAL: " + costInfo;
+
+    
+
+   // show button to view it later and show the modal now
+    document.getElementById("viewReceiptBtn").style.display = "inline-block";
+    document.getElementById("receiptModal").style.display = "block";
 });
 
+//close receipt logic 
+document.getElementById("closeReceipt").addEventListener("click", function() {
+    document.getElementById("receiptModal").style.display = "none";
+});
+
+// view receipt logic
+document.getElementById("viewReceiptBtn").addEventListener("click", function() {
+    document.getElementById("receiptModal").style.display = "block";
+});
 // Start everything
 loadParkings();

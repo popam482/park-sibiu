@@ -5,6 +5,16 @@
 import { db } from "./firebase-config.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
+function setCurrentTimeDefault() {
+  const timeInput = document.getElementById("startTime");
+  if (!timeInput) return;
+
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  timeInput.value = `${hh}:${mm}`;
+}
+
 async function loadParkings() {
     var listElement = document.getElementById("parkingList");
     
@@ -54,12 +64,12 @@ async function loadParkings() {
 
             // Logic for the Book Now button
             var btn = li.querySelector(".booking-button");
-            btn.addEventListener("click", function(event) {
-                event.stopPropagation(); // This stops the list from closing
+            btn.addEventListener("click", (event) => {
+                event.stopPropagation();
                 document.getElementById("reservationModal").style.display = "block";
                 document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
+                setCurrentTimeDefault();
             });
-
             listElement.appendChild(li);
         });
 
@@ -73,7 +83,7 @@ document.getElementById("closeModal").addEventListener("click", function() {
     document.getElementById("reservationModal").style.display = "none";
 });
 
-/* * Functions to Edit or Cancel the reservation */
+/*  Functions to Edit or Cancel the reservation */
 
 var manageBox = document.getElementById("manageReservation");
 var resInfo = document.getElementById("resInfo");
@@ -88,9 +98,10 @@ document.getElementById("cancelBtn").addEventListener("click", function() {
 });
 
 //  Function to Edit
-document.getElementById("editBtn").addEventListener("click", function() {
-    document.getElementById("reservationModal").style.display = "block";
-    document.getElementById("modalTitle").innerText = "Edit your time";
+document.getElementById("editBtn").addEventListener("click", () => {
+  document.getElementById("reservationModal").style.display = "block";
+  document.getElementById("modalTitle").innerText = "Edit your time";
+  setCurrentTimeDefault();
 });
 
 //  Update the Confirm button logic 
@@ -109,4 +120,5 @@ document.getElementById("confirmBooking").addEventListener("click", function() {
 });
 
 // Start everything
+setCurrentTimeDefault();
 loadParkings();

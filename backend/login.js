@@ -106,3 +106,11 @@ onAuthStateChanged(auth, (user) => {
 
   if (logoutBtn) logoutBtn.style.display = user ? "block" : "none";
 });
+
+// If the user is already logged in, go to the profile page directly
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log("User is already logged in, redirecting...");
+        window.location.href = "index.html";
+    }
+});

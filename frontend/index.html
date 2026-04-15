@@ -16,7 +16,7 @@
     #parking-section { 
       padding: 20px; 
       height: 30%; 
-      overflow-y: auto;  /*for scorlling if needed*/
+      overflow-y: auto;  
       background: #f9f9f9;
     }
     ul { list-style: none; padding: 0; }
@@ -34,7 +34,7 @@ li:hover {
     padding: 10px;
     background-color: #ffffff;
     border-radius: 8px;
-    border-left: 4px solid #3498db; /* O dungă albastră în stânga */
+    border-left: 4px solid #3498db; 
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     animation: fadeIn 0.4s ease;
 }
@@ -57,6 +57,26 @@ li:hover {
     <ul id="parkingList">
         <li>Loading parkings...</li>
     </ul>
+  </div>
+
+  <div id="manageReservation" style="display:none; margin: 20px; padding: 15px; border: 2px dashed #007bff; border-radius: 10px; background: #f0f7ff;">
+    <h4>My Reservation</h4>
+    <p id="resInfo"></p>
+    <button id="editBtn" style="background: orange; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer;">Edit Time</button>
+    <button id="cancelBtn" style="background: red; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer;">Cancel Booking</button>
+</div>
+
+  <div id="reservationModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6);">
+    <div style="background-color: white; margin: 15% auto; padding: 25px; width: 300px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif;">
+        <h3 id="modalTitle">Book a spot</h3>
+        <p id="selectedParkingName" style="color: #555;"></p>
+        
+        <label>Choose a time:</label><br>
+        <input type="time" id="startTime" style="margin: 15px 0; padding: 8px; width: 80%;"><br>
+        
+        <button id="confirmBooking" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Confirm</button>
+        <button id="closeModal" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 5px;">Cancel</button>
+    </div>
 </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

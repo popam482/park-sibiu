@@ -11,8 +11,16 @@
   />
 
   <style>
-    html, body { margin: 0; height: 100%; }
-    #map { width: 100%; height: 100%; }
+    html, body { margin: 0; height: 100%; padding: 0; }
+    #map { width: 100%; height: 70%; }
+    #parking-section { 
+      padding: 20px; 
+      height: 30%; 
+      overflow-y: auto;  /*for scorlling if needed*/
+      background: #f9f9f9;
+    }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
   </style>
 </head>
 <body>
@@ -21,9 +29,18 @@
 
   <div id="map"></div>
 
+    <div id="parking-section">
+    <h2>Available Parkings</h2>
+    <ul id="parkingList">
+        <li>Loading parkings...</li>
+    </ul>
+</div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script type="module" src="../backend/script.js"></script>
+
+  <script type="module" src="../backend/parking.js"></script>
 
 </body>
 </html>

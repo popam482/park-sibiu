@@ -12,7 +12,6 @@ var darkToggle = document.getElementById("darkModeToggle");
 // This function checks if we are logged in
 onAuthStateChanged(auth, (user) => {
     if (user != null) {
-        // We look for the user in the database
         var userRef = doc(db, "users", user.uid);
         
         getDoc(userRef).then((snapshot) => {
@@ -40,19 +39,16 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Function to save what the user likes
+// Function to save what the user preffers
 function saveStuff() {
     var user = auth.currentUser;
     if (user != null) {
         var userRef = doc(db, "users", user.uid);
-        
-        // I save them one by one to be sure
         updateDoc(userRef, {
             "preferences.language": langSelect.value,
             "preferences.theme": darkToggle.checked ? "dark" : "light"
         });
 
-        // Simple way to change the background color
         if (darkToggle.checked == true) {
             document.body.style.backgroundColor = "#333";
             document.body.style.color = "white";

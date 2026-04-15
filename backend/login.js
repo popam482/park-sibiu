@@ -48,7 +48,7 @@ if (signinBtn) {
             const cred = await signInWithEmailAndPassword(auth, email, password);
             await ensureUserProfile(cred.user);
             alert("Login Successful!");
-            window.location.href = "profile.html"; 
+            window.location.href = "index.html"; 
         } catch (e) {
             alert("Login Error: " + e.message);
         }
@@ -77,7 +77,7 @@ if (googleBtn) {
             const provider = new GoogleAuthProvider();
             const cred = await signInWithPopup(auth, provider);
             await ensureUserProfile(cred.user);
-            window.location.href = "profile.html";
+            window.location.href = "index.html";
         } catch (e) {
             alert("Google Login Error: " + e.message);
         }
@@ -110,8 +110,7 @@ onAuthStateChanged(auth, (user) => {
 // If the user is already logged in, go to the profile page directly
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Log a message and change the page to profile.html
         console.log("User is already logged in, redirecting...");
-        window.location.href = "profile.html";
+        window.location.href = "index.html";
     }
 });

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Park Sibiu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="app-body">
+    <nav>
+        <a href="index.html">Map</a>
+        <button id="logoutBtn">Logout</button>
+    </nav>
+
+    <div class="container">
+        <h1>Profile Settings</h1>
+        
+        <section>
+            <h3>Personal Information</h3>
+            <label for="displayName">Display Name:</label>
+            <input type="text" id="displayName" placeholder="Enter your name">
+            <button id="saveNameBtn">Save Name</button>
+        </section>
+
+        <section>
+            <h3>Preferences</h3>
+            <div>
+                <label for="languageSelect">Language:</label>
+                <select id="languageSelect">
+                    <option value="en">English</option>
+                    <option value="ro">Romanian</option>
+                </select>
+            </div>
+            <div>
+                <label for="darkModeToggle">Dark Mode:</label>
+                <input type="checkbox" id="darkModeToggle">
+            </div>
+        </section>
+
+        <section>
+            <h3>Security</h3>
+            <button id="resetPasswordBtn">Send Password Reset Email</button>
+        </section>
+    </div>
+
+    <script type="module" src="../backend/profile.js"></script>
+</body>
+</html>

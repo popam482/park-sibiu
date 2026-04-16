@@ -30,6 +30,7 @@ async function ensureUserProfile(user) {
                 uid: user.uid,
                 email: user.email || "",
                 displayName: user.displayName || "",
+                licensePlates: [],
                 role: "user",
                 createdAt: serverTimestamp()
             });
@@ -108,7 +109,6 @@ onAuthStateChanged(auth, (user) => {
 
   if (user) {
     console.log("User is already logged in, redirecting...");
-    window.location.href = "index.html";
   }
 });
 

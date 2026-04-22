@@ -12,13 +12,7 @@
 
   <style>
     html, body { margin: 0; height: 100%; padding: 0; }
-    #map { width: 100%; height: 70%; }
-    #parking-section { 
-      padding: 20px; 
-      height: 30%; 
-      overflow-y: auto;  
-      background: #f9f9f9;
-    }
+    #map { width: 100%; height: 100%; }
     ul { list-style: none; padding: 0; }
     li { margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
   /* Hover effect for list items */
@@ -52,30 +46,54 @@ li:hover {
 
   <div id="map"></div>
 
-    <div id="parking-section">
-    <h2>Available Parkings</h2>
-    <ul id="parkingList">
-        <li>Loading parkings...</li>
-    </ul>
-  </div>
 
- <div id="reservationModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6);">
-    <div style="background-color: white; margin: 15% auto; padding: 25px; width: 300px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif;">
-        <h3 id="modalTitle">Book a spot</h3>
-        <p id="selectedParkingName" style="color: #555;"></p>
-        
-        <label>Choose a time:</label><br>
-        <input type="time" id="startTime" style="margin: 15px 0; padding: 8px; width: 80%;"><br>
+<button id="openParkingListBtn" style="position: fixed; top: 12px; left: 12px; z-index: 1200;">
+  Available Parkings
+</button>
 
-        <label>How many hours?</label><br>
-        <input type="number" id="duration" value="1" min="1" style="margin: 10px 0; padding: 5px; width: 50px;"><br>
-        
-        <button id="confirmBooking" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Confirm</button>
-        <button id="closeModal" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 5px;">Cancel</button>
+ <div id="parkingPanel" style="display:none; position:fixed; z-index:1300; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.4);">
+  <div style="background:#fff; width:90%; max-width:500px; margin:40px auto; padding:15px; border-radius:8px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h2 style="margin:0;">Available Parkings</h2>
+      <button id="closeParkingPanelBtn">Close</button>
     </div>
+    <div id="parkingListView">
+      <ul id="parkingList">
+        <li>Loading parkings...</li>
+      </ul>
+    </div>
+    <div id="parkingDetailsView" style="display:none;">
+      <button id="backToParkingListBtn" style="margin-bottom:10px;">Back to list</button>
+      <div id="selectedParkingDetails"></div>
+    </div>
+  </div>
 </div>
 
-<div id="manageReservation" style="display:none; margin: 20px; padding: 15px; border: 2px dashed #007bff; border-radius: 10px; background: #f0f7ff; font-family: Arial, sans-serif;">
+<div id="reservationPanel" style="display:none; position:fixed; z-index:1400; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6);">
+  <div style="background-color: white; margin: 15% auto; padding: 25px; width: 300px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif;">
+    <h3 id="panelTitle">Book a spot</h3>
+    <p id="selectedParkingName" style="color: #555;"></p>
+
+    <label>Choose a time:</label><br>
+    <input type="time" id="startTime" style="margin: 15px 0; padding: 8px; width: 80%;"><br>
+
+    <label>How many hours?</label><br>
+    <input type="number" id="duration" value="1" min="1" style="margin: 10px 0; padding: 5px; width: 50px;"><br>
+
+    <button id="confirmBooking" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Confirm</button>
+    <button id="closePanel" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 5px;">Cancel</button>
+  </div>
+</div>
+
+<div id="manageReservation" style="
+  display:none;
+  position: fixed;
+  z-index: 1100;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #f0f7ff;
+">
     <h4>My Reservation</h4>
     <p id="resInfo"></p>
 

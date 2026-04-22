@@ -1,150 +1,144 @@
-/* * This script helps users book a parking spot.
- * It shows a window when the button is clicked.
- */
-
 import { db } from "./firebase-config.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
+let currentPricePerHour = 0;
+let selectedParking = null;
 
-var currentPricePerHour = 0; 
+const openParkingListBtn = document.getElementById("openParkingListBtn");
+const parkingPanel = document.getElementById("parkingPanel");
+const closeParkingPanelBtn = document.getElementById("closeParkingPanelBtn");
+const parkingListView = document.getElementById("parkingListView");
+const parkingDetailsView = document.getElementById("parkingDetailsView");
+const backToParkingListBtn = document.getElementById("backToParkingListBtn");
+const selectedParkingDetails = document.getElementById("selectedParkingDetails");
+
+const reservationPanel = document.getElementById("reservationPanel");
+const manageBox = document.getElementById("manageReservation");
+const resInfo = document.getElementById("resInfo");
+
+
 function setCurrentTimeDefault() {
   const timeInput = document.getElementById("startTime");
   if (!timeInput) return;
-
   const now = new Date();
-  const hh = String(now.getHours()).padStart(2, "0");
-  const mm = String(now.getMinutes()).padStart(2, "0");
-  timeInput.value = `${hh}:${mm}`;
+  timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-async function loadParkings() {
-    var listElement = document.getElementById("parkingList");
-    
-    try {
-        var dataFromFirebase = await getDocs(collection(db, "parkings"));
-        listElement.innerHTML = "";
-
-        dataFromFirebase.forEach(function(doc) {
-            var parking = doc.data();
-            var li = document.createElement("li");
-            
-            var color = "red";
-            var text = "Full";
-            if (parking.freeSpots > 0) {
-                color = "green";
-                text = "Available";
-            }
-
-            // We added a "Book Now" button here
-            li.innerHTML = `
-                <div style="padding: 10px;">
-                    <b style="font-size: 18px;">${parking.name}</b><br>
-                    Status: <span style="color: ${color}; font-weight: bold;">${text}</span>
-                    
-                    <div class="details-box" id="details-${doc.id}" style="display: none;">
-                        <p>📍 Location: Sibiu</p>
-                        <p>🚗 Spots: ${parking.freeSpots} / ${parking.totalSpots}</p>
-                        <p>💰 Price: ${parking.pricePerHour} RON/hour</p>
-                        <p>⏰ Hours: ${parking.openHours}</p>
-                        <button class="booking-button" style="width: 100%; background: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; margin-top: 10px; cursor: pointer;">Book Now</button>
-                    </div>
-                </div>
-            `;
-
-            // Click to show details and move map
-            li.addEventListener("click", function() {
-                var box = document.getElementById("details-" + doc.id);
-                if (box.style.display === "none") {
-                    box.style.display = "block";
-                    if (window.map) {
-                        window.map.flyTo([parking.lat, parking.lng], 16);
-                    }
-                } else {
-                    box.style.display = "none";
-                }
-            });
-
-            // Logic for the Book Now button
-            var btn = li.querySelector(".booking-button");
-            btn.addEventListener("click", function(event) {
-                event.stopPropagation(); // This stops the list from closing
-                
-                currentPricePerHour = parking.pricePerHour;
-            });
-
-            btn.addEventListener("click", (event) => {
-                event.stopPropagation();
-                document.getElementById("reservationModal").style.display = "block";
-                document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
-                setCurrentTimeDefault();
-            });
-            listElement.appendChild(li);
-        });
-
-    } catch (error) {
-        console.log("Error logic:", error);
-    }
-}
-
-// Logic for the buttons inside the pop-up window
-document.getElementById("closeModal").addEventListener("click", function() {
-    document.getElementById("reservationModal").style.display = "none";
+openParkingListBtn?.addEventListener("click", () => {
+  parkingPanel.style.display = "block";
+  parkingListView.style.display = "block";
+  parkingDetailsView.style.display = "none";
 });
 
-/*  Functions to Edit or Cancel the reservation */
-
-var manageBox = document.getElementById("manageReservation");
-var resInfo = document.getElementById("resInfo");
-
-// Function to Cancel
-document.getElementById("cancelBtn").addEventListener("click", function() {
-    var sure = confirm("Are you sure you want to cancel your booking?");
-    if (sure) {
-        manageBox.style.display = "none";
-        alert("Reservation cancelled successfully.");
-    }
+closeParkingPanelBtn?.addEventListener("click", () => {
+  parkingPanel.style.display = "none";
 });
 
-//  Function to Edit
-document.getElementById("editBtn").addEventListener("click", () => {
-  document.getElementById("reservationModal").style.display = "block";
-  document.getElementById("modalTitle").innerText = "Edit your time";
+backToParkingListBtn?.addEventListener("click", () => {
+  parkingListView.style.display = "block";
+  parkingDetailsView.style.display = "none";
+});
+
+document.getElementById("closePanel")?.addEventListener("click", () => {
+  reservationPanel.style.display = "none";
+});
+
+document.getElementById("cancelBtn")?.addEventListener("click", () => {
+  if (confirm("Are you sure you want to cancel your booking?")) {
+    manageBox.style.display = "none";
+    alert("Reservation cancelled successfully.");
+  }
+});
+
+document.getElementById("editBtn")?.addEventListener("click", () => {
+  reservationPanel.style.display = "block";
+  document.getElementById("panelTitle").innerText = "Edit your time";
   setCurrentTimeDefault();
 });
 
-// This button confirms the booking and calculates the cost
-document.getElementById("confirmBooking").addEventListener("click", function() {
-    var timeChosen = document.getElementById("startTime").value;
-    var hoursAmount = document.getElementById("duration").value;
-    
-    if (timeChosen !== "") {
-        // Price * Hours
-        var totalCost = hoursAmount * currentPricePerHour;
+document.getElementById("confirmBooking")?.addEventListener("click", () => {
+  const timeChosen = document.getElementById("startTime")?.value;
+  const hoursAmount = Number(document.getElementById("duration")?.value || 1);
+  if (!timeChosen) return;
 
-        manageBox.style.display = "block";
-        resInfo.innerText = "Reserved at " + timeChosen + " for " + hoursAmount + " hours.";
-        
-        // Show the price and set status to unpaid
-        document.getElementById("costText").innerText = "Total to pay: " + totalCost + " RON";
-        document.getElementById("statusText").innerText = "Status: NOT PAID";
-        document.getElementById("statusText").style.color = "blue";
-        document.getElementById("payBtn").style.display = "inline-block";
+  const totalCost = hoursAmount * currentPricePerHour;
 
-        alert("Reservation saved! Total cost: " + totalCost + " RON");
-        document.getElementById("reservationModal").style.display = "none";
-    }
+  manageBox.style.display = "block";
+  resInfo.innerText = `Reserved at ${timeChosen} for ${hoursAmount} hours.${selectedParking ? " (" + selectedParking.name + ")" : ""}`;
+  document.getElementById("costText").innerText = `Total to pay: ${totalCost} RON`;
+  document.getElementById("statusText").innerText = "Status: NOT PAID";
+  document.getElementById("statusText").style.color = "blue";
+  document.getElementById("payBtn").style.display = "inline-block";
+
+  reservationPanel.style.display = "none";
+  parkingPanel.style.display = "none";
 });
 
-// This button simulates the payment
-document.getElementById("payBtn").addEventListener("click", function() {
-    alert("Connecting to bank...");
-    alert("Payment successful! Thank you.");
-    
-    document.getElementById("statusText").innerText = "Status: PAID ✅";
-    document.getElementById("statusText").style.color = "green";
-    document.getElementById("payBtn").style.display = "none";
+document.getElementById("payBtn")?.addEventListener("click", () => {
+  alert("Payment successful! Thank you.");
+  document.getElementById("statusText").innerText = "Status: PAID";
+  document.getElementById("statusText").style.color = "green";
+  document.getElementById("payBtn").style.display = "none";
+  document.getElementById("manageReservation").style.display = "none";
 });
 
-// Start everything
+function showParkingDetails(parking) {
+  selectedParking = parking;
+  currentPricePerHour = parking.pricePerHour;
+
+  selectedParkingDetails.innerHTML = `
+    <p><b>${parking.name}</b></p>
+    <p>Status: <span style="color:${parking.freeSpots > 0 ? "green" : "red"}; font-weight:bold;">${parking.freeSpots > 0 ? "Available" : "Full"}</span></p>
+    <p>Location: Sibiu</p>
+    <p>Spots: ${parking.freeSpots} / ${parking.totalSpots}</p>
+    <p>Price: ${parking.pricePerHour} RON/hour</p>
+    <p>Hours: ${parking.openHours}</p>
+    <button id="bookSelectedParkingBtn" style="width:100%; background:#007bff; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">Book Now</button>
+  `;
+
+  parkingListView.style.display = "none";
+  parkingDetailsView.style.display = "block";
+
+  document.getElementById("bookSelectedParkingBtn")?.addEventListener("click", () => {
+    reservationPanel.style.display = "block";
+    document.getElementById("panelTitle").innerText = "Book a spot";
+    document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
+    setCurrentTimeDefault();
+  });
+
+  if (
+  window.map &&
+  typeof window.map.flyTo === "function" &&
+  parking.lat != null &&
+  parking.lng != null
+  ) {
+  window.map.flyTo([parking.lat, parking.lng], 16);
+  }
+}
+
+async function loadParkings() {
+  const listElement = document.getElementById("parkingList");
+  if (!listElement) return;
+
+  try {
+    const dataFromFirebase = await getDocs(collection(db, "parkings"));
+    listElement.innerHTML = "";
+
+    dataFromFirebase.forEach((docSnap) => {
+      const parking = docSnap.data();
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
+          <b style="font-size:16px;">${parking.name}</b><br>
+          Status: <span style="color:${parking.freeSpots > 0 ? "green" : "red"}; font-weight:bold;">${parking.freeSpots > 0 ? "Available" : "Full"}</span>
+        </div>`;
+      li.addEventListener("click", () => showParkingDetails(parking));
+      listElement.appendChild(li);
+    });
+  } catch (error) {
+    console.log("Error loading parkings:", error);
+  }
+}
+
 setCurrentTimeDefault();
 loadParkings();

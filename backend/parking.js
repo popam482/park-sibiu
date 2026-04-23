@@ -140,5 +140,10 @@ async function loadParkings() {
   }
 }
 
+window.showParkingDetailsFromMap = function (parking) {
+  if (parkingPanel) parkingPanel.style.display = "block";
+  showParkingDetails(parking); 
+};
+
 setCurrentTimeDefault();
 loadParkings();

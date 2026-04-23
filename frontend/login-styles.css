@@ -1,9 +1,11 @@
 /*style for the login/main page*/
-@import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400..700;1,400..700&display=swap');
+
 
 h1 {
-    font-family: "Jersey 10", sans-serif;
-    font-weight: 400;
+    font-family: "Gelasio", sans-serif;
+
+    font-weight: 1000;
     font-style: normal;
     font-size: 800%;
     text-align: center;
@@ -13,7 +15,7 @@ h1 {
 }
 
 h2 {
-    font-family: "Jersey 10", sans-serif;
+    font-family: "Gelasio", sans-serif;
     font-weight: 400;
     font-style: normal;
     font-size: 200%;
@@ -43,11 +45,10 @@ body {
     background-size: cover;
 }
 
-
 button {
     background-color: #304533;
     color: rgb(230, 233, 245);
-    font-family: "Jersey 10", sans-serif;
+    font-family: "Gelasio", sans-serif;
     padding: 5px 5px;
 
     border-color: #000000;
@@ -62,7 +63,7 @@ button {
 }
 
 p {
-    font-family: "Jersey 10", sans-serif;
+    font-family: "Gelasio", sans-serif;
     font-size: 150%;
     color: rgb(230, 233, 245);
     margin: 5px;
@@ -70,7 +71,7 @@ p {
 }
 
 input {
-    font-family: "Jersey 10", sans-serif;
+    font-family: "Gelasio", sans-serif;
     font-size: 150%;
     padding: 5px;
     margin: 5px;

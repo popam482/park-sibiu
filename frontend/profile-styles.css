@@ -1,0 +1,229 @@
+/*style for profile settings page*/
+@import url('https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400..700;1,400..700&display=swap');
+
+:root {
+    --bg-color: #ffffff;
+    --text-color: #111827;
+    --panel-bg: rgba(218, 243, 193, 0.92);
+    --card-bg: rgba(196, 236, 161, 0.9);
+    --border-color: rgba(15, 23, 42, 0.12);
+    --button-bg: #304533;
+    --button-text: #f8fafc;
+    --gradient-start: #dbeafe;
+    --gradient-end: #c7d2fe;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: "Gelasio", sans-serif;
+    color: var(--text-color);
+    background: linear-gradient(to bottom, var(--gradient-start), var(--gradient-end));
+}
+
+body.light-theme {
+    --bg-color: #c2e0a4;
+    --text-color: #111827;
+    --panel-bg: rgba(188, 219, 168, 0.92);
+    --card-bg: rgba(240, 249, 233, 0.9);
+    --border-color: rgba(15, 23, 42, 0.12);
+    --button-bg: #517556;
+    --button-text: #f8fafc;
+    --gradient-start: #2b4828;
+    --gradient-end: #e6fec7;
+}
+
+body.dark-theme {
+    --bg-color: #101814;
+    --text-color: #f8fafc;
+    --panel-bg: rgba(20, 30, 24, 0.92);
+    --card-bg: rgba(23, 35, 27, 0.94);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --button-bg: #5f8b5d;
+    --button-text: #f8fafc;
+    --gradient-start: #111a14;
+    --gradient-end: #2f4237;
+}
+
+body.light-theme,
+body.dark-theme {
+    background: linear-gradient(to bottom, var(--gradient-start), var(--gradient-end));
+}
+
+button {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    font-family: "Gelasio", sans-serif;
+    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    font-size: 100%;
+    margin: 5px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+button a {
+    color: inherit;
+    text-decoration: none;
+}
+
+h1 {
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    text-align: left;
+    color: var(--text-color);
+    margin: 0;
+}
+
+h3 {
+    font-weight: 600;
+    font-size: 1.35rem;
+    text-align: left;
+    color: var(--text-color);
+    margin: 0;
+}
+
+label {
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+}
+
+.section-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    padding: 28px;
+    width: 100%;
+}
+
+.section-card h3 {
+    margin-bottom: 18px;
+}
+
+.section-card div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.section-card input,
+.section-card select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+.profile-container {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.profile-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+    gap: 30px;
+    margin: 24px auto 40px;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.information-container {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 32px;
+    padding: 32px;
+    width: 60%;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.12);
+}
+
+.image-panel {
+    width: 35%;
+    min-width: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-placeholder {
+    width: 100%;
+    min-height: 420px;
+    border: 2px dashed rgba(255, 255, 255, 0.18);
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.05);
+    background-image:url('../graphics/map-image.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+
+@media (max-width: 980px) {
+    .profile-main {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .information-container,
+    .image-panel {
+        width: 100%;
+    }
+
+    .image-panel {
+        order: -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .information-container {
+        padding: 22px;
+    }
+
+    .section-card {
+        padding: 22px;
+    }
+
+    button {
+        width: 100%;
+    }
+}

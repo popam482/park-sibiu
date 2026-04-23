@@ -1,0 +1,109 @@
+/*style for the login/main page*/
+@import url('https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400..700;1,400..700&display=swap');
+
+
+h1 {
+    font-family: "Gelasio", sans-serif;
+
+    font-weight: 1000;
+    font-style: normal;
+    font-size: 800%;
+    text-align: center;
+    text-shadow: 0px 10px 10px #242724;
+    color: rgb(230, 233, 245);
+    margin-bottom: 0px;
+}
+
+h2 {
+    font-family: "Gelasio", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 200%;
+    text-align: center;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+    color: rgb(230, 233, 245);
+    margin-top: 0px;
+}
+
+/*makes header stay at the very top of page*/
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
+header {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-image: url("../login-image.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+button {
+    background-color: #304533;
+    color: rgb(230, 233, 245);
+    font-family: "Gelasio", sans-serif;
+    padding: 5px 5px;
+
+    border-color: #000000;
+    border-width: 1px;
+    border-radius: 5%;
+
+    font-size: 170%;
+    margin: 5px;
+    /*table-layout:fixed;
+    border-collapse:collapse;
+    width:100%;*/
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+p {
+    font-family: "Gelasio", sans-serif;
+    font-size: 150%;
+    color: rgb(230, 233, 245);
+    margin: 5px;
+    text-align: center;
+}
+
+input {
+    font-family: "Gelasio", sans-serif;
+    font-size: 150%;
+    padding: 5px;
+    margin: 5px;
+    border-color: #000000;
+    border-width: 1px;
+    border-radius: 5%;
+}
+
+
+.gradient {
+    height: 100%;
+    width: 100%;
+    background-image: linear-gradient(to bottom, rgba(36, 39, 36, 0.8), rgba(95, 151, 103, 0.3));
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+.login-container {
+    background-color: #242724;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 120%;
+    box-sizing: border-box;
+    padding: 10px;
+}

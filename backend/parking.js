@@ -63,7 +63,7 @@ document.getElementById("confirmBooking")?.addEventListener("click", () => {
 
   const totalCost = hoursAmount * currentPricePerHour;
 
-  manageBox.style.display = "block";
+  manageBox.style.display = "flex";
   resInfo.innerText = `Reserved at ${timeChosen} for ${hoursAmount} hours.${selectedParking ? " (" + selectedParking.name + ")" : ""}`;
   document.getElementById("costText").innerText = `Total to pay: ${totalCost} RON`;
   document.getElementById("statusText").innerText = "Status: NOT PAID";

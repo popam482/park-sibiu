@@ -55,13 +55,8 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function applyTheme(isDark) {
-  if (isDark) {
-    document.body.style.backgroundColor = "#333";
-    document.body.style.color = "white";
-  } else {
-    document.body.style.backgroundColor = "white";
-    document.body.style.color = "black";
-  }
+  document.body.classList.toggle("dark-theme", isDark);
+  document.body.classList.toggle("light-theme", !isDark);
 }
 
 function normalizePlate(value) {

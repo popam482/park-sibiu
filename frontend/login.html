@@ -3,22 +3,27 @@
 <head>
     <meta charset="UTF-8" />
     <title>Park Sibiu</title>
-    <!-- <link rel="stylesheet" href="style.css">  -->
+    <link rel="stylesheet" href="login-styles.css">  
+    <link rel="icon" href="../graphics/park-icon-unsigned.png" />
 </head>
 <body>
-    <div id="login-container">
-        <h2>Log In</h2>
-        <p id="status">Not logged in</p> 
-
+    <header>
+    <div id="login-container" class="login-container">
         <input id="email" type="email" placeholder="Email" />
         <input id="password" type="password" placeholder="Password" />
         <br>
+
         <button id="signinBtn">Sign In</button>
-        <button id="googleBtn">Login with Google</button>
-        
         <button id="signupBtn">Sign Up</button>
+        <button id="googleBtn">Login with Google</button>
         <button id="logoutBtn">Logout</button>
     </div>
+    <p id="status">Not logged in</p> 
+    </header>
+    <div class="gradient"></div>
+    <h1>Car Park Sibiu</h1>
+    <h2>Fast Parking For Your Travel Experience</h2>
+    
 
     <script type="module" src="../backend/login.js"></script>
 </body>

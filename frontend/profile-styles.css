@@ -55,13 +55,14 @@ button {
     background-color: var(--button-bg);
     color: var(--button-text);
     font-family: "Gelasio", sans-serif;
-    padding: 10px 16px;
-    border: 1px solid transparent;
-    border-radius: 14px;
+    padding: 5px 5px;
+
+    border-color: #000000;
+    border-width: 1px;
+    border-radius: 5%;
+
     font-size: 100%;
     margin: 5px;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 button:hover {
@@ -224,6 +225,6 @@ section {
     }
 
     button {
-        width: 100%;
+        width: 90%;
     }
 }

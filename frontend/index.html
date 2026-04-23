@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Park Sibiu</title>
-
+<link rel="icon" href="../graphics/park-icon-unsigned.png" />
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
-
-  <style>
+  <link rel="stylesheet" href="map-styles.css" />
+  <!--><style>
     html, body { margin: 0; height: 100%; padding: 0; }
     #map { width: 100%; height: 100%; }
     ul { list-style: none; padding: 0; }
@@ -38,18 +38,21 @@ li:hover {
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: translateY(0); }
 }
-  </style>
+  </style><!-->
+  
 </head>
 <body>
-
-  <a href="profile.html" id="profileBtn" title="Profil">👤</a>
-
+<header>
+  <div id="header-container" class="header-container">
+  <button><a href="profile.html" id="profileBtn" title="Profil">👤</a></button>
+  <button id="openParkingListBtn" title="Available Parkings">
+  Available Parkings
+</button>
+</div>
+</header>
   <div id="map"></div>
 
 
-<button id="openParkingListBtn" style="position: fixed; top: 12px; left: 12px; z-index: 1200;">
-  Available Parkings
-</button>
 
  <div id="parkingPanel" style="display:none; position:fixed; z-index:1300; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.4);">
   <div style="background:#fff; width:90%; max-width:500px; margin:40px auto; padding:15px; border-radius:8px;">
@@ -70,7 +73,7 @@ li:hover {
 </div>
 
 <div id="reservationPanel" style="display:none; position:fixed; z-index:1400; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6);">
-  <div style="background-color: white; margin: 15% auto; padding: 25px; width: 300px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif;">
+  <div style="background-color: #ffffff; margin: 15% auto; padding: 25px; width: 300px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif;">
     <h3 id="panelTitle">Book a spot</h3>
     <p id="selectedParkingName" style="color: #555;"></p>
 
@@ -80,31 +83,23 @@ li:hover {
     <label>How many hours?</label><br>
     <input type="number" id="duration" value="1" min="1" style="margin: 10px 0; padding: 5px; width: 50px;"><br>
 
-    <button id="confirmBooking" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Confirm</button>
-    <button id="closePanel" style="background-color: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 5px;">Cancel</button>
+    <button id="confirmBooking" >Confirm</button>
+    <button id="closePanel">Cancel</button>
   </div>
 </div>
 
-<div id="manageReservation" style="
-  display:none;
-  position: fixed;
-  z-index: 1100;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: #f0f7ff;
-">
+<div id="manageReservation" class="manageReservation">
     <h4>My Reservation</h4>
     <p id="resInfo"></p>
 
     <p id="costText" style="font-weight: bold; margin: 10px 0;"></p>
-    <button id="payBtn" style="background: gold; color: black; border: 1px solid #ccac00; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">Pay Now</button>
-    <p id="statusText" style="color: blue; font-weight: bold; margin-top: 5px;"></p>
+    <button id="payBtn">Pay Now</button>
+    <p id="statusText" style="color: black; font-weight: bold; margin-top: 5px;"></p>
 
     <hr style="margin: 15px 0;">
 
-    <button id="editBtn" style="background: orange; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer;">Edit Time</button>
-    <button id="cancelBtn" style="background: red; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer;">Cancel Booking</button>
+    <button id="editBtn">Edit Time</button>
+    <button id="cancelBtn">Cancel Booking</button>
 </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

@@ -62,6 +62,10 @@ button {
     width:100%;*/
 }
 
+button:hover {
+    transform: translateY(-1px);
+}
+
 p {
     font-family: "Gelasio", sans-serif;
     font-size: 150%;

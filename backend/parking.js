@@ -1,5 +1,13 @@
-import { db } from "./firebase-config.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { db, auth } from "./firebase-config.js";
+import {
+  collection,
+  getDocs,
+  doc,
+  runTransaction,
+  addDoc,
+  updateDoc,
+  Timestamp
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 let currentPricePerHour = 0;
 let selectedParking = null;
@@ -43,10 +51,36 @@ document.getElementById("closePanel")?.addEventListener("click", () => {
   reservationPanel.style.display = "none";
 });
 
-document.getElementById("cancelBtn")?.addEventListener("click", () => {
-  if (confirm("Are you sure you want to cancel your booking?")) {
+document.getElementById("cancelBtn")?.addEventListener("click", async () => {
+  if (!confirm("Are you sure you want to cancel your booking?")) return;
+
+  try {
+    if (!activeReservationId || !activeReservationParkingId) {
+      manageBox.style.display = "none";
+      return;
+    }
+
+    const reservationRef = doc(db, "reservations", String(activeReservationId));
+    const parkingRef = doc(db, "parkings", String(activeReservationParkingId));
+
+    await runTransaction(db, async (tx) => {
+      const parkingSnap = await tx.get(parkingRef);
+      if (!parkingSnap.exists()) throw new Error("Parking not found.");
+
+      const currentFree = Number(parkingSnap.data().freeSpots || 0);
+      tx.update(parkingRef, { freeSpots: currentFree + 1 });
+      tx.update(reservationRef, { status: "cancelled" });
+    });
+
+    activeReservationId = null;
+    activeReservationParkingId = null;
     manageBox.style.display = "none";
     alert("Reservation cancelled successfully.");
+
+    await loadParkings();
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Cancel failed.");
   }
 });
 
@@ -56,32 +90,96 @@ document.getElementById("editBtn")?.addEventListener("click", () => {
   setCurrentTimeDefault();
 });
 
-document.getElementById("confirmBooking")?.addEventListener("click", () => {
-  const timeChosen = document.getElementById("startTime")?.value;
-  const hoursAmount = Number(document.getElementById("duration")?.value || 1);
-  if (!timeChosen) return;
+let activeReservationId = null;
+let activeReservationParkingId = null;
 
-  const totalCost = hoursAmount * currentPricePerHour;
+function getStartAndEndDate(timeHHMM, durationHours) {
+  const now = new Date();
+  const [hh, mm] = timeHHMM.split(":").map(Number);
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
+  const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);
+  return { start, end };
+}
 
-  manageBox.style.display = "flex";
-  resInfo.innerText = `Reserved at ${timeChosen} for ${hoursAmount} hours.${selectedParking ? " (" + selectedParking.name + ")" : ""}`;
-  document.getElementById("costText").innerText = `Total to pay: ${totalCost} RON`;
-  document.getElementById("statusText").innerText = "Status: NOT PAID";
-  document.getElementById("statusText").style.color = "blue";
-  document.getElementById("payBtn").style.display = "inline-block";
+document.getElementById("confirmBooking")?.addEventListener("click", async () => {
+  const parkingId = String(selectedParking.id || "").trim();
+  if (!parkingId) return alert("Invalid parking id.");
+  try {
+    const user = auth.currentUser;
+    if (!user) return alert("Please login first.");
+    if (!selectedParking?.id) return alert("Please select a parking first.");
 
-  reservationPanel.style.display = "none";
-  parkingPanel.style.display = "none";
+    const timeChosen = document.getElementById("startTime")?.value;
+    const hoursAmount = Number(document.getElementById("duration")?.value || 1);
+    if (!timeChosen || hoursAmount < 1) return alert("Choose valid time and duration.");
+
+    const totalCost = hoursAmount * Number(currentPricePerHour || 0);
+    const { start, end } = getStartAndEndDate(timeChosen, hoursAmount);
+
+    const parkingRef = doc(db, "parkings", parkingId);
+
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(parkingRef);
+      if (!snap.exists()) throw new Error("Parking not found.");
+
+      const free = Number(snap.data().freeSpots || 0);
+      if (free <= 0) throw new Error("No free spots available.");
+
+      tx.update(parkingRef, { freeSpots: free - 1 });
+    });
+
+    const reservationRef = await addDoc(collection(db, "reservations"), {
+      userId: user.uid,
+      parkingId: selectedParking.id,
+      parkingName: selectedParking.name,
+      startTime: Timestamp.fromDate(start),
+      endTime: Timestamp.fromDate(end),
+      durationHours: hoursAmount,
+      pricePerHour: Number(currentPricePerHour || 0),
+      totalCost,
+      status: "pending_payment",
+      createdAt: Timestamp.now()
+    });
+
+    activeReservationId = reservationRef.id;
+    activeReservationParkingId = selectedParking.id;
+
+    manageBox.style.display = "flex";
+    resInfo.innerText = `Reserved at ${timeChosen} for ${hoursAmount} hours. (${selectedParking.name})`;
+    document.getElementById("costText").innerText = `Total to pay: ${totalCost} RON`;
+    document.getElementById("statusText").innerText = "Status: NOT PAID";
+    document.getElementById("statusText").style.color = "blue";
+    document.getElementById("payBtn").style.display = "inline-block";
+
+    reservationPanel.style.display = "none";
+    parkingPanel.style.display = "none";
+
+    await loadParkings();
+    await refreshSelectedParkingDetails();
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Could not confirm booking.");
+  }
 });
 
-document.getElementById("payBtn")?.addEventListener("click", () => {
-  alert("Payment successful! Thank you.");
-  document.getElementById("statusText").innerText = "Status: PAID";
-  document.getElementById("statusText").style.color = "green";
-  document.getElementById("payBtn").style.display = "none";
-  document.getElementById("manageReservation").style.display = "none";
-});
+document.getElementById("payBtn")?.addEventListener("click", async () => {
+  try {
+    if (activeReservationId) {
+      const reservationRef = doc(db, "reservations", String(activeReservationId));
+      await updateDoc(reservationRef, { status: "paid" });
+    }
 
+    document.getElementById("statusText").innerText = "Status: PAID";
+    document.getElementById("statusText").style.color = "green";
+    document.getElementById("payBtn").style.display = "none";
+    document.getElementById("manageReservation").style.display = "none";
+
+    alert("Payment successful! Thank you.");
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Payment update failed.");
+  }
+});
 function showParkingDetails(parking) {
   selectedParking = parking;
   currentPricePerHour = parking.pricePerHour;
@@ -125,14 +223,14 @@ async function loadParkings() {
     listElement.innerHTML = "";
 
     dataFromFirebase.forEach((docSnap) => {
-      const parking = docSnap.data();
+      const p = { ...docSnap.data(), id: docSnap.id };
       const li = document.createElement("li");
       li.innerHTML = `
         <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
-          <b style="font-size:16px;">${parking.name}</b><br>
-          Status: <span style="color:${parking.freeSpots > 0 ? "green" : "red"}; font-weight:bold;">${parking.freeSpots > 0 ? "Available" : "Full"}</span>
+          <b style="font-size:16px;">${p.name}</b><br>
+          Status: <span style="color:${p.freeSpots > 0 ? "green" : "red"}; font-weight:bold;">${p.freeSpots > 0 ? "Available" : "Full"}</span>
         </div>`;
-      li.addEventListener("click", () => showParkingDetails(parking));
+      li.addEventListener("click", () => showParkingDetails(p));
       listElement.appendChild(li);
     });
   } catch (error) {
@@ -144,6 +242,27 @@ window.showParkingDetailsFromMap = function (parking) {
   if (parkingPanel) parkingPanel.style.display = "block";
   showParkingDetails(parking); 
 };
+
+async function refreshSelectedParkingDetails() {
+  if (!selectedParking?.id) return;
+
+  try {
+    const dataFromFirebase = await getDocs(collection(db, "parkings"));
+    let updated = null;
+
+    dataFromFirebase.forEach((docSnap) => {
+      if (docSnap.id === String(selectedParking.id)) {
+        updated = { ...docSnap.data(), id: docSnap.id };
+      }
+    });
+
+    if (updated) {
+      showParkingDetails(updated);
+    }
+  } catch (err) {
+    console.error("Failed to refresh selected parking details:", err);
+  }
+}
 
 setCurrentTimeDefault();
 loadParkings();

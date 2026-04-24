@@ -117,6 +117,9 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     const { start, end } = getStartAndEndDate(timeChosen, hoursAmount);
 
     const parkingRef = doc(db, "parkings", parkingId);
+    const plateRaw = document.getElementById("plateNumber")?.value || "";
+    const plateNumber = plateRaw.replace(/\s+/g, "").toUpperCase();
+    if (!plateNumber) return alert("Please enter car plate number.");
 
     await runTransaction(db, async (tx) => {
       const snap = await tx.get(parkingRef);
@@ -137,6 +140,7 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
       durationHours: hoursAmount,
       pricePerHour: Number(currentPricePerHour || 0),
       totalCost,
+      plateNumber,
       status: "pending_payment",
       createdAt: Timestamp.now()
     });
@@ -145,7 +149,7 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     activeReservationParkingId = selectedParking.id;
 
     manageBox.style.display = "flex";
-    resInfo.innerText = `Reserved at ${timeChosen} for ${hoursAmount} hours. (${selectedParking.name})`;
+    resInfo.innerText = `Reserved at ${timeChosen} for ${hoursAmount} hours. (${selectedParking.name} - License: ${plateNumber})`;
     document.getElementById("costText").innerText = `Total to pay: ${totalCost} RON`;
     document.getElementById("statusText").innerText = "Status: NOT PAID";
     document.getElementById("statusText").style.color = "blue";
@@ -197,12 +201,22 @@ function showParkingDetails(parking) {
   parkingListView.style.display = "none";
   parkingDetailsView.style.display = "block";
 
-  document.getElementById("bookSelectedParkingBtn")?.addEventListener("click", () => {
-    reservationPanel.style.display = "block";
-    document.getElementById("panelTitle").innerText = "Book a spot";
-    document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
-    setCurrentTimeDefault();
-  });
+document.getElementById("bookSelectedParkingBtn")?.addEventListener("click", () => {
+  reservationPanel.style.display = "block";
+  document.getElementById("panelTitle").innerText = "Book a spot";
+  document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
+  setCurrentTimeDefault();
+
+  if (!document.getElementById("plateNumber")) {
+    const durationInput = document.getElementById("duration");
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = `
+      <label>Car plate number:</label><br>
+      <input type="text" id="plateNumber" placeholder="Ex: SB01ABC" style="margin: 10px 0; padding: 8px; width: 80%;">
+    `;
+    durationInput?.parentElement?.insertBefore(wrapper, durationInput.nextSibling);
+  }
+});
 
   if (
   window.map &&

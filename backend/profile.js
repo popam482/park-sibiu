@@ -1,6 +1,7 @@
 import { db, auth } from "./firebase-config.js";
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+import { setLanguage } from './translations.js';
 
 const nameInput = document.getElementById("displayName");
 const langSelect = document.getElementById("languageSelect");
@@ -46,7 +47,7 @@ onAuthStateChanged(auth, async (user) => {
         darkToggle.checked = data.preferences.theme === "dark";
       }
     }
-
+    setLanguage(langSelect.value);
     renderPlates();
     applyTheme(darkToggle.checked);
   } catch (err) {
@@ -139,6 +140,7 @@ async function savePreferences() {
       "preferences.language": langSelect.value,
       "preferences.theme": darkToggle.checked ? "dark" : "light"
     });
+    setLanguage(langSelect.value);
     applyTheme(darkToggle.checked);
   } catch (err) {
     console.error("Failed to save preferences:", err);

@@ -45,7 +45,7 @@ li:hover {
 <header>
   <div id="header-container" class="header-container">
   <button><a href="profile.html" id="profileBtn" title="Profil">👤</a></button>
-  <button id="openParkingListBtn" title="Available Parkings">
+  <button id="openParkingListBtn" title="Available Parkings" data-i18n="open_list_btn">
   Available Parkings
 </button>
 </div>
@@ -57,16 +57,16 @@ li:hover {
  <div id="parkingPanel" style="display:none; position:fixed; z-index:1300; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.4);">
   <div style="background:#fff; width:90%; max-width:500px; margin:40px auto; padding:15px; border-radius:8px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h2 style="margin:0;">Available Parkings</h2>
-      <button id="closeParkingPanelBtn">Close</button>
+      <h2 style="margin:0;" data-i18n="parking_list_title">Available Parkings</h2>
+      <button id="closeParkingPanelBtn" data-i18n="close_btn">Close</button>
     </div>
     <div id="parkingListView">
       <ul id="parkingList">
-        <li>Loading parkings...</li>
+        <li data-i18n="loading_text">Loading parkings...</li>
       </ul>
     </div>
     <div id="parkingDetailsView" style="display:none;">
-      <button id="backToParkingListBtn" style="margin-bottom:10px;">Back to list</button>
+      <button id="backToParkingListBtn" style="margin-bottom:10px;" data-i18n="back_btn">Back to list</button>
       <div id="selectedParkingDetails"></div>
     </div>
   </div>
@@ -74,32 +74,32 @@ li:hover {
 
 <div id="reservationPanel" style="display:none; position:fixed; z-index:1400; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6);">
   <div style="background-color: #ffffff; margin: 15% auto; padding: 25px; width: 300px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif;">
-    <h3 id="panelTitle">Book a spot</h3>
+    <h3 id="panelTitle" data-i18n="book_title">Book a spot</h3>
     <p id="selectedParkingName" style="color: #555;"></p>
 
-    <label>Choose a time:</label><br>
+    <label data-i18n="choose_time">Choose a time:</label><br>
     <input type="time" id="startTime" style="margin: 15px 0; padding: 8px; width: 80%;"><br>
 
-    <label>How many hours?</label><br>
+    <label data-i18n="how_many_hours">How many hours?</label><br>
     <input type="number" id="duration" value="1" min="1" style="margin: 10px 0; padding: 5px; width: 50px;"><br>
 
-    <button id="confirmBooking" >Confirm</button>
-    <button id="closePanel">Cancel</button>
+    <button id="confirmBooking" data-i18n="confirm_btn">Confirm</button>
+    <button id="closePanel" data-i18n="cancel_btn">Cancel</button>
   </div>
 </div>
 
 <div id="manageReservation" class="manageReservation">
-    <h4>My Reservation</h4>
+    <h4 data-i18n="my_res_title">My Reservation</h4>
     <p id="resInfo"></p>
 
     <p id="costText" style="font-weight: bold; margin: 10px 0;"></p>
-    <button id="payBtn">Pay Now</button>
+    <button id="payBtn" data-i18n="pay_btn">Pay Now</button>
     <p id="statusText" style="color: black; font-weight: bold; margin-top: 5px;"></p>
 
     <hr style="margin: 15px 0;">
 
-    <button id="editBtn">Edit Time</button>
-    <button id="cancelBtn">Cancel Booking</button>
+    <button id="editBtn" data-i18n="edit_btn">Edit Time</button>
+    <button id="cancelBtn" data-i18n="cancel_btn">Cancel Booking</button>
 </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

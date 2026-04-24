@@ -8,8 +8,8 @@ import {
     signOut, 
     onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-
-
+import { setLanguage, i18n } from './translations.js';
+const getLang = () => localStorage.getItem('preferredLang') || 'en';
 const emailEl = document.getElementById("email");
 const passwordEl = document.getElementById("password");
 const statusEl = document.getElementById("status");
@@ -48,7 +48,7 @@ if (signinBtn) {
             const password = passwordEl.value;
             const cred = await signInWithEmailAndPassword(auth, email, password);
             await ensureUserProfile(cred.user);
-            alert("Login Successful!");
+            alert(i18n[getLang()].alert_login_success || "Login Successful!");
             window.location.href = "index.html"; 
         } catch (e) {
             alert("Login Error: " + e.message);
@@ -64,7 +64,7 @@ if (signupBtn) {
             const password = passwordEl.value;
             const cred = await createUserWithEmailAndPassword(auth, email, password);
             await ensureUserProfile(cred.user);
-            alert("Account Created Successfully!");
+            alert(i18n[getLang()].alert_signup_success || "Account Created Successfully!");
         } catch (e) {
             alert("Sign Up Error: " + e.message);
         }
@@ -90,7 +90,7 @@ if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
         try {
             await signOut(auth);
-            alert("Logged out!");
+            alert(i18n[getLang()].alert_logout || "Logged out!");
         } catch (e) {
             alert("Logout Error: " + e.message);
         }
@@ -99,10 +99,17 @@ if (logoutBtn) {
 
 // Auth State Observer
 onAuthStateChanged(auth, (user) => {
+//   if (statusEl) {
+//     statusEl.textContent = user
+//       ? `Logged in as: ${user.email || user.displayName}`
+//       : "Not logged in";
+//   }
+  const savedLang = localStorage.getItem('preferredLang') || 'en';
   if (statusEl) {
-    statusEl.textContent = user
-      ? `Logged in as: ${user.email || user.displayName}`
-      : "Not logged in";
+    const statusText = user 
+      ? `${i18n[savedLang].login_status_on || "Logged in as"}: ${user.email || user.displayName}` 
+      : (i18n[savedLang].login_status_off || "Not logged in");
+    statusEl.textContent = statusText;
   }
 
   if (logoutBtn) logoutBtn.style.display = user ? "block" : "none";
@@ -112,3 +119,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+window.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('preferredLang') || 'en';
+    setLanguage(savedLang);
+});

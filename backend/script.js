@@ -1,5 +1,6 @@
 import { db, auth } from './firebase-config.js'; 
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { setLanguage } from './translations.js';
 
 // initialize Map
 const map = L.map('map').setView([45.7983, 24.1256], 13);
@@ -32,6 +33,9 @@ querySnapshot.forEach((doc) => {
         console.error("Firebase read error:", error);
     }
 }
-
+window.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('preferredLang') || 'en';
+    setLanguage(savedLang);
+});
 //displaying parkings on map
 displayParkingsFromFirebase();

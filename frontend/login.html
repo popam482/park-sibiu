@@ -9,20 +9,20 @@
 <body>
     <header>
     <div id="login-container" class="login-container">
-        <input id="email" type="email" placeholder="Email" />
-        <input id="password" type="password" placeholder="Password" />
+        <input id="email" type="email" placeholder="Email" data-i18n="email_placeholder" />
+        <input id="password" type="password" placeholder="Password" data-i18n="password_placeholder" />
         <br>
 
-        <button id="signinBtn">Sign In</button>
-        <button id="signupBtn">Sign Up</button>
-        <button id="googleBtn">Login with Google</button>
-        <button id="logoutBtn">Logout</button>
+        <button id="signinBtn" data-i18n="login_signin_btn">Sign In</button>
+        <button id="signupBtn" data-i18n="login_signup_btn">Sign Up</button>
+        <button id="googleBtn" data-i18n="login_google_btn">Login with Google</button>
+        <button id="logoutBtn" data-i18n="login_logout_btn">Logout</button>
     </div>
-    <p id="status">Not logged in</p> 
+    <p id="status" data-i18n="login_status_off">Not logged in</p> 
     </header>
     <div class="gradient"></div>
-    <h1>Car Park Sibiu</h1>
-    <h2>Fast Parking For Your Travel Experience</h2>
+    <h1 data-i18n="login_main_title">Car Park Sibiu</h1>
+    <h2 data-i18n="login_subtitle">Fast Parking For Your Travel Experience</h2>
     
 
     <script type="module" src="../backend/login.js"></script>

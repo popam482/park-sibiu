@@ -1,5 +1,6 @@
 import { db } from "./firebase-config.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { setLanguage, i18n } from './translations.js';
 
 let currentPricePerHour = 0;
 let selectedParking = null;
@@ -83,17 +84,18 @@ document.getElementById("payBtn")?.addEventListener("click", () => {
 });
 
 function showParkingDetails(parking) {
+  const lang = localStorage.getItem('preferredLang') || 'en';
   selectedParking = parking;
   currentPricePerHour = parking.pricePerHour;
 
   selectedParkingDetails.innerHTML = `
     <p><b>${parking.name}</b></p>
-    <p>Status: <span style="color:${parking.freeSpots > 0 ? "green" : "red"}; font-weight:bold;">${parking.freeSpots > 0 ? "Available" : "Full"}</span></p>
-    <p>Location: Sibiu</p>
-    <p>Spots: ${parking.freeSpots} / ${parking.totalSpots}</p>
-    <p>Price: ${parking.pricePerHour} RON/hour</p>
-    <p>Hours: ${parking.openHours}</p>
-    <button id="bookSelectedParkingBtn" style="width:100%; background:#007bff; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">Book Now</button>
+    <p>${i18n[lang].label_status || "Status"}: <span style="color:${parking.freeSpots > 0 ? "green" : "red"}; font-weight:bold;">${parking.freeSpots > 0 ? (i18n[lang].status_available || "Available") : (i18n[lang].status_full || "Full")}</span></p>
+    <p>${i18n[lang].label_location || "Location"}: Sibiu</p>
+    <p>${i18n[lang].label_spots || "Spots"}: ${parking.freeSpots} / ${parking.totalSpots}</p>
+    <p>${i18n[lang].label_price || "Price"}: ${parking.pricePerHour} RON/hour</p>
+    <p>${i18n[lang].label_hours || "Hours"}: ${parking.openHours}</p>
+    <button id="bookSelectedParkingBtn" style="width:100%; background:#007bff; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;" data-i18n="book_now_btn">${i18n[lang].book_now_btn || "Book Now"}</button>
   `;
 
   parkingListView.style.display = "none";
@@ -144,6 +146,11 @@ window.showParkingDetailsFromMap = function (parking) {
   if (parkingPanel) parkingPanel.style.display = "block";
   showParkingDetails(parking); 
 };
+
+window.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('preferredLang') || 'en';
+    setLanguage(savedLang);
+});
 
 setCurrentTimeDefault();
 loadParkings();

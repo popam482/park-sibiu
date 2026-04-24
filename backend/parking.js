@@ -1,5 +1,6 @@
-import { db } from "./firebase-config.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { db, auth } from "./firebase-config.js";
+import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 
 let currentPricePerHour = 0;
 let selectedParking = null;
@@ -59,12 +60,18 @@ document.getElementById("editBtn")?.addEventListener("click", () => {
 document.getElementById("confirmBooking")?.addEventListener("click", () => {
   const timeChosen = document.getElementById("startTime")?.value;
   const hoursAmount = Number(document.getElementById("duration")?.value || 1);
+  const selectedCar = document.getElementById("carSelect")?.value;
+
   if (!timeChosen) return;
+  if (!selectedCar) { 
+    alert("Please select a car before booking!");
+    return;
+  }
 
   const totalCost = hoursAmount * currentPricePerHour;
 
   manageBox.style.display = "flex";
-  resInfo.innerText = `Reserved at ${timeChosen} for ${hoursAmount} hours.${selectedParking ? " (" + selectedParking.name + ")" : ""}`;
+  resInfo.innerText = `Reserved at ${timeChosen} for ${hoursAmount} hours with car ${selectedCar}${selectedParking ? " (" + selectedParking.name + ")" : ""}`;
   document.getElementById("costText").innerText = `Total to pay: ${totalCost} RON`;
   document.getElementById("statusText").innerText = "Status: NOT PAID";
   document.getElementById("statusText").style.color = "blue";
@@ -144,6 +151,35 @@ window.showParkingDetailsFromMap = function (parking) {
   if (parkingPanel) parkingPanel.style.display = "block";
   showParkingDetails(parking); 
 };
+
+async function loadUserCars(user) {
+  const carSelect = document.getElementById("carSelect");
+  if (!carSelect || !user) return;
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const snapshot = await getDoc(userRef);
+
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      const plates = data.licensePlates || [];
+
+      carSelect.innerHTML = '<option value=""> No car selected </option>';
+      plates.forEach(plate => {
+        const option = document.createElement("option");
+        option.value = plate;
+        option.textContent = plate;
+        carSelect.appendChild(option);
+      });
+    }
+  } catch (err) {
+    console.error("Error loading cars:", err);
+  }
+}
+
+onAuthStateChanged(auth, (user) => {
+  if (user) loadUserCars(user);
+});
 
 setCurrentTimeDefault();
 loadParkings();

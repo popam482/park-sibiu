@@ -70,6 +70,7 @@ async function persistLicensePlates() {
   try {
     const userRef = doc(db, "users", user.uid);
     await updateDoc(userRef, { licensePlates });
+    alert("License plates updated!");
   } catch (err) {
     console.error("Failed to save license plates:", err);
     alert("Could not update license plates.");

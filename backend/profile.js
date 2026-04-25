@@ -1,5 +1,5 @@
 import { db, auth } from "./firebase-config.js";
-import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 
 const nameInput = document.getElementById("displayName");
@@ -10,11 +10,36 @@ const resetBtn = document.getElementById("resetPasswordBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
 
-const newPlateInput = document.getElementById("newPlateInput");
-const addPlateBtn = document.getElementById("addPlateBtn");
-const platesList = document.getElementById("platesList");
+const newPlateInput = document.getElementById("newPlateNumber"); 
+const savePlateBtn = document.getElementById("savePlateBtn");    
+const platesList = document.getElementById("savedPlatesList"); 
+const favoriteSelect = document.getElementById("favoritePlateSelect");
 
 let licensePlates = [];
+
+function validateROPlate(plate) {
+    const cleanPlate = plate.replace(/\s+/g, '').toUpperCase();
+    const regex = /^(B\d{2,3}[A-Z]{3})$|^([A-Z]{2}\d{2}[A-Z]{3})$/;
+    return regex.test(cleanPlate);
+}
+
+document.getElementById('togglePlatesBtn')?.addEventListener('click', () => {
+    const accordion = document.getElementById('platesAccordion');
+    const btn = document.getElementById('togglePlatesBtn');
+    if (accordion.style.display === "none") {
+        accordion.style.display = "block";
+        btn.innerText = "Hide Saved Plates ▲";
+    } else {
+        accordion.style.display = "none";
+        btn.innerText = "View Saved Plates ▼";
+    }
+});
+
+document.getElementById('countryProfileSelect')?.addEventListener('change', (e) => {
+    if (newPlateInput) {
+        newPlateInput.placeholder = (e.target.value === "RO") ? "Ex: B123ABC" : "Enter plate number";
+    }
+});
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -69,7 +94,10 @@ async function persistLicensePlates() {
 
   try {
     const userRef = doc(db, "users", user.uid);
-    await updateDoc(userRef, { licensePlates });
+    await setDoc(userRef, { 
+      licensePlates: licensePlates 
+    }, { merge: true });
+    
     alert("License plates updated!");
   } catch (err) {
     console.error("Failed to save license plates:", err);
@@ -80,42 +108,81 @@ async function persistLicensePlates() {
 function renderPlates() {
   if (!platesList) return;
   platesList.innerHTML = "";
+  
+  if (favoriteSelect) {
+    favoriteSelect.innerHTML = '<option value=""> Select Favorite Plate </option>';
+  }
 
   if (licensePlates.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "No license plates added yet.";
-    platesList.appendChild(li);
+    platesList.innerHTML = "<li>No license plates added yet.</li>";
     return;
   }
 
+  const currentFav = localStorage.getItem('favoritePlate');
+
   licensePlates.forEach((plate, index) => {
     const li = document.createElement("li");
-    li.style.marginBottom = "8px";
-
-    const plateText = document.createElement("span");
-    plateText.textContent = plate;
-    plateText.style.marginRight = "10px";
+    li.style.display = "flex";
+    li.style.justifyContent = "space-between";
+    li.style.alignItems = "center";
+    li.style.marginBottom = "5px";
+    
+    const isFav = plate === currentFav;
+    li.innerHTML = `<span>${plate} ${isFav ? '⭐' : ''}</span>`;
 
     const removeBtn = document.createElement("button");
     removeBtn.textContent = "Remove";
-    removeBtn.addEventListener("click", async () => {
+    removeBtn.style.background = "#e74c3c";
+    removeBtn.style.color = "white";
+    removeBtn.style.border = "none";
+    removeBtn.style.padding = "2px 8px";
+    removeBtn.style.borderRadius = "3px";
+    removeBtn.style.cursor = "pointer";
+    
+    removeBtn.onclick = async () => {
+      if (plate === currentFav) {
+        localStorage.removeItem('favoritePlate');
+      }
       licensePlates.splice(index, 1);
       await persistLicensePlates();
       renderPlates();
-    });
+    };
 
-    li.appendChild(plateText);
     li.appendChild(removeBtn);
     platesList.appendChild(li);
+
+    if (favoriteSelect) {
+      const opt = document.createElement("option");
+      opt.value = plate;
+      opt.textContent = plate;
+      favoriteSelect.appendChild(opt);
+    }
   });
+
+  if (currentFav && licensePlates.includes(currentFav)) {
+    favoriteSelect.value = currentFav;
+  }
 }
 
-if (addPlateBtn) {
-  addPlateBtn.addEventListener("click", async () => {
+if (savePlateBtn) {
+  savePlateBtn.addEventListener("click", async () => {
+    const country = document.getElementById('countryProfileSelect').value;
     const raw = newPlateInput?.value?.trim() || "";
     const plate = normalizePlate(raw);
 
     if (!plate) return;
+
+    if (country === "RO") {
+        if (!validateROPlate(plate)) {
+            alert("INVALID FORMAT!\nEx: SB12ABC OR B123ABC");
+            return;
+        }
+    } else {
+        if (plate.length > 14) {
+            alert("International plates cannot exceed 14 characters!");
+            return;
+        }
+    }
 
     if (licensePlates.includes(plate)) {
       alert("This license plate already exists.");
@@ -125,7 +192,6 @@ if (addPlateBtn) {
     licensePlates.push(plate);
     await persistLicensePlates();
     renderPlates();
-
     if (newPlateInput) newPlateInput.value = "";
   });
 }
@@ -136,14 +202,15 @@ async function savePreferences() {
 
   try {
     const userRef = doc(db, "users", user.uid);
-    await updateDoc(userRef, {
-      "preferences.language": langSelect.value,
-      "preferences.theme": darkToggle.checked ? "dark" : "light"
-    });
+    await setDoc(userRef, {
+      preferences: {
+        language: langSelect.value,
+        theme: darkToggle.checked ? "dark" : "light"
+      }
+    }, { merge: true });
     applyTheme(darkToggle.checked);
   } catch (err) {
     console.error("Failed to save preferences:", err);
-    alert("Could not save preferences.");
   }
 }
 
@@ -156,9 +223,9 @@ saveNameBtn.addEventListener("click", async () => {
 
   try {
     const userRef = doc(db, "users", user.uid);
-    await updateDoc(userRef, {
+    await setDoc(userRef, {
       displayName: nameInput.value.trim()
-    });
+    }, { merge: true });
     alert("Done! Name changed.");
   } catch (err) {
     console.error("Failed to save name:", err);
@@ -191,4 +258,21 @@ logoutBtn.addEventListener("click", async () => {
     console.error("Logout failed:", err);
     alert("Could not log out.");
   }
+});
+
+document.getElementById('countryProfileSelect')?.addEventListener('change', (e) => {
+    const input = document.getElementById('newPlateNumber');
+    if (e.target.value === "RO") {
+        input.placeholder = "Ex: B123ABC";
+    } else {
+        input.placeholder = "Enter plate number";
+    }
+});
+document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
+  const selectedFav = favoriteSelect.value;
+  if (!selectedFav) return alert("Select a plate first!");
+  
+  localStorage.setItem('favoritePlate', selectedFav);
+  alert(`Plate ${selectedFav} is now your favorite!`);
+  renderPlates(); 
 });

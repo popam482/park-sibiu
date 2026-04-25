@@ -72,35 +72,29 @@ li:hover {
   </div>
 </div>
 
-<<<<<<< HEAD
-<div id="reservationPanel" style="display:none; position:fixed; z-index:1400; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); overflow:scroll;">
-  <div style="background-color: #ffffff; margin: 15% auto; padding: 25px; width: 300px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif;">
-=======
-<div id="reservationPanel" style="display:none; position:fixed; z-index:1400; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6);">
+  <div id="reservationPanel" style="display:none; position:fixed; z-index:1400; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); overflow:scroll;">
   <div style="background-color: #ffffff; margin: 10% auto; padding: 25px; width: 320px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
->>>>>>> 703159be9bb1c03d37e17a39919356681e37bf37
+ 
     <h3 id="panelTitle">Book a spot</h3>
     <p id="selectedParkingName" style="color: #555; font-weight: bold;"></p>
 
-    <div style="text-align: left; margin-bottom: 15px;">
-      <label style="font-size: 12px; font-weight: bold;">Country:</label>
-      <select id="countrySelect" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;">
-        <option value="RO">Romania (Strict Format)</option>
-        <option value="OTHER">Other Countries (Free Text)</option>
-      </select>
-    </div>
+ 
 
     <div style="text-align: left; margin-bottom: 15px;">
-      <label style="font-size: 12px; font-weight: bold;">Your Saved Plates:</label>
-      <select id="carSelect" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;">
-        <option value="">-- Select a saved plate --</option>
-      </select>
-    </div>
+  <label style="font-size: 12px; font-weight: bold;">Your Saved Plates:</label>
+  <select id="carSelect" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;">
+    <option value=""> Select a saved plate </option>
+  </select>
+</div>
 
-    <div style="text-align: left; margin-bottom: 15px;">
-      <label style="font-size: 12px; font-weight: bold;">License Plate:</label>
-      <input type="text" id="plateNumber" placeholder="Ex: SB12ABC" style="width: 94%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; text-transform: uppercase;">
-    </div>
+<div style="text-align: left; margin-bottom: 15px;">
+  <label style="font-size: 12px; font-weight: bold;">Plate Number:</label>
+  <input type="text" id="plateNumber" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;" placeholder="Select or type plate...">
+</div>
+
+<select id="countrySelect" style="display: none;">
+  <option value="RO" selected>Romania</option>
+</select>
 
     <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
       <div style="text-align: left; width: 45%;">

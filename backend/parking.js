@@ -107,14 +107,17 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     if (!user) return alert("Please login first.");
     if (!parkingId) return alert("Please select a parking first.");
     if (!timeChosen || !plateNumber) return alert("Fill in all details.");
-
-    if (country === "RO") {
-        if (plateNumber.length < 6 || plateNumber.length > 7) {
-            return alert("Format Romania invalid (Ex: SB12ABC)");
-        }
-    } else {
-        if (plateNumber.length > 14) return alert("Plate too long!");
+    if (!plateNumber) return alert("Please enter or select a license plate.");
+  if (country === "RO") {
+    const regexRO = /^(B\d{2,3}[A-Z]{3})$|^([A-Z]{2}\d{2}[A-Z]{3})$/;
+    if (!regexRO.test(plateNumber)) {
+        return alert("INVALID FORMAT! For Romania use: SB12ABC or B123ABC (București)");
     }
+} else {
+    if (plateNumber.length < 3 || plateNumber.length > 14) {
+        return alert("Plate number is too short or too long.");
+    }
+}
 
     try {
         const totalCost = hoursAmount * (currentPricePerHour || 0);
@@ -182,6 +185,7 @@ document.getElementById("payBtn")?.addEventListener("click", async () => {
     alert(err.message || "Payment update failed.");
   }
 });
+
 function showParkingDetails(parking) {
   selectedParking = parking;
   currentPricePerHour = parking.pricePerHour;
@@ -199,30 +203,41 @@ function showParkingDetails(parking) {
   parkingListView.style.display = "none";
   parkingDetailsView.style.display = "block";
 
-document.getElementById("bookSelectedParkingBtn")?.addEventListener("click", () => {
-  reservationPanel.style.display = "block";
-  document.getElementById("panelTitle").innerText = "Book a spot";
-  document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
-  setCurrentTimeDefault();
+  document.getElementById("bookSelectedParkingBtn")?.addEventListener("click", async () => {
+    reservationPanel.style.display = "block";
+    document.getElementById("panelTitle").innerText = "Book a spot";
+    document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
+    setCurrentTimeDefault();
 
-const carSelect = document.getElementById("carSelect");
-  const plateInput = document.getElementById("plateNumber");
-  if (carSelect && carSelect.options.length > 1 && plateInput) {
-    carSelect.selectedIndex = 1; 
-    plateInput.value = carSelect.value;
-  }
-});
+    if (auth.currentUser) {
+      await loadUserCars(auth.currentUser);
+    }
+
+    const carSelect = document.getElementById("carSelect");
+    const plateInput = document.getElementById("plateNumber");
+
+    if (carSelect && plateInput) {
+      const selectedValue = carSelect.value;
+
+      if (selectedValue === "OTHER") {
+        plateInput.value = "";
+        plateInput.readOnly = false;
+      } else {
+        plateInput.value = selectedValue;
+        plateInput.readOnly = true;
+      }
+    }
+  });
 
   if (
-  window.map &&
-  typeof window.map.flyTo === "function" &&
-  parking.lat != null &&
-  parking.lng != null
+    window.map &&
+    typeof window.map.flyTo === "function" &&
+    parking.lat != null &&
+    parking.lng != null
   ) {
-  window.map.flyTo([parking.lat, parking.lng], 16);
+    window.map.flyTo([parking.lat, parking.lng], 16);
   }
 }
-
 async function loadParkings() {
   const listElement = document.getElementById("parkingList");
   if (!listElement) return;
@@ -251,9 +266,11 @@ window.showParkingDetailsFromMap = function (parking) {
   if (parkingPanel) parkingPanel.style.display = "block";
   showParkingDetails(parking); 
 };
+
 async function loadUserCars(user) {
   const carSelect = document.getElementById("carSelect");
-  const plateInput = document.getElementById("plateNumber"); 
+  const plateInput = document.getElementById("plateNumber");
+  
   if (!carSelect || !user) return;
 
   try {
@@ -263,34 +280,52 @@ async function loadUserCars(user) {
     if (snapshot.exists()) {
       const data = snapshot.data();
       const plates = data.licensePlates || [];
+      const favoritePlate = localStorage.getItem('favoritePlate') || "";
 
-      carSelect.innerHTML = '<option value=""> View Saved Plates </option>';
-      plates.forEach(plate => {
+      carSelect.innerHTML = ""; 
+
+      const otherOpt = document.createElement("option");
+      otherOpt.value = "OTHER";
+      otherOpt.textContent = "-- Choose another license plate --";
+      carSelect.appendChild(otherOpt);
+
+      const sortedPlates = [...plates].sort((a, b) => (a === favoritePlate ? -1 : b === favoritePlate ? 1 : 0));
+
+      sortedPlates.forEach(plate => {
         const option = document.createElement("option");
         option.value = plate;
-        option.textContent = plate;
+        option.textContent = plate + (plate === favoritePlate ? " ⭐" : "");
         carSelect.appendChild(option);
       });
 
-      if (plates.length > 0 && plateInput) {
-        plateInput.value = plates[0];
-        carSelect.value = plates[0];
+      const currentFav = localStorage.getItem('favoritePlate');
+      if (currentFav && plates.includes(currentFav)) {
+        carSelect.value = currentFav;
+        if(plateInput) { plateInput.value = currentFav; plateInput.readOnly = true; }
+      } else if (sortedPlates.length > 0) {
+        carSelect.value = sortedPlates[0];
+        if(plateInput) { plateInput.value = sortedPlates[0]; plateInput.readOnly = true; }
+      } else {
+        carSelect.value = "OTHER";
+        if(plateInput) { plateInput.value = ""; plateInput.readOnly = false; }
       }
 
-      carSelect.addEventListener("change", () => {
-        if (carSelect.value && plateInput) {
+      carSelect.onchange = () => {
+        if (!plateInput) return;
+        if (carSelect.value === "OTHER") {
+          plateInput.value = "";
+          plateInput.readOnly = false; 
+          plateInput.focus();
+        } else {
           plateInput.value = carSelect.value;
+          plateInput.readOnly = true; 
         }
-      });
+      };
     }
   } catch (err) {
     console.error("Error loading cars:", err);
   }
 }
-
-onAuthStateChanged(auth, (user) => {
-  if (user) loadUserCars(user);
-});
 
 async function refreshSelectedParkingDetails() {
   if (!selectedParking?.id) return;
@@ -312,5 +347,27 @@ async function refreshSelectedParkingDetails() {
     console.error("Failed to refresh selected parking details:", err);
   }
 }
+document.getElementById('countrySelect')?.addEventListener('change', (e) => {
+  const plateInput = document.getElementById('plateNumber');
+  if (!plateInput) return;
+  
+  if (e.target.value === "RO") {
+    plateInput.placeholder = "Ex: SB12ABC";
+  } else {
+    plateInput.placeholder = "Up to 14 characters";
+  }
+});
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loadUserCars(user);
+    loadParkings(); 
+  } else {
+    const carSelect = document.getElementById("carSelect");
+    const plateInput = document.getElementById("plateNumber");
+    if(carSelect) carSelect.innerHTML = '<option value="OTHER">Login to see cars</option>';
+    if(plateInput) { plateInput.value = ""; plateInput.readOnly = false; }
+    loadParkings(); 
+  }
+});
 setCurrentTimeDefault();
 loadParkings();

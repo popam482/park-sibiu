@@ -10,11 +10,10 @@ import {
   Timestamp,
   query,
   where,
-  onSnapshot
+  onSnapshot,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-
-import { writeBatch } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 let currentPricePerHour = 0;
 let selectedParking = null;
@@ -32,7 +31,7 @@ const resInfo                = document.getElementById("resInfo");
 
 const scheduledReleases = new Map();
 
-//recalculate freeSpots for all parkings based on active reservations 
+// recalculate freeSpots for all parkings based on active reservations
 async function forceResetAllFreeSpotsToTotal() {
   try {
     const parkingsSnap = await getDocs(collection(db, "parkings"));
@@ -68,7 +67,6 @@ async function releaseExpiredSpot(reservationId, parkingId) {
         tx.get(parkingRef)
       ]);
 
-      // Guard: only act if still "paid" (prevents double-release)
       if (!resSnap.exists() || resSnap.data().status !== "paid") return;
       if (!parkSnap.exists()) return;
 
@@ -88,7 +86,7 @@ async function releaseExpiredSpot(reservationId, parkingId) {
 }
 
 function scheduleSpotRelease(reservationId, parkingId, endTime) {
-  if (scheduledReleases.has(reservationId)) return; 
+  if (scheduledReleases.has(reservationId)) return;
   const endMs   = endTime?.toMillis ? endTime.toMillis() : Number(endTime) * 1000;
   const delayMs = endMs - Date.now();
 
@@ -110,8 +108,7 @@ async function pollMyExpiredReservations(userId) {
     const now = Timestamp.now();
     const q   = query(
       collection(db, "reservations"),
-      where("userId",  "==", userId),
-      where("userId", "==", currentUser.uid),
+      where("userId", "==", userId),
       where("endTime", "<=", now)
     );
     const snap = await getDocs(q);
@@ -124,7 +121,7 @@ async function pollMyExpiredReservations(userId) {
   }
 }
 
-// Start everything once the program know who the user is
+// Start everything once the program knows who the user is
 onAuthStateChanged(auth, (user) => {
   if (!user) return;
   onSnapshot(
@@ -151,7 +148,6 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // license plates
-
 async function getUserLicensePlates() {
   const user = auth.currentUser;
   if (!user) return [];
@@ -186,7 +182,6 @@ function renderPlateSelector(plates) {
 }
 
 // parking list and details
-
 function setCurrentTimeDefault() {
   const timeInput = document.getElementById("startTime");
   if (!timeInput) return;
@@ -202,6 +197,30 @@ function getStartAndEndDate(timeHHMM, durationHours) {
   return { start, end };
 }
 
+function isNowInPaidInterval(openHours) {
+  if (!openHours || typeof openHours !== "string") return true;
+
+  const [startStr, endStr] = openHours.split("-").map(s => s.trim());
+  if (!startStr || !endStr) return true;
+
+  let [sh, sm] = startStr.split(":").map(Number);
+  let [eh, em] = endStr.split(":").map(Number);
+
+  if ([sh, sm, eh, em].some(Number.isNaN)) return true;
+
+  if (eh === 24) { eh = 0; em = 0; }
+
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const startMin = sh * 60 + sm;
+  const endMin = eh * 60 + em;
+
+  if (startStr === "00:00" && endStr === "24:00") return true;
+  if (startMin < endMin) return nowMin >= startMin && nowMin < endMin;
+
+  return nowMin >= startMin || nowMin < endMin;
+}
+
 async function openBookingPanel(parking) {
   reservationPanel.style.display = "block";
   document.getElementById("panelTitle").innerText = "Book a spot";
@@ -212,7 +231,6 @@ async function openBookingPanel(parking) {
 }
 
 // real time parking list and details
-
 window.renderParkingListFromLive = function (parkings) {
   const listElement = document.getElementById("parkingList");
   if (!listElement) return;
@@ -242,11 +260,14 @@ window.refreshSelectedParkingFromLive = function (parkings) {
   }
 };
 
-//parking details
+// parking details
 function showParkingDetails(parking) {
   selectedParking     = parking;
   currentPricePerHour = parking.pricePerHour;
-  const isFull        = parking.freeSpots <= 0;
+
+  const isFull = parking.freeSpots <= 0;
+  const paidNow = isNowInPaidInterval(parking.openHours);
+  const canBook = !isFull && paidNow;
 
   selectedParkingDetails.innerHTML = `
     <p><b>${parking.name}</b></p>
@@ -258,17 +279,19 @@ function showParkingDetails(parking) {
     <p>Price: ${parking.pricePerHour} RON/hour</p>
     <p>Hours: ${parking.openHours}</p>
     <button id="bookSelectedParkingBtn"
-      style="width:100%; background:${isFull ? "#aaa" : "#007bff"}; color:white;
+      style="width:100%; background:${canBook ? "#007bff" : "#aaa"}; color:white;
              border:none; padding:10px; border-radius:5px;
-             cursor:${isFull ? "not-allowed" : "pointer"};"
-      ${isFull ? "disabled" : ""}>
-      ${isFull ? "Parking Full" : "Book Now"}
-    </button>`;
+             cursor:${canBook ? "pointer" : "not-allowed"};"
+      ${canBook ? "" : "disabled"}>
+      ${isFull ? "Parking Full" : (paidNow ? "Book Now" : "Outside paid hours")}
+    </button>
+    ${!paidNow ? `<p style="margin-top:8px; color:#666;">Booking with payment is available only in interval ${parking.openHours}.</p>` : ""}
+  `;
 
   parkingListView.style.display    = "none";
   parkingDetailsView.style.display = "block";
 
-  if (!isFull) {
+  if (canBook) {
     document.getElementById("bookSelectedParkingBtn")
       ?.addEventListener("click", () => openBookingPanel(parking));
   }
@@ -279,7 +302,6 @@ function showParkingDetails(parking) {
 }
 
 // controls
-
 openParkingListBtn?.addEventListener("click", () => {
   parkingPanel.style.display       = "block";
   parkingListView.style.display    = "block";
@@ -305,7 +327,6 @@ window.showParkingDetailsFromMap = function (parking) {
 };
 
 // reservation
-
 let activeReservationId        = null;
 let activeReservationParkingId = null;
 
@@ -324,7 +345,7 @@ document.getElementById("cancelBtn")?.addEventListener("click", async () => {
       const parkingSnap = await tx.get(parkingRef);
       if (!parkingSnap.exists()) throw new Error("Parking not found.");
       const currentFree = Number(parkingSnap.data().freeSpots || 0);
-      tx.update(parkingRef,     { freeSpots: currentFree + 1 });
+      tx.update(parkingRef, { freeSpots: currentFree + 1 });
       tx.update(reservationRef, { status: "cancelled" });
     });
 
@@ -355,8 +376,12 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
 
   try {
     const user = auth.currentUser;
-    if (!user)               return alert("Please login first.");
+    if (!user) return alert("Please login first.");
     if (!selectedParking?.id) return alert("Please select a parking first.");
+
+    if (!isNowInPaidInterval(selectedParking.openHours)) {
+      return alert(`Parking is outside paid hours (${selectedParking.openHours}). Booking is disabled now.`);
+    }
 
     const timeChosen  = document.getElementById("startTime")?.value;
     const hoursAmount = Number(document.getElementById("duration")?.value || 1);
@@ -366,15 +391,17 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     const licensePlate = plateEl ? plateEl.value.replace(/\s+/g, "").toUpperCase() : "";
     if (!licensePlate) return alert("Please enter or select a license plate.");
 
-    const totalCost      = hoursAmount * Number(currentPricePerHour || 0);
+    const totalCost = hoursAmount * Number(currentPricePerHour || 0);
     const { start, end } = getStartAndEndDate(timeChosen, hoursAmount);
-    const parkingRef     = doc(db, "parkings", parkingId);
+    const parkingRef = doc(db, "parkings", parkingId);
 
     await runTransaction(db, async (tx) => {
       const snap = await tx.get(parkingRef);
       if (!snap.exists()) throw new Error("Parking not found.");
+
       const free = Number(snap.data().freeSpots || 0);
       if (free <= 0) throw new Error("No free spots available.");
+
       tx.update(parkingRef, { freeSpots: free - 1 });
     });
 
@@ -397,16 +424,18 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
 
     manageBox.style.display = "flex";
     resInfo.innerText = `Reserved at ${timeChosen} for ${hoursAmount}h — ${selectedParking.name} — Plate: ${licensePlate}`;
-    document.getElementById("costText").innerText      = `Total to pay: ${totalCost} RON`;
-    document.getElementById("statusText").innerText    = "Status: NOT PAID";
-    document.getElementById("statusText").style.color  = "blue";
-    document.getElementById("payBtn").style.display    = "inline-block";
+    document.getElementById("costText").innerText = `Total to pay: ${totalCost} RON`;
+    document.getElementById("statusText").innerText = "Status: NOT PAID";
+    document.getElementById("statusText").style.color = "blue";
+    document.getElementById("payBtn").style.display = "inline-block";
 
     reservationPanel.style.display = "none";
-    parkingPanel.style.display     = "none";
+    parkingPanel.style.display = "none";
+    parkingDetailsView.style.display = "none";
+    parkingListView.style.display = "block";
   } catch (err) {
     console.error(err);
-    alert(err.message || "Could not confirm booking.");
+    alert(err.message || "Booking failed.");
   }
 });
 
@@ -428,6 +457,6 @@ document.getElementById("payBtn")?.addEventListener("click", async () => {
   }
 });
 
-//initialization
+// initialization
 setCurrentTimeDefault();
-//forceResetAllFreeSpotsToTotal();
+// forceResetAllFreeSpotsToTotal();

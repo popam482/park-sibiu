@@ -72,21 +72,43 @@ li:hover {
   </div>
 </div>
 
-<div id="reservationPanel" style="display:none; position:fixed; z-index:1400; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); overflow:scroll;">
-  <div style="background-color: #ffffff; margin: 15% auto; padding: 25px; width: 300px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif;">
+  <div id="reservationPanel" style="display:none; position:fixed; z-index:1400; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); overflow:scroll;">
+  <div style="background-color: #ffffff; margin: 10% auto; padding: 25px; width: 320px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+ 
     <h3 id="panelTitle">Book a spot</h3>
-    <p id="selectedParkingName" style="color: #555;"></p>
+    <p id="selectedParkingName" style="color: #555; font-weight: bold;"></p>
 
-    <div id="plateSelectContainer" style="margin:15px 0;"></div>
+ 
 
-    <label>Choose a time:</label><br>
-    <input type="time" id="startTime" style="margin: 15px 0; padding: 8px; width: 80%;"><br>
+    <div style="text-align: left; margin-bottom: 15px;">
+  <label style="font-size: 12px; font-weight: bold;">Your Saved Plates:</label>
+  <select id="carSelect" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;">
+    <option value=""> Select a saved plate </option>
+  </select>
+</div>
 
-    <label>How many hours?</label><br>
-    <input type="number" id="duration" value="1" min="1" style="margin: 10px 0; padding: 5px; width: 50px;"><br>
+<div style="text-align: left; margin-bottom: 15px;">
+  <label style="font-size: 12px; font-weight: bold;">Plate Number:</label>
+  <input type="text" id="plateNumber" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;" placeholder="Select or type plate...">
+</div>
 
-    <button id="confirmBooking" >Confirm</button>
-    <button id="closePanel">Cancel</button>
+<select id="countrySelect" style="display: none;">
+  <option value="RO" selected>Romania</option>
+</select>
+
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+      <div style="text-align: left; width: 45%;">
+        <label style="font-size: 12px; font-weight: bold;">Start Time:</label>
+        <input type="time" id="startTime" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;">
+      </div>
+      <div style="text-align: left; width: 45%;">
+        <label style="font-size: 12px; font-weight: bold;">Hours:</label>
+        <input type="number" id="duration" value="1" min="1" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;">
+      </div>
+    </div>
+
+    <button id="confirmBooking" style="width: 100%; background: #27ae60; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 10px;">Confirm Booking</button>
+    <button id="closePanel" style="width: 100%; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Cancel</button>
   </div>
 </div>
 

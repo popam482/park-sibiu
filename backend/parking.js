@@ -123,19 +123,6 @@ async function pollMyExpiredReservations(userId) {
   }
 }
 
-// onAuthStateChanged(auth, (user) => {
-//   if (user) {
-//     loadUserCars(user);
-//     loadParkings(); 
-//   } else {
-//     const carSelect = document.getElementById("carSelect");
-//     const plateInput = document.getElementById("plateNumber");
-//     if(carSelect) carSelect.innerHTML = '<option value="OTHER">Login to see cars</option>';
-//     if(plateInput) { plateInput.value = ""; plateInput.readOnly = false; }
-//     loadParkings(); 
-//   }
-// });
-
 // Start everything once the program knows who the user is
 onAuthStateChanged(auth, (user) => {
   if (!user) return;
@@ -235,15 +222,6 @@ function isNowInPaidInterval(openHours) {
 
   return nowMin >= startMin || nowMin < endMin;
 }
-
-// async function openBookingPanel(parking) {
-//   reservationPanel.style.display = "block";
-//   document.getElementById("panelTitle").innerText = "Book a spot";
-//   document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
-//   setCurrentTimeDefault();
-//   const plates = await getUserLicensePlates();
-//   renderPlateSelector(plates);
-// }
 
 async function openBookingPanel(parking) {
   reservationPanel.style.display = "block";
@@ -397,84 +375,93 @@ document.getElementById("editBtn")?.addEventListener("click", () => {
 });
 
 document.getElementById("confirmBooking")?.addEventListener("click", async () => {
-const user = auth.currentUser;
-const parkingId = String(selectedParking?.id || "").trim();
+    try {
+        const user = auth.currentUser;
+        const parkingId = String(selectedParking?.id || "").trim();
 
+        if (!user) return alert("Please login first.");
+        if (!parkingId) return alert("Please select a parking first.");
 
-if (!user) return alert("Please login first.");
-if (!parkingId) return alert("Please select a parking first.");
+        if (typeof isNowInPaidInterval === "function" && !isNowInPaidInterval(selectedParking.openHours)) {
+            return alert(`Parking is outside paid hours (${selectedParking.openHours}). Booking is disabled now.`);
+        }
 
-if (typeof isNowInPaidInterval === "function" && !isNowInPaidInterval(selectedParking.openHours)) {
-    return alert(`Parking is outside paid hours (${selectedParking.openHours}). Booking is disabled now.`);
-}
+        const timeChosen = document.getElementById("startTime")?.value;
+        const hoursAmount = Number(document.getElementById("duration")?.value || 1);
+        const plateRaw = document.getElementById("plateNumber")?.value || ""; 
+        const plateNumber = plateRaw.replace(/\s+/g, "").toUpperCase();
+        const country = document.getElementById("countrySelect")?.value;
 
-const timeChosen = document.getElementById("startTime")?.value;
-const hoursAmount = Number(document.getElementById("duration")?.value || 1);
-const plateRaw = document.getElementById("plateNumber")?.value || ""; 
-const plateNumber = plateRaw.replace(/\s+/g, "").toUpperCase();
-const country = document.getElementById("countrySelect")?.value;
+        // Validări input
+        if (!timeChosen || hoursAmount < 1 || !plateNumber) {
+            return alert("Please fill in all details and choose a valid duration.");
+        }
 
-if (!timeChosen || !plateNumber) return alert("Fill in all details.");
+        // Validare format RO
+        if (country === "RO") {
+            const regexRO = /^(B\d{2,3}[A-Z]{3})$|^([A-Z]{2}\d{2}[A-Z]{3})$/;
+            if (!regexRO.test(plateNumber)) {
+                return alert("INVALID FORMAT! For Romania use: SB12ABC or B123ABC");
+            }
+        } else {
+            if (plateNumber.length < 3 || plateNumber.length > 14) {
+                return alert("Plate number is too short or too long.");
+            }
+        }
 
-if (country === "RO") {
-    const regexRO = /^(B\d{2,3}[A-Z]{3})$|^([A-Z]{2}\d{2}[A-Z]{3})$/;
-    if (!regexRO.test(plateNumber)) {
-        return alert("INVALID FORMAT! For Romania use: SB12ABC or B123ABC");
+        const totalCost = hoursAmount * Number(currentPricePerHour || 0);
+        const { start, end } = getStartAndEndDate(timeChosen, hoursAmount);
+        const parkingRef = doc(db, "parkings", parkingId);
+
+        // Tranzacție Firestore
+        await runTransaction(db, async (tx) => {
+            const snap = await tx.get(parkingRef);
+            if (!snap.exists()) throw new Error("Parking not found.");
+
+            const free = Number(snap.data().freeSpots || 0);
+            if (free <= 0) throw new Error("No free spots available.");
+
+            tx.update(parkingRef, { freeSpots: free - 1 });
+        });
+
+        // Adăugare Rezervare
+        const reservationRef = await addDoc(collection(db, "reservations"), {
+            userId: user.uid,
+            parkingId: selectedParking.id,
+            parkingName: selectedParking.name,
+            plateNumber: plateNumber,
+            startTime: Timestamp.fromDate(start),
+            endTime: Timestamp.fromDate(end),
+            durationHours: hoursAmount,
+            totalCost: totalCost,
+            status: "pending_payment",
+            createdAt: Timestamp.now()
+        });
+
+        activeReservationId = reservationRef.id;
+        activeReservationParkingId = selectedParking.id;
+
+        // UI Updates
+        manageBox.style.display = "flex";
+        resInfo.innerText = `Reserved: ${plateNumber} at ${timeChosen} for ${hoursAmount}h — ${selectedParking.name}`;
+        
+        document.getElementById("costText").innerText = `Total to pay: ${totalCost} RON`;
+        document.getElementById("statusText").innerText = "Status: NOT PAID";
+        document.getElementById("statusText").style.color = "blue";
+        document.getElementById("payBtn").style.display = "inline-block";
+
+        reservationPanel.style.display = "none";
+        parkingPanel.style.display = "none";
+
+        if (parkingDetailsView) parkingDetailsView.style.display = "none";
+        if (parkingListView) parkingListView.style.display = "block";
+
+        alert("Reservation created! Please pay to finalize.");
+
+    } catch (err) {
+        console.error("Booking error:", err);
+        alert(err.message || "Booking failed.");
     }
-} else {
-    if (plateNumber.length < 3 || plateNumber.length > 14) {
-        return alert("Plate number is too short or too long.");
-    }
-}
-
-try {
-    const totalCost = hoursAmount * (currentPricePerHour || 0);
-    const { start, end } = getStartAndEndDate(timeChosen, hoursAmount);
-    const parkingRef = doc(db, "parkings", parkingId);
-
-    await runTransaction(db, async (tx) => {
-        const snap = await tx.get(parkingRef);
-        if (!snap.exists()) throw new Error("Parking not found.");
-        const free = Number(snap.data().freeSpots || 0);
-        if (free <= 0) throw new Error("No free spots available.");
-        tx.update(parkingRef, { freeSpots: free - 1 });
-    });
-
-    const reservationRef = await addDoc(collection(db, "reservations"), {
-        userId: user.uid,
-        parkingId: selectedParking.id,
-        parkingName: selectedParking.name,
-        plateNumber: plateNumber,
-        startTime: Timestamp.fromDate(start),
-        endTime: Timestamp.fromDate(end),
-        durationHours: hoursAmount,
-        totalCost: totalCost,
-        status: "pending_payment",
-        createdAt: Timestamp.now()
-    });
-
-    activeReservationId = reservationRef.id;
-    activeReservationParkingId = selectedParking.id;
-
-    manageBox.style.display = "flex";
-    resInfo.innerText = `Reserved: ${plateNumber} at ${timeChosen} for ${hoursAmount}h`;
-    
-    document.getElementById("costText").innerText = `Total to pay: ${totalCost} RON`;
-    document.getElementById("statusText").innerText = "Status: NOT PAID";
-    document.getElementById("statusText").style.color = "blue";
-    document.getElementById("payBtn").style.display = "inline-block";
-
-    reservationPanel.style.display = "none";
-    parkingPanel.style.display = "none";
-    if (document.getElementById("parkingDetailsView")) {
-        document.getElementById("parkingDetailsView").style.display = "none";
-        document.getElementById("parkingListView").style.display = "block";
-    }
-
-} catch (err) {
-    console.error(err);
-    alert(err.message || "Booking failed.");
-}
 });
 function getStartAndEndDate(timeHHMM, durationHours) {
   const now = new Date();
@@ -502,58 +489,7 @@ document.getElementById("payBtn")?.addEventListener("click", async () => {
   }
 });
 
-// function showParkingDetails(parking) {
-//   selectedParking = parking;
-//   currentPricePerHour = parking.pricePerHour;
 
-//   selectedParkingDetails.innerHTML = `
-//     <p><b>${parking.name}</b></p>
-//     <p>Status: <span style="color:${parking.freeSpots > 0 ? "green" : "red"}; font-weight:bold;">${parking.freeSpots > 0 ? "Available" : "Full"}</span></p>
-//     <p>Location: Sibiu</p>
-//     <p>Spots: ${parking.freeSpots} / ${parking.totalSpots}</p>
-//     <p>Price: ${parking.pricePerHour} RON/hour</p>
-//     <p>Hours: ${parking.openHours}</p>
-//     <button id="bookSelectedParkingBtn" style="width:100%; background:#007bff; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">Book Now</button>
-//   `;
-
-//   parkingListView.style.display = "none";
-//   parkingDetailsView.style.display = "block";
-
-//   document.getElementById("bookSelectedParkingBtn")?.addEventListener("click", async () => {
-//     reservationPanel.style.display = "block";
-//     document.getElementById("panelTitle").innerText = "Book a spot";
-//     document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
-//     setCurrentTimeDefault();
-
-//     if (auth.currentUser) {
-//       await loadUserCars(auth.currentUser);
-//     }
-
-//     const carSelect = document.getElementById("carSelect");
-//     const plateInput = document.getElementById("plateNumber");
-
-//     if (carSelect && plateInput) {
-//       const selectedValue = carSelect.value;
-
-//       if (selectedValue === "OTHER") {
-//         plateInput.value = "";
-//         plateInput.readOnly = false;
-//       } else {
-//         plateInput.value = selectedValue;
-//         plateInput.readOnly = true;
-//       }
-//     }
-//   });
-
-//   if (
-//     window.map &&
-//     typeof window.map.flyTo === "function" &&
-//     parking.lat != null &&
-//     parking.lng != null
-//   ) {
-//     window.map.flyTo([parking.lat, parking.lng], 16);
-//   }
-// }
 async function loadParkings() {
   const listElement = document.getElementById("parkingList");
   if (!listElement) return;

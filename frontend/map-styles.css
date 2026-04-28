@@ -1,15 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Gelasio:ital,wght@0,400..700;1,400..700&display=swap');
 
 :root {
-    --bg-color: #ffffff;
-    --text-color: #111827;
-    --panel-bg: rgba(218, 243, 193, 0.92);
-    --card-bg: rgba(196, 236, 161, 0.9);
-    --border-color: rgba(15, 23, 42, 0.12);
     --button-bg: #304533;
     --button-text: #f8fafc;
-    --gradient-start: #dbeafe;
-    --gradient-end: #c7d2fe;
+
 }
 
 button {
@@ -31,17 +25,10 @@ button:hover {
 }
 
 html,
-body {
-    margin-top: 0;
-    padding: 0;
-    min-height: 100%;
-}
-
-header {
-    width: 100%;
-    margin-top: 0;
-    padding: 0;
-    background-color: #242724;
+body,
+#map {
+    margin: 0;
+    height: 100%;
 }
 
 body {
@@ -49,16 +36,14 @@ body {
     background-size: cover;
 }
 
-.header-container {
-    background-color: #242724;
+header {
+    position: fixed;
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: left;
-    width: 100%;
-    height: 120%;
-    box-sizing: border-box;
-    padding: 10px;
+    align-items: center;
+    padding: 10px 50px;
+    background: transparent;
+    border-bottom: none;
+    z-index: 1200;
 }
 
 .parkingPanel {

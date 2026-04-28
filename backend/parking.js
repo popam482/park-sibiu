@@ -392,12 +392,17 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
         const plateNumber = plateRaw.replace(/\s+/g, "").toUpperCase();
         const country = document.getElementById("countrySelect")?.value;
 
-        // Validări input
+   
         if (!timeChosen || hoursAmount < 1 || !plateNumber) {
             return alert("Please fill in all details and choose a valid duration.");
         }
 
-        // Validare format RO
+    const alphanumericRegex = /^[A-Z0-9]+$/;
+        if (!alphanumericRegex.test(plateNumber)) {
+            return alert("ERROR: License plate must contain only LETTERS and NUMBERS (no dots, spaces, or symbols).");
+        }
+
+     
         if (country === "RO") {
             const regexRO = /^(B\d{2,3}[A-Z]{3})$|^([A-Z]{2}\d{2}[A-Z]{3})$/;
             if (!regexRO.test(plateNumber)) {
@@ -405,7 +410,7 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
             }
         } else {
             if (plateNumber.length < 3 || plateNumber.length > 14) {
-                return alert("Plate number is too short or too long.");
+                return alert("Plate number is too short or too long (3-14 characters).");
             }
         }
 
@@ -413,7 +418,7 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
         const { start, end } = getStartAndEndDate(timeChosen, hoursAmount);
         const parkingRef = doc(db, "parkings", parkingId);
 
-        // Tranzacție Firestore
+       
         await runTransaction(db, async (tx) => {
             const snap = await tx.get(parkingRef);
             if (!snap.exists()) throw new Error("Parking not found.");
@@ -424,7 +429,7 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
             tx.update(parkingRef, { freeSpots: free - 1 });
         });
 
-        // Adăugare Rezervare
+       
         const reservationRef = await addDoc(collection(db, "reservations"), {
             userId: user.uid,
             parkingId: selectedParking.id,
@@ -441,7 +446,7 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
         activeReservationId = reservationRef.id;
         activeReservationParkingId = selectedParking.id;
 
-        // UI Updates
+   
         manageBox.style.display = "flex";
         resInfo.innerText = `Reserved: ${plateNumber} at ${timeChosen} for ${hoursAmount}h — ${selectedParking.name}`;
         
@@ -610,5 +615,36 @@ document.getElementById('countrySelect')?.addEventListener('change', (e) => {
   }
 });
 
+
+// const plateField = document.getElementById("plateNumber");
+// if (plateField) {
+//     plateField.addEventListener("input", (e) => {
+//         const cursorPosition = e.target.selectionStart;
+
+//         const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
+        
+//         if (e.target.value !== sanitizedValue) {
+//             e.target.value = sanitizedValue;
+//             e.target.setSelectionStart(cursorPosition - 1);
+//             e.target.setSelectionEnd(cursorPosition - 1);
+//         }
+//     });
+// }
+
+
+const plateField = document.getElementById("plateNumber");
+if (plateField) {
+    plateField.addEventListener("input", (e) => {
+        const start = e.target.selectionStart;
+
+        const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+        
+        if (e.target.value !== sanitizedValue) {
+            e.target.value = sanitizedValue;
+            const newCursorPos = Math.max(0, start); 
+            e.target.setSelectionRange(newCursorPos, newCursorPos);
+        }
+    });
+}
 setCurrentTimeDefault();
 // forceResetAllFreeSpotsToTotal();

@@ -163,37 +163,35 @@ function renderPlates() {
     favoriteSelect.value = currentFav;
   }
 }
-
 if (savePlateBtn) {
-  savePlateBtn.addEventListener("click", async () => {
-    const country = document.getElementById('countryProfileSelect').value;
-    const raw = newPlateInput?.value?.trim() || "";
-    const plate = normalizePlate(raw);
+    savePlateBtn.addEventListener("click", async () => {
+        const country = document.getElementById('countryProfileSelect').value;
+        const raw = newPlateInput?.value?.trim() || "";
+        const plate = normalizePlate(raw);
+        if (!plate) return;
+        const alphanumericRegex = /^[A-Z0-9]+$/;
+        if (!alphanumericRegex.test(plate)) {
+            return alert("ERROR: License plate must contain only LETTERS and NUMBERS (no dots, symbols, or spaces).");
+        }
 
-    if (!plate) return;
-
-    if (country === "RO") {
-        if (!validateROPlate(plate)) {
-            alert("INVALID FORMAT!\nEx: SB12ABC OR B123ABC");
+        if (country === "RO") {
+            if (!validateROPlate(plate)) {
+                return alert("INVALID FORMAT! For Romania use: SB12ABC or B123ABC");
+            }
+        } else {
+            if (plate.length < 3 || plate.length > 14) {
+                return alert("Plate number is too short or too long (3-14 characters).");
+            }
+        }
+        if (licensePlates.includes(plate)) {
+            alert("This license plate is already in your list.");
             return;
         }
-    } else {
-        if (plate.length > 14) {
-            alert("International plates cannot exceed 14 characters!");
-            return;
-        }
-    }
-
-    if (licensePlates.includes(plate)) {
-      alert("This license plate already exists.");
-      return;
-    }
-
-    licensePlates.push(plate);
-    await persistLicensePlates();
-    renderPlates();
-    if (newPlateInput) newPlateInput.value = "";
-  });
+        licensePlates.push(plate);
+        await persistLicensePlates();
+        renderPlates();
+        if (newPlateInput) newPlateInput.value = "";
+    });
 }
 
 async function savePreferences() {
@@ -276,3 +274,19 @@ document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
   alert(`Plate ${selectedFav} is now your favorite!`);
   renderPlates(); 
 });
+
+
+if (newPlateInput) {
+    newPlateInput.addEventListener("input", (e) => {
+        const start = e.target.selectionStart;
+        // Permitem doar litere și cifre, forțăm UpperCase instant
+        const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+        
+        if (e.target.value !== sanitizedValue) {
+            e.target.value = sanitizedValue;
+            // Menținem poziția cursorului corectă
+            const newCursorPos = Math.max(0, start - 1);
+            e.target.setSelectionRange(newCursorPos, newCursorPos);
+        }
+    });
+}

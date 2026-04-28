@@ -392,12 +392,10 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
         const plateNumber = plateRaw.replace(/\s+/g, "").toUpperCase();
         const country = document.getElementById("countrySelect")?.value;
 
-        // Validări input
         if (!timeChosen || hoursAmount < 1 || !plateNumber) {
             return alert("Please fill in all details and choose a valid duration.");
         }
 
-        // Validare format RO
         if (country === "RO") {
             const regexRO = /^(B\d{2,3}[A-Z]{3})$|^([A-Z]{2}\d{2}[A-Z]{3})$/;
             if (!regexRO.test(plateNumber)) {
@@ -424,7 +422,6 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
             tx.update(parkingRef, { freeSpots: free - 1 });
         });
 
-        // Adăugare Rezervare
         const reservationRef = await addDoc(collection(db, "reservations"), {
             userId: user.uid,
             parkingId: selectedParking.id,
@@ -441,7 +438,6 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
         activeReservationId = reservationRef.id;
         activeReservationParkingId = selectedParking.id;
 
-        // UI Updates
         manageBox.style.display = "flex";
         resInfo.innerText = `Reserved: ${plateNumber} at ${timeChosen} for ${hoursAmount}h — ${selectedParking.name}`;
         
@@ -611,4 +607,4 @@ document.getElementById('countrySelect')?.addEventListener('change', (e) => {
 });
 
 setCurrentTimeDefault();
-// forceResetAllFreeSpotsToTotal();
+//forceResetAllFreeSpotsToTotal();

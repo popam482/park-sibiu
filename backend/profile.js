@@ -1,6 +1,16 @@
 import { db, auth } from "./firebase-config.js";
-import {
-  doc, getDoc, updateDoc, collection, query, where, orderBy, limit, getDocs
+import { 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  setDoc, 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  getDocs, 
+  deleteDoc 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 
@@ -87,6 +97,7 @@ if (data.displayName) {
   } catch (err) {
     console.error("Failed to load profile:", err);
   }
+  loadBookingHistory(user.uid);
 });
 
 function applyTheme(isDark) {
@@ -270,24 +281,6 @@ async function savePreferences() {
 
 langSelect.addEventListener("change", savePreferences);
 darkToggle.addEventListener("change", savePreferences);
-
-// saveNameBtn.addEventListener("click", async () => {
-//   const user = auth.currentUser;
-//   if (!user) return;
-
-//   try {
-//     const userRef = doc(db, "users", user.uid);
-//     await setDoc(userRef, {
-//       displayName: nameInput.value.trim()
-//     }, { merge: true });
-//     alert("Done! Name changed.");
-//   } catch (err) {
-//     console.error("Failed to save name:", err);
-//     alert("Could not update display name.");
-//   }
-// });
-
-
 saveNameBtn.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) return;
@@ -353,6 +346,94 @@ document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
   alert(`Plate ${selectedFav} is now your favorite!`);
   renderPlates(); 
 });
+async function loadBookingHistory(userId) {
+    const container = document.getElementById("bookingHistoryContainer");
+    if (!container) return;
+
+    try {
+        const q = query(
+            collection(db, "reservations"),
+            where("userId", "==", userId),
+            orderBy("createdAt", "desc")
+        );
+
+        const querySnapshot = await getDocs(q);
+        container.innerHTML = "";
+
+        if (querySnapshot.empty) {
+            container.innerHTML = "<p>No bookings found.</p>";
+            return;
+        }
+
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const reservationId = docSnap.id;
+            const statusClass = data.status === 'paid' ? '' : (data.status === 'cancelled' ? 'cancelled' : 'pending');
+            const dateStr = data.createdAt?.toDate().toLocaleString('en-US') || "N/A";
+
+            const card = document.createElement("div");
+            card.className = `booking-card ${statusClass}`;
+            card.style.position = "relative";
+
+            card.innerHTML = `
+                <div style="margin-right: 35px;">
+                    <strong>${data.parkingName || "Parking"}</strong><br>
+                    Plate: ${data.plateNumber}<br>
+                    Time: ${dateStr}<br>
+                    Cost: ${data.totalCost} RON | Status: <strong>${data.status.toUpperCase()}</strong>
+                </div>
+            `;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerHTML = "&times;";
+            deleteBtn.title = "Delete from history";
+            deleteBtn.style.cssText = `
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: #ff4d4d;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                font-size: 16px;
+                line-height: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                transition: 0.3s;
+            `;
+
+            deleteBtn.onmouseover = () => deleteBtn.style.background = "#cc0000";
+            deleteBtn.onmouseout = () => deleteBtn.style.background = "#ff4d4d";
+
+            deleteBtn.onclick = async () => {
+                if (confirm("Are you sure you want to delete this booking from your history?")) {
+                    try {
+                        await deleteDoc(doc(db, "reservations", reservationId));
+                        card.remove(); 
+                        if (container.children.length === 0) {
+                            container.innerHTML = "<p>No bookings found.</p>";
+                        }
+                    } catch (err) {
+                        console.error("Error deleting reservation:", err);
+                        alert("Could not delete the reservation.");
+                    }
+                }
+            };
+
+            card.appendChild(deleteBtn);
+            container.appendChild(card);
+        });
+
+    } catch (err) {
+        console.error("Error loading history:", err);
+        container.innerHTML = "<p>Could not load history. Please check your connection.</p>";
+    }
+}
+
 function showGreeting(name) {
     nameInputArea.style.display = "none";
     greetingArea.innerText = `Hello, ${name}! 👋`;
@@ -369,10 +450,9 @@ function showGreeting(name) {
     ];
 
     const randomMessage = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
-
     subGreetingtext.innerText = randomMessage;
     subGreetingtext.style.display = "block";
-} // <--- ASIGURĂ-TE CĂ AI PUS PARANTEZA ASTA
+}
 
 if (newPlateInput) {
     newPlateInput.addEventListener("input", (e) => {

@@ -27,6 +27,10 @@ const savePlateBtn = document.getElementById("savePlateBtn");
 const platesList = document.getElementById("savedPlatesList"); 
 const favoriteSelect = document.getElementById("favoritePlateSelect");
 
+const nameInputArea = document.getElementById("nameInputArea");
+const greetingArea = document.getElementById("greetingArea");
+const subGreetingtext = document.getElementById("subGreetingtext");
+
 let licensePlates = [];
 
 function validateROPlate(plate) {
@@ -66,7 +70,11 @@ onAuthStateChanged(auth, async (user) => {
     if (snapshot.exists()) {
       const data = snapshot.data();
 
-      nameInput.value = data.displayName || "";
+       nameInput.value = data.displayName || "";
+if (data.displayName) {
+    nameInput.value = data.displayName;
+    showGreeting(data.displayName);
+}
 
       if (Array.isArray(data.licensePlates)) {
         licensePlates = data.licensePlates;
@@ -223,35 +231,34 @@ async function fetchAndRenderHistory(userId) {
 }
 
 if (savePlateBtn) {
-  savePlateBtn.addEventListener("click", async () => {
-    const country = document.getElementById('countryProfileSelect').value;
-    const raw = newPlateInput?.value?.trim() || "";
-    const plate = normalizePlate(raw);
+    savePlateBtn.addEventListener("click", async () => {
+        const country = document.getElementById('countryProfileSelect').value;
+        const raw = newPlateInput?.value?.trim() || "";
+        const plate = normalizePlate(raw);
+        if (!plate) return;
+        const alphanumericRegex = /^[A-Z0-9]+$/;
+        if (!alphanumericRegex.test(plate)) {
+            return alert("ERROR: License plate must contain only LETTERS and NUMBERS (no dots, symbols, or spaces).");
+        }
 
-    if (!plate) return;
-
-    if (country === "RO") {
-        if (!validateROPlate(plate)) {
-            alert("INVALID FORMAT!\nEx: SB12ABC OR B123ABC");
+        if (country === "RO") {
+            if (!validateROPlate(plate)) {
+                return alert("INVALID FORMAT! For Romania use: SB12ABC or B123ABC");
+            }
+        } else {
+            if (plate.length < 3 || plate.length > 14) {
+                return alert("Plate number is too short or too long (3-14 characters).");
+            }
+        }
+        if (licensePlates.includes(plate)) {
+            alert("This license plate is already in your list.");
             return;
         }
-    } else {
-        if (plate.length > 14) {
-            alert("International plates cannot exceed 14 characters!");
-            return;
-        }
-    }
-
-    if (licensePlates.includes(plate)) {
-      alert("This license plate already exists.");
-      return;
-    }
-
-    licensePlates.push(plate);
-    await persistLicensePlates();
-    renderPlates();
-    if (newPlateInput) newPlateInput.value = "";
-  });
+        licensePlates.push(plate);
+        await persistLicensePlates();
+        renderPlates();
+        if (newPlateInput) newPlateInput.value = "";
+    });
 }
 
 async function savePreferences() {
@@ -274,22 +281,27 @@ async function savePreferences() {
 
 langSelect.addEventListener("change", savePreferences);
 darkToggle.addEventListener("change", savePreferences);
-
 saveNameBtn.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) return;
+  const newName = nameInput.value.trim();
+
+  if (!newName) {
+      alert("Please enter a name.");
+      return;
+  }
 
   try {
     const userRef = doc(db, "users", user.uid);
-    await setDoc(userRef, {
-      displayName: nameInput.value.trim()
-    }, { merge: true });
-    alert("Done! Name changed.");
+    await setDoc(userRef, { displayName: newName }, { merge: true });
+    
+    showGreeting(newName); 
   } catch (err) {
     console.error("Failed to save name:", err);
     alert("Could not update display name.");
   }
 });
+
 
 resetBtn.addEventListener("click", async () => {
   try {
@@ -334,7 +346,6 @@ document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
   alert(`Plate ${selectedFav} is now your favorite!`);
   renderPlates(); 
 });
-
 async function loadBookingHistory(userId) {
     const container = document.getElementById("bookingHistoryContainer");
     if (!container) return;
@@ -347,7 +358,6 @@ async function loadBookingHistory(userId) {
         );
 
         const querySnapshot = await getDocs(q);
-        
         container.innerHTML = "";
 
         if (querySnapshot.empty) {
@@ -404,7 +414,6 @@ async function loadBookingHistory(userId) {
                     try {
                         await deleteDoc(doc(db, "reservations", reservationId));
                         card.remove(); 
-                        
                         if (container.children.length === 0) {
                             container.innerHTML = "<p>No bookings found.</p>";
                         }
@@ -424,15 +433,35 @@ async function loadBookingHistory(userId) {
         container.innerHTML = "<p>Could not load history. Please check your connection.</p>";
     }
 }
-async function deleteBooking(bookingId) {
-    try {
-        const bookingRef = doc(db, "reservations", bookingId);
-        await deleteDoc(bookingRef);
-        alert("Booking deleted successfully!");
-        const user = auth.currentUser;
-        if (user) loadBookingHistory(user.uid);
-    } catch (err) {
-        console.error("Error deleting booking:", err);
-        alert("Failed to delete booking.");
-    }
+
+function showGreeting(name) {
+    nameInputArea.style.display = "none";
+    greetingArea.innerText = `Hello, ${name}! 👋`;
+    greetingArea.style.display = "block";
+
+    const cuteMessages = [
+        "Ready to find the perfect parking spot?",
+        "Have a wonderful day in Sibiu!",
+        "Your car missed you!",
+        "Looking sharp today!",
+        "Let's make parking easy for you.",
+        "Glad to see you back!",
+        "Stay awesome!"
+    ];
+
+    const randomMessage = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
+    subGreetingtext.innerText = randomMessage;
+    subGreetingtext.style.display = "block";
+}
+
+if (newPlateInput) {
+    newPlateInput.addEventListener("input", (e) => {
+        const start = e.target.selectionStart;
+        const sanitizedValue = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");      
+        if (e.target.value !== sanitizedValue) {
+            e.target.value = sanitizedValue;
+            e.target.setSelectionRange(start, start);
+        }
+    });
+}
 }

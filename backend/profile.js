@@ -1,5 +1,7 @@
 import { db, auth } from "./firebase-config.js";
-import { doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import {
+  doc, getDoc, updateDoc, collection, query, where, orderBy, limit, getDocs
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 
 const nameInput = document.getElementById("displayName");
@@ -64,7 +66,6 @@ if (data.displayName) {
     showGreeting(data.displayName);
 }
 
-      // migration: old single field -> new array field
       if (Array.isArray(data.licensePlates)) {
         licensePlates = data.licensePlates;
       } else if (typeof data.licensePlate === "string" && data.licensePlate.trim() !== "") {
@@ -81,6 +82,7 @@ if (data.displayName) {
     }
 
     renderPlates();
+    await fetchAndRenderHistory(user.uid);
     applyTheme(darkToggle.checked);
   } catch (err) {
     console.error("Failed to load profile:", err);
@@ -172,36 +174,80 @@ function renderPlates() {
   }
 }
 
-if (savePlateBtn) {
-  savePlateBtn.addEventListener("click", async () => {
-    const country = document.getElementById('countryProfileSelect').value;
-    const raw = newPlateInput?.value?.trim() || "";
-    const plate = normalizePlate(raw);
+function renderHistory(reservations) {
+  const listEl = document.getElementById("reservationHistoryList");
+  if (!listEl) return;
 
-    if (!plate) return;
+  listEl.innerHTML = "";
 
-    if (country === "RO") {
-        if (!validateROPlate(plate)) {
-            alert("INVALID FORMAT!\nEx: SB12ABC OR B123ABC");
-            return;
-        }
-    } else {
-        if (plate.length > 14) {
-            alert("International plates cannot exceed 14 characters!");
-            return;
-        }
-    }
+  if (reservations.length === 0) {
+    listEl.innerHTML = "<li>No reservations found in your history.</li>";
+    return;
+  }
 
-    if (licensePlates.includes(plate)) {
-      alert("This license plate already exists.");
-      return;
-    }
-
-    licensePlates.push(plate);
-    await persistLicensePlates();
-    renderPlates();
-    if (newPlateInput) newPlateInput.value = "";
+  reservations.forEach(res => {
+    const li = document.createElement("li");
+    const date = res.startTime.toDate().toLocaleDateString('ro-RO');
+    const time = res.startTime.toDate().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+    
+    li.innerHTML = `
+      <strong>${res.parkingName}</strong><br>
+      <small>${date} at ${time} - ${res.durationHours}h</small><br>
+      <span style="float:right;">${res.totalCost} RON</span>
+    `;
+    listEl.appendChild(li);
   });
+}
+
+async function fetchAndRenderHistory(userId) {
+  try {
+    const q = query(
+      collection(db, "reservations"),
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc"),
+      limit(20) 
+    );
+
+    const snapshot = await getDocs(q);
+    const reservations = snapshot.docs.map(doc => doc.data());
+    renderHistory(reservations);
+
+  } catch (err) {
+    console.error("Failed to fetch reservation history:", err);
+    const listEl = document.getElementById("reservationHistoryList");
+    if(listEl) listEl.innerHTML = "<li>Could not load history.</li>";
+  }
+}
+
+if (savePlateBtn) {
+    savePlateBtn.addEventListener("click", async () => {
+        const country = document.getElementById('countryProfileSelect').value;
+        const raw = newPlateInput?.value?.trim() || "";
+        const plate = normalizePlate(raw);
+        if (!plate) return;
+        const alphanumericRegex = /^[A-Z0-9]+$/;
+        if (!alphanumericRegex.test(plate)) {
+            return alert("ERROR: License plate must contain only LETTERS and NUMBERS (no dots, symbols, or spaces).");
+        }
+
+        if (country === "RO") {
+            if (!validateROPlate(plate)) {
+                return alert("INVALID FORMAT! For Romania use: SB12ABC or B123ABC");
+            }
+        } else {
+            if (plate.length < 3 || plate.length > 14) {
+                return alert("Plate number is too short or too long (3-14 characters).");
+            }
+        }
+        if (licensePlates.includes(plate)) {
+            alert("This license plate is already in your list.");
+            return;
+        }
+        licensePlates.push(plate);
+        await persistLicensePlates();
+        renderPlates();
+        if (newPlateInput) newPlateInput.value = "";
+    });
 }
 
 async function savePreferences() {
@@ -307,7 +353,6 @@ document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
   alert(`Plate ${selectedFav} is now your favorite!`);
   renderPlates(); 
 });
-
 function showGreeting(name) {
     nameInputArea.style.display = "none";
     greetingArea.innerText = `Hello, ${name}! 👋`;
@@ -327,4 +372,15 @@ function showGreeting(name) {
 
     subGreetingtext.innerText = randomMessage;
     subGreetingtext.style.display = "block";
+} // <--- ASIGURĂ-TE CĂ AI PUS PARANTEZA ASTA
+
+if (newPlateInput) {
+    newPlateInput.addEventListener("input", (e) => {
+        const start = e.target.selectionStart;
+        const sanitizedValue = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");      
+        if (e.target.value !== sanitizedValue) {
+            e.target.value = sanitizedValue;
+            e.target.setSelectionRange(start, start);
+        }
+    });
 }

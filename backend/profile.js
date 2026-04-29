@@ -322,12 +322,10 @@ document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
   alert(`Plate ${selectedFav} is now your favorite!`);
   renderPlates(); 
 });
-
 if (newPlateInput) {
     newPlateInput.addEventListener("input", (e) => {
         const start = e.target.selectionStart;
-        const sanitizedValue = e.target.value.replace(/\s+/g, "").toUpperCase(); 
-        
+        const sanitizedValue = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");      
         if (e.target.value !== sanitizedValue) {
             e.target.value = sanitizedValue;
             e.target.setSelectionRange(start, start);

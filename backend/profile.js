@@ -15,6 +15,10 @@ const savePlateBtn = document.getElementById("savePlateBtn");
 const platesList = document.getElementById("savedPlatesList"); 
 const favoriteSelect = document.getElementById("favoritePlateSelect");
 
+const nameInputArea = document.getElementById("nameInputArea");
+const greetingArea = document.getElementById("greetingArea");
+const subGreetingtext = document.getElementById("subGreetingtext");
+
 let licensePlates = [];
 
 function validateROPlate(plate) {
@@ -54,7 +58,11 @@ onAuthStateChanged(auth, async (user) => {
     if (snapshot.exists()) {
       const data = snapshot.data();
 
-      nameInput.value = data.displayName || "";
+       nameInput.value = data.displayName || "";
+if (data.displayName) {
+    nameInput.value = data.displayName;
+    showGreeting(data.displayName);
+}
 
       // migration: old single field -> new array field
       if (Array.isArray(data.licensePlates)) {
@@ -217,21 +225,44 @@ async function savePreferences() {
 langSelect.addEventListener("change", savePreferences);
 darkToggle.addEventListener("change", savePreferences);
 
+// saveNameBtn.addEventListener("click", async () => {
+//   const user = auth.currentUser;
+//   if (!user) return;
+
+//   try {
+//     const userRef = doc(db, "users", user.uid);
+//     await setDoc(userRef, {
+//       displayName: nameInput.value.trim()
+//     }, { merge: true });
+//     alert("Done! Name changed.");
+//   } catch (err) {
+//     console.error("Failed to save name:", err);
+//     alert("Could not update display name.");
+//   }
+// });
+
+
 saveNameBtn.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) return;
+  const newName = nameInput.value.trim();
+
+  if (!newName) {
+      alert("Please enter a name.");
+      return;
+  }
 
   try {
     const userRef = doc(db, "users", user.uid);
-    await setDoc(userRef, {
-      displayName: nameInput.value.trim()
-    }, { merge: true });
-    alert("Done! Name changed.");
+    await setDoc(userRef, { displayName: newName }, { merge: true });
+    
+    showGreeting(newName); 
   } catch (err) {
     console.error("Failed to save name:", err);
     alert("Could not update display name.");
   }
 });
+
 
 resetBtn.addEventListener("click", async () => {
   try {
@@ -276,3 +307,24 @@ document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
   alert(`Plate ${selectedFav} is now your favorite!`);
   renderPlates(); 
 });
+
+function showGreeting(name) {
+    nameInputArea.style.display = "none";
+    greetingArea.innerText = `Hello, ${name}! 👋`;
+    greetingArea.style.display = "block";
+
+    const cuteMessages = [
+        "Ready to find the perfect parking spot?",
+        "Have a wonderful day in Sibiu!",
+        "Your car missed you!",
+        "Looking sharp today!",
+        "Let's make parking easy for you.",
+        "Glad to see you back!",
+        "Stay awesome!"
+    ];
+
+    const randomMessage = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
+
+    subGreetingtext.innerText = randomMessage;
+    subGreetingtext.style.display = "block";
+}

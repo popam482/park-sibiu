@@ -354,7 +354,8 @@ async function loadBookingHistory(userId) {
         const q = query(
             collection(db, "reservations"),
             where("userId", "==", userId),
-            orderBy("createdAt", "desc")
+            orderBy("createdAt", "desc"),
+            limit(20)
         );
 
         const querySnapshot = await getDocs(q);
@@ -368,8 +369,9 @@ async function loadBookingHistory(userId) {
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             const reservationId = docSnap.id;
-            const statusClass = data.status === 'paid' ? '' : (data.status === 'cancelled' ? 'cancelled' : 'pending');
-            const dateStr = data.createdAt?.toDate().toLocaleString('en-US') || "N/A";
+            const status = data.status || "pending";
+            const statusClass = status === 'paid' ? '' : (status === 'cancelled' ? 'cancelled' : 'pending');
+            const dateStr = data.createdAt?.toDate().toLocaleString('ro-RO') || "N/A";
 
             const card = document.createElement("div");
             card.className = `booking-card ${statusClass}`;
@@ -380,46 +382,99 @@ async function loadBookingHistory(userId) {
                     <strong>${data.parkingName || "Parking"}</strong><br>
                     Plate: ${data.plateNumber}<br>
                     Time: ${dateStr}<br>
-                    Cost: ${data.totalCost} RON | Status: <strong>${data.status.toUpperCase()}</strong>
+                    Cost: ${data.totalCost} RON | Status: <strong>${status.toUpperCase()}</strong>
                 </div>
             `;
 
+            const actionContainer = document.createElement("div");
+            actionContainer.style.cssText = "display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;";
+
+            if (status === 'paid') {
+                const pdfBtn = document.createElement("button");
+                pdfBtn.innerText = "📄 Receipt";
+                pdfBtn.className = "btn-download";
+                pdfBtn.onclick = () => {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    doc.setFillColor(44, 62, 80);
+                    doc.rect(0, 0, 210, 40, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(22);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("PARK SIBIU", 105, 20, { align: "center" });
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    doc.text("OFFICIAL DIGITAL RECEIPT", 105, 30, { align: "center" });
+                    doc.setTextColor(44, 62, 80);
+                    doc.setFontSize(12);
+                    doc.text(`Receipt ID: #${reservationId.substring(0, 8).toUpperCase()}`, 20, 55);
+                    doc.text(`Date: ${new Date().toLocaleDateString('ro-RO')}`, 140, 55);
+                    doc.setDrawColor(200, 200, 200);
+                    doc.line(20, 60, 190, 60);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("DESCRIPTION", 20, 75);
+                    doc.text("DETAILS", 100, 75);
+                    doc.setFont("helvetica", "normal");
+                    doc.line(20, 78, 190, 78);
+                    const rows = [
+                        ["Parking Zone:", data.parkingName || "Public Parking"],
+                        ["License Plate:", data.plateNumber],
+                        ["Time of Entry:", dateStr],
+                        ["Duration:", data.durationHours ? `${data.durationHours}h` : "N/A"],
+                        ["Payment Status:", "PAID / SUCCESSFUL"]
+                    ];
+                    let y = 88;
+                    rows.forEach(row => {
+                        doc.text(row[0], 20, y);
+                        doc.text(row[1], 100, y);
+                        y += 10;
+                    });
+                    doc.setFillColor(248, 249, 250);
+                    doc.rect(20, y + 5, 170, 20, 'F');
+                    doc.setFontSize(16);
+                    doc.setFont("helvetica", "bold");
+                    doc.setTextColor(52, 152, 219);
+                    doc.text(`TOTAL PAID: ${data.totalCost} RON`, 105, y + 18, { align: "center" });
+                    doc.setFontSize(9);
+                    doc.setTextColor(150, 150, 150);
+                    doc.setFont("helvetica", "italic");
+                    doc.text("Thank you for using Park Sibiu. Safe travels!", 105, 280, { align: "center" });
+                    doc.save(`ParkSibiu_Receipt_${data.plateNumber}.pdf`);
+                };
+                actionContainer.appendChild(pdfBtn);
+            }
+
+            if (status !== 'cancelled') {
+                const cancelBtn = document.createElement("button");
+                cancelBtn.innerText = "🚫 Cancel";
+                cancelBtn.className = "btn-cancel";
+                cancelBtn.onclick = async () => {
+                    if (confirm("Are you sure you want to cancel this booking?")) {
+                        try {
+                            await updateDoc(doc(db, "reservations", reservationId), { status: 'cancelled' });
+                            loadBookingHistory(userId);
+                        } catch (err) {
+                            console.error(err);
+                            alert("Error cancelling booking.");
+                        }
+                    }
+                };
+                actionContainer.appendChild(cancelBtn);
+            }
+
+            card.querySelector('div').appendChild(actionContainer);
+
             const deleteBtn = document.createElement("button");
             deleteBtn.innerHTML = "&times;";
-            deleteBtn.title = "Delete from history";
-            deleteBtn.style.cssText = `
-                position: absolute;
-                top: 8px;
-                right: 8px;
-                background: #ff4d4d;
-                color: white;
-                border: none;
-                border-radius: 50%;
-                width: 24px;
-                height: 24px;
-                cursor: pointer;
-                font-size: 16px;
-                line-height: 20px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                transition: 0.3s;
-            `;
-
-            deleteBtn.onmouseover = () => deleteBtn.style.background = "#cc0000";
-            deleteBtn.onmouseout = () => deleteBtn.style.background = "#ff4d4d";
-
+            deleteBtn.className = "btn-delete-small";
             deleteBtn.onclick = async () => {
-                if (confirm("Are you sure you want to delete this booking from your history?")) {
+                if (confirm("Are you sure you want to delete this booking from history?")) {
                     try {
                         await deleteDoc(doc(db, "reservations", reservationId));
-                        card.remove(); 
-                        if (container.children.length === 0) {
-                            container.innerHTML = "<p>No bookings found.</p>";
-                        }
+                        card.remove();
+                        if (container.children.length === 0) container.innerHTML = "<p>No bookings found.</p>";
                     } catch (err) {
-                        console.error("Error deleting reservation:", err);
-                        alert("Could not delete the reservation.");
+                        console.error(err);
                     }
                 }
             };
@@ -427,13 +482,11 @@ async function loadBookingHistory(userId) {
             card.appendChild(deleteBtn);
             container.appendChild(card);
         });
-
     } catch (err) {
-        console.error("Error loading history:", err);
-        container.innerHTML = "<p>Could not load history. Please check your connection.</p>";
+        console.error(err);
+        container.innerHTML = "<p>Error loading history.</p>";
     }
 }
-
 function showGreeting(name) {
     nameInputArea.style.display = "none";
     greetingArea.innerText = `Hello, ${name}! 👋`;
@@ -463,4 +516,36 @@ if (newPlateInput) {
             e.target.setSelectionRange(start, start);
         }
     });
+}
+function generatePDF(data) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.setTextColor(40, 116, 166);
+    doc.text("PARK SIBIU - DIGITAL RECEIPT", 105, 20, null, "center");
+    
+    doc.setLineWidth(0.5);
+    doc.line(20, 25, 190, 25);
+
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Date of Issue: ${new Date().toLocaleString()}`, 20, 35);
+    doc.text(`Transaction ID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}`, 20, 42);
+
+    doc.setFontSize(14);
+    doc.text("Parking Details:", 20, 60);
+    doc.setFontSize(12);
+    doc.text(`Location: ${data.parkingName || 'Sibiu Public Parking'}`, 30, 70);
+    doc.text(`License Plate: ${data.plateNumber}`, 30, 77);
+    doc.text(`Booking Date: ${data.dateStr}`, 30, 84);
+    
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(20, 95, 170, 20);
+    doc.setFontSize(16);
+    doc.text(`TOTAL PAID: ${data.totalCost} RON`, 105, 108, null, "center");
+
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Thank you for using Park Sibiu! Keep this for your records.", 105, 130, null, "center");
+    doc.save(`Receipt_${data.plateNumber}_${data.reservationId}.pdf`);
 }

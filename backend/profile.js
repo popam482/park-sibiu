@@ -1,5 +1,7 @@
 import { db, auth } from "./firebase-config.js";
-import { doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import {
+  doc, getDoc, updateDoc, collection, query, where, orderBy, limit, getDocs
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 
 const nameInput = document.getElementById("displayName");
@@ -56,7 +58,6 @@ onAuthStateChanged(auth, async (user) => {
 
       nameInput.value = data.displayName || "";
 
-      // migration: old single field -> new array field
       if (Array.isArray(data.licensePlates)) {
         licensePlates = data.licensePlates;
       } else if (typeof data.licensePlate === "string" && data.licensePlate.trim() !== "") {
@@ -73,6 +74,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     renderPlates();
+    await fetchAndRenderHistory(user.uid);
     applyTheme(darkToggle.checked);
   } catch (err) {
     console.error("Failed to load profile:", err);
@@ -161,6 +163,51 @@ function renderPlates() {
 
   if (currentFav && licensePlates.includes(currentFav)) {
     favoriteSelect.value = currentFav;
+  }
+}
+
+function renderHistory(reservations) {
+  const listEl = document.getElementById("reservationHistoryList");
+  if (!listEl) return;
+
+  listEl.innerHTML = "";
+
+  if (reservations.length === 0) {
+    listEl.innerHTML = "<li>No reservations found in your history.</li>";
+    return;
+  }
+
+  reservations.forEach(res => {
+    const li = document.createElement("li");
+    const date = res.startTime.toDate().toLocaleDateString('ro-RO');
+    const time = res.startTime.toDate().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+    
+    li.innerHTML = `
+      <strong>${res.parkingName}</strong><br>
+      <small>${date} at ${time} - ${res.durationHours}h</small><br>
+      <span style="float:right;">${res.totalCost} RON</span>
+    `;
+    listEl.appendChild(li);
+  });
+}
+
+async function fetchAndRenderHistory(userId) {
+  try {
+    const q = query(
+      collection(db, "reservations"),
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc"),
+      limit(20) 
+    );
+
+    const snapshot = await getDocs(q);
+    const reservations = snapshot.docs.map(doc => doc.data());
+    renderHistory(reservations);
+
+  } catch (err) {
+    console.error("Failed to fetch reservation history:", err);
+    const listEl = document.getElementById("reservationHistoryList");
+    if(listEl) listEl.innerHTML = "<li>Could not load history.</li>";
   }
 }
 

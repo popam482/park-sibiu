@@ -74,6 +74,27 @@
   </button>
 </div>
 
+<div class="profile-section">
+    <h3>Booking History</h3>
+    <div id="bookingHistoryContainer">
+        <p>Loading history...</p>
+    </div>
+</div>
+
+<style>
+    .booking-card {
+        background: #f8f9fa;
+        border-left: 5px solid #28a745;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        font-size: 14px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .booking-card.pending { border-left-color: #ffc107; }
+    .booking-card.cancelled { border-left-color: #dc3545; }
+</style>
+
                 </section>
             </div>
 

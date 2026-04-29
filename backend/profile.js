@@ -1,5 +1,14 @@
 import { db, auth } from "./firebase-config.js";
-import { doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { collection, 
+         query, 
+         where,
+         doc,
+         getDocs,
+         orderBy,
+        deleteDoc,
+         getDoc, 
+         updateDoc, 
+         setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 
 const nameInput = document.getElementById("displayName");
@@ -77,6 +86,7 @@ onAuthStateChanged(auth, async (user) => {
   } catch (err) {
     console.error("Failed to load profile:", err);
   }
+  loadBookingHistory(user.uid);
 });
 
 function applyTheme(isDark) {
@@ -276,3 +286,105 @@ document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
   alert(`Plate ${selectedFav} is now your favorite!`);
   renderPlates(); 
 });
+
+async function loadBookingHistory(userId) {
+    const container = document.getElementById("bookingHistoryContainer");
+    if (!container) return;
+
+    try {
+        const q = query(
+            collection(db, "reservations"),
+            where("userId", "==", userId),
+            orderBy("createdAt", "desc")
+        );
+
+        const querySnapshot = await getDocs(q);
+        
+        container.innerHTML = "";
+
+        if (querySnapshot.empty) {
+            container.innerHTML = "<p>No bookings found.</p>";
+            return;
+        }
+
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const reservationId = docSnap.id;
+            const statusClass = data.status === 'paid' ? '' : (data.status === 'cancelled' ? 'cancelled' : 'pending');
+            const dateStr = data.createdAt?.toDate().toLocaleString('en-US') || "N/A";
+
+            const card = document.createElement("div");
+            card.className = `booking-card ${statusClass}`;
+            card.style.position = "relative";
+
+            card.innerHTML = `
+                <div style="margin-right: 35px;">
+                    <strong>${data.parkingName || "Parking"}</strong><br>
+                    Plate: ${data.plateNumber}<br>
+                    Time: ${dateStr}<br>
+                    Cost: ${data.totalCost} RON | Status: <strong>${data.status.toUpperCase()}</strong>
+                </div>
+            `;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerHTML = "&times;";
+            deleteBtn.title = "Delete from history";
+            deleteBtn.style.cssText = `
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: #ff4d4d;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                font-size: 16px;
+                line-height: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                transition: 0.3s;
+            `;
+
+            deleteBtn.onmouseover = () => deleteBtn.style.background = "#cc0000";
+            deleteBtn.onmouseout = () => deleteBtn.style.background = "#ff4d4d";
+
+            deleteBtn.onclick = async () => {
+                if (confirm("Are you sure you want to delete this booking from your history?")) {
+                    try {
+                        await deleteDoc(doc(db, "reservations", reservationId));
+                        card.remove(); 
+                        
+                        if (container.children.length === 0) {
+                            container.innerHTML = "<p>No bookings found.</p>";
+                        }
+                    } catch (err) {
+                        console.error("Error deleting reservation:", err);
+                        alert("Could not delete the reservation.");
+                    }
+                }
+            };
+
+            card.appendChild(deleteBtn);
+            container.appendChild(card);
+        });
+
+    } catch (err) {
+        console.error("Error loading history:", err);
+        container.innerHTML = "<p>Could not load history. Please check your connection.</p>";
+    }
+}
+async function deleteBooking(bookingId) {
+    try {
+        const bookingRef = doc(db, "reservations", bookingId);
+        await deleteDoc(bookingRef);
+        alert("Booking deleted successfully!");
+        const user = auth.currentUser;
+        if (user) loadBookingHistory(user.uid);
+    } catch (err) {
+        console.error("Error deleting booking:", err);
+        alert("Failed to delete booking.");
+    }
+}

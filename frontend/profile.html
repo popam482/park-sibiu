@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,73 +7,57 @@
     <link rel="stylesheet" href="profile-styles.css">
     <link rel="icon" href="../graphics/park-icon-unsigned.png" />
 </head>
-
 <body id="app-body">
-    <div id="profile-container" class="profile-container">
+    <header id="profile-container" class="profile-container">
         <button id="mapBtn"><a href="index.html">Map</a></button>
         <button id="logoutBtn">Logout</button>
-    </div>
+    </header>
 
-    <div class="profile-main">
+    <main class="profile-main">
         <div class="information-container">
             <h1>Profile Settings</h1>
 
             <div class="section-card">
-                <h3>Personal Information</h3>
+                <h3>Personal &amp; Vehicle Information</h3>
                 <section>
                     <label for="displayName">Display Name:</label>
                     <input type="text" id="displayName" placeholder="Enter your name">
                     <button id="saveNameBtn">Save Name</button>
-                    <!-- <input type="text" id="newPlateInput" placeholder="Ex: AA00XYZ">
-                    <button id="addPlateBtn">Add Plate</button> -->
-              
-<h2>Manage License Plates</h2>
-
-<div id="platesSection" style="margin-top:15px;">
-  <button id="togglePlatesBtn" 
-          style="background:#3498db; color:white; padding:8px 12px; border:none; border-radius:5px; cursor:pointer;">
-    View Saved Plates 
-  </button>
-
-  <div id="platesAccordion" style="display:none; background:#f9f9f9; padding:10px; border-radius:8px; margin-top:8px;">
-    <ul id="savedPlatesList"></ul>
-  </div>
-</div>
-
-<hr>
-
-<div id="addPlateForm" style="margin-top:15px;">
-  <h3>Add New License Plate</h3>
-
-  <label for="countryProfileSelect">Country:</label>
-  <select id="countryProfileSelect" style="width:100%; padding:5px; border-radius:5px;">
-    <option value="RO">Romania (Strict Format)</option>
-    <option value="OTHER">Other Country</option>
-  </select>
-
-  <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC"
-         style="width:95%; padding:8px; margin-top:5px; border-radius:5px; border:1px solid #ccc; text-transform:uppercase;">
-
-  <button id="savePlateBtn"
-          style="margin-top:10px; background:#27ae60; color:white; border:none; padding:8px; border-radius:5px;">
-    Save Plate
-  </button>
-</div>
-
-<hr>
-
-<div style="margin-top:10px;">
-  <h3>Favorite License Plate</h3>
-  <select id="favoritePlateSelect" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;">
-    <option value=""> Select Favorite Plate </option>
-  </select>
-  <button id="saveFavoriteBtn" 
-          style="margin-top:10px; background:#f1c40f; color:black; border:none; padding:8px; border-radius:5px;">
-    Save as Favorite
-  </button>
-</div>
-
                 </section>
+                <hr>
+                <div id="platesSection">
+                    <h4>Manage License Plates</h4>
+                    <button id="togglePlatesBtn">View Saved Plates</button>
+                    <div id="platesAccordion" style="display:none;">
+                        <ul id="savedPlatesList"></ul>
+                    </div>
+                </div>
+                <hr>
+                <div id="addPlateForm">
+                    <h4>Add New License Plate</h4>
+                    <label for="countryProfileSelect">Country:</label>
+                    <select id="countryProfileSelect">
+                        <option value="RO">Romania (Strict Format)</option>
+                        <option value="OTHER">Other Country</option>
+                    </select>
+                    <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC">
+                    <button id="savePlateBtn">Save Plate</button>
+                </div>
+                <hr>
+                <div>
+                    <h4>Favorite License Plate</h4>
+                    <select id="favoritePlateSelect">
+                        <option value="">Select Favorite Plate</option>
+                    </select>
+                    <button id="saveFavoriteBtn">Set as Favorite</button>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h3>Reservation History</h3>
+                <ul id="reservationHistoryList">
+                    <li>Loading history...</li>
+                </ul>
             </div>
 
             <div class="section-card">
@@ -105,9 +88,8 @@
         <div class="image-panel">
             <div class="image-placeholder"></div>
         </div>
-    </div>
+    </main>
 
     <script type="module" src="../backend/profile.js"></script>
 </body>
-
 </html>

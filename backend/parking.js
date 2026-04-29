@@ -391,8 +391,6 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
         const plateRaw = document.getElementById("plateNumber")?.value || ""; 
         const plateNumber = plateRaw.replace(/\s+/g, "").toUpperCase();
         const country = document.getElementById("countrySelect")?.value;
-
-   
         if (!timeChosen || hoursAmount < 1 || !plateNumber) {
             return alert("Please fill in all details and choose a valid duration.");
         }
@@ -428,8 +426,6 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
 
             tx.update(parkingRef, { freeSpots: free - 1 });
         });
-
-       
         const reservationRef = await addDoc(collection(db, "reservations"), {
             userId: user.uid,
             parkingId: selectedParking.id,
@@ -445,8 +441,6 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
 
         activeReservationId = reservationRef.id;
         activeReservationParkingId = selectedParking.id;
-
-   
         manageBox.style.display = "flex";
         resInfo.innerText = `Reserved: ${plateNumber} at ${timeChosen} for ${hoursAmount}h — ${selectedParking.name}`;
         

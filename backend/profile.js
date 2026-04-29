@@ -275,18 +275,14 @@ document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
   renderPlates(); 
 });
 
-
 if (newPlateInput) {
     newPlateInput.addEventListener("input", (e) => {
         const start = e.target.selectionStart;
-        // Permitem doar litere și cifre, forțăm UpperCase instant
-        const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+        const sanitizedValue = e.target.value.replace(/\s+/g, "").toUpperCase(); 
         
         if (e.target.value !== sanitizedValue) {
             e.target.value = sanitizedValue;
-            // Menținem poziția cursorului corectă
-            const newCursorPos = Math.max(0, start - 1);
-            e.target.setSelectionRange(newCursorPos, newCursorPos);
+            e.target.setSelectionRange(start, start);
         }
     });
 }

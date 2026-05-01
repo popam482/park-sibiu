@@ -223,20 +223,108 @@ function isNowInPaidInterval(openHours) {
   return nowMin >= startMin || nowMin < endMin;
 }
 
-async function openBookingPanel(parking) {
-  reservationPanel.style.display = "block";
-  document.getElementById("panelTitle").innerText = "Book a spot";
-  document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
-  setCurrentTimeDefault();
+function calculatePayableHours(bookingStart, bookingEnd, openHours) {
+  if (!openHours || typeof openHours !== 'string') return 0;
 
-  if (auth.currentUser) {
-    await loadUserCars(auth.currentUser);
-  } else {
-    const carSelect = document.getElementById("carSelect");
-    if (carSelect) carSelect.innerHTML = '<option value="">Login to see cars</option>';
+  const [startStr, endStr] = openHours.split('-').map(s => s.trim());
+  if (!startStr || !endStr) return 0;
+  
+  let [sh, sm] = startStr.split(':').map(Number);
+  let [eh, em] = endStr.split(':').map(Number);
+  
+  if ([sh, sm, eh, em].some(isNaN)) return 0;
+
+  if (eh === 24 && em === 0) eh = 23, em = 59;
+  
+  const today = new Date();
+  const paidStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sh, sm);
+  const paidEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), eh, em);
+
+  const overlapStart = Math.max(bookingStart.getTime(), paidStart.getTime());
+  const overlapEnd = Math.min(bookingEnd.getTime(), paidEnd.getTime());
+
+  if (overlapStart >= overlapEnd) {
+    return 0; 
   }
 
+  const overlapDurationMs = overlapEnd - overlapStart;
+  const payableHours = overlapDurationMs / (1000 * 60 * 60);
+
+  return payableHours;
 }
+
+async function openBookingPanel(parking) {
+    reservationPanel.style.display = "block";
+    document.getElementById("panelTitle").innerText = "Book a spot";
+    document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
+    
+    setCurrentTimeDefault();
+    updateDurationConstraint(); 
+
+    const startTimeInput = document.getElementById("startTime");
+    startTimeInput?.addEventListener('change', updateDurationConstraint);
+
+    if (auth.currentUser) {
+        await loadUserCars(auth.currentUser);
+    } else {
+        const carSelect = document.getElementById("carSelect");
+        if (carSelect) carSelect.innerHTML = '<option value="">Login to see cars</option>';
+    }
+
+    const allDayCheck = document.getElementById("allDayCheck");
+    const durationInput = document.getElementById("duration");
+
+    if (allDayCheck && durationInput && startTimeInput) {
+        allDayCheck.onchange = () => {
+            if (allDayCheck.checked) {
+                durationInput.disabled = true;
+                const maxDuration = startTimeInput.max;
+                durationInput.value = maxDuration;
+                updateDurationConstraint(); 
+                durationInput.value = durationInput.max; 
+            } else {
+                durationInput.disabled = false;
+                durationInput.value = 1;
+            }
+        };
+        allDayCheck.checked = false;
+        durationInput.disabled = false;
+        durationInput.value = 1;
+    }
+}
+
+function updateDurationConstraint() {
+    const startTimeInput = document.getElementById("startTime");
+    const durationInput = document.getElementById("duration");
+
+    if (!startTimeInput || !durationInput || !selectedParking) return;
+
+    const [startHH, startMM] = startTimeInput.value.split(':').map(Number);
+
+    let maxHours = 24; 
+
+    if (selectedParking.openHours && selectedParking.openHours !== "00:00-24:00") {
+        const [endStr] = selectedParking.openHours.split('-').slice(-1);
+        let [endHH, endMM] = endStr.split(':').map(Number);
+
+        if (endHH === 24 && endMM === 0) endHH = 23, endMM = 59;
+
+        const startTotalMinutes = startHH * 60 + startMM;
+        const endTotalMinutes = endHH * 60 + endMM;
+
+        if (endTotalMinutes > startTotalMinutes) {
+            const diffMinutes = endTotalMinutes - startTotalMinutes;
+            const availableHours = Math.floor(diffMinutes / 60);
+            maxHours = Math.max(1, availableHours); 
+        }
+    }
+
+    durationInput.max = maxHours;
+    if (Number(durationInput.value) > maxHours) {
+        durationInput.value = maxHours;
+    }
+}
+
 // real time parking list and details
 window.renderParkingListFromLive = function (parkings) {
   const listElement = document.getElementById("parkingList");
@@ -412,8 +500,22 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
             }
         }
 
-        const totalCost = hoursAmount * Number(currentPricePerHour || 0);
-        const { start, end } = getStartAndEndDate(timeChosen, hoursAmount);
+        const { start: bookingStart, end: bookingEnd } = getStartAndEndDate(timeChosen, hoursAmount);
+
+        const payableHours = calculatePayableHours(bookingStart, bookingEnd, selectedParking.openHours);
+        const totalCost = payableHours * Number(currentPricePerHour || 0);
+
+        const [endStr] = (selectedParking.openHours || "23:59").split('-').slice(-1);
+
+        let [endHH, endMM] = endStr.split(':').map(Number);
+        if (endHH === 24) endHH = 23, endMM = 59;
+        const paidPeriodEnd = new Date(bookingStart.getFullYear(), bookingStart.getMonth(), bookingStart.getDate(), endHH, endMM);
+
+        if (bookingEnd.getTime() > paidPeriodEnd.getTime() && !document.getElementById("allDayCheck").checked) {
+            const maxDuration = calculatePayableHours(bookingStart, paidPeriodEnd, selectedParking.openHours);
+            return alert(`Your booking extends beyond the paid interval. The maximum duration you can book from ${timeChosen} is approximately ${Math.floor(maxDuration)} hours.`);
+        }
+
         const parkingRef = doc(db, "parkings", parkingId);
 
        
@@ -431,8 +533,8 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
             parkingId: selectedParking.id,
             parkingName: selectedParking.name,
             plateNumber: plateNumber,
-            startTime: Timestamp.fromDate(start),
-            endTime: Timestamp.fromDate(end),
+            startTime: Timestamp.fromDate(bookingStart), 
+            endTime: Timestamp.fromDate(bookingEnd),  
             durationHours: hoursAmount,
             totalCost: totalCost,
             status: "pending_payment",
@@ -641,4 +743,4 @@ if (plateField) {
     });
 }
 setCurrentTimeDefault();
-// forceResetAllFreeSpotsToTotal();
+forceResetAllFreeSpotsToTotal();

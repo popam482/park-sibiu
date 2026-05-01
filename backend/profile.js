@@ -354,7 +354,8 @@ async function loadBookingHistory(userId) {
         const q = query(
             collection(db, "reservations"),
             where("userId", "==", userId),
-            orderBy("createdAt", "desc")
+            orderBy("createdAt", "desc"),
+            limit(20)
         );
 
         const querySnapshot = await getDocs(q);

@@ -21,108 +21,42 @@
                 <h3>Personal &amp; Vehicle Information</h3>
                 <section>
                     <div id="nameInputArea">
-    <label for="displayName">Display Name:</label>
-    <input type="text" id="displayName" placeholder="Enter your name">
-    <button id="saveNameBtn">Save Name</button>
-</div>
-<h2 id="greetingArea" style="display: none; color: #2c3e50; margin-bottom: 5px;"></h2>
-<p id="subGreetingtext" style="display: none; color: #7f8c8d; font-style: italic; margin-top: 0;"></p>
-              
-<h2>Manage License Plates</h2>
-
-<div id="platesSection" style="margin-top:15px;">
-  <button id="togglePlatesBtn" 
-          style="background:#3498db; color:white; padding:8px 12px; border:none; border-radius:5px; cursor:pointer;">
-    View Saved Plates 
-  </button>
-
-  <div id="platesAccordion" style="display:none; background:#f9f9f9; padding:10px; border-radius:8px; margin-top:8px;">
-    <ul id="savedPlatesList"></ul>
-  </div>
-</div>
-
-<hr>
-
-<div id="addPlateForm" style="margin-top:15px;">
-  <h3>Add New License Plate</h3>
-
-  <label for="countryProfileSelect">Country:</label>
-  <select id="countryProfileSelect" style="width:100%; padding:5px; border-radius:5px;">
-    <option value="RO">Romania (Strict Format)</option>
-    <option value="OTHER">Other Country</option>
-  </select>
-
-  <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC"
-         style="width:95%; padding:8px; margin-top:5px; border-radius:5px; border:1px solid #ccc; text-transform:uppercase;">
-
-  <button id="savePlateBtn"
-          style="margin-top:10px; background:#27ae60; color:white; border:none; padding:8px; border-radius:5px;">
-    Save Plate
-  </button>
-</div>
-
-<hr>
-
-<div style="margin-top:10px;">
-  <h3>Favorite License Plate</h3>
-  <select id="favoritePlateSelect" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;">
-    <option value=""> Select Favorite Plate </option>
-  </select>
-  <button id="saveFavoriteBtn" 
-          style="margin-top:10px; background:#f1c40f; color:black; border:none; padding:8px; border-radius:5px;">
-    Save as Favorite
-  </button>
-</div>
-
-<div class="profile-section">
-    <h3>Booking History</h3>
-    <div id="bookingHistoryContainer">
-        <p>Loading history...</p>
-    </div>
-</div>
-
-<style>
-    .booking-card {
-        background: #f8f9fa;
-        border-left: 5px solid #28a745;
-        padding: 10px;
-        margin-bottom: 10px;
-        border-radius: 4px;
-        font-size: 14px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .booking-card.pending { border-left-color: #ffc107; }
-    .booking-card.cancelled { border-left-color: #dc3545; }
-</style>
-
-                <!-- </section>
-                <hr>
-                <div id="platesSection">
-                    <h4>Manage License Plates</h4>
-                    <button id="togglePlatesBtn">View Saved Plates</button>
-                    <div id="platesAccordion" style="display:none;">
-                        <ul id="savedPlatesList"></ul>
+                        <label for="displayName">Display Name:</label>
+                        <input type="text" id="displayName" placeholder="Enter your name">
+                        <button id="saveNameBtn">Save Name</button>
                     </div>
-                </div> -->
+                    <h2 id="greetingArea" style="display: none;"></h2>
+                    <p id="subGreetingtext" style="display: none;"></p>
+                </section>
                 <hr>
-                <div id="addPlateForm">
-                    <h4>Add New License Plate</h4>
-                    <label for="countryProfileSelect">Country:</label>
-                    <select id="countryProfileSelect">
-                        <option value="RO">Romania (Strict Format)</option>
-                        <option value="OTHER">Other Country</option>
-                    </select>
-                    <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC">
-                    <button id="savePlateBtn">Save Plate</button>
-                </div>
-                <hr>
-                <div>
-                    <h4>Favorite License Plate</h4>
-                    <select id="favoritePlateSelect">
-                        <option value="">Select Favorite Plate</option>
-                    </select>
-                    <button id="saveFavoriteBtn">Set as Favorite</button>
-                </div>
+                <section>
+                    <h2>Manage License Plates</h2>
+                    <div id="platesSection" style="margin-top:15px;">
+                        <button id="togglePlatesBtn">View Saved Plates</button>
+                        <div id="platesAccordion" style="display:none;">
+                            <ul id="savedPlatesList"></ul>
+                        </div>
+                    </div>
+                    <hr>
+                    <div id="addPlateForm" style="margin-top:15px;">
+                        <h3>Add New License Plate</h3>
+                        <label for="countryProfileSelect">Country:</label>
+                        <select id="countryProfileSelect">
+                            <option value="RO">Romania (Strict Format)</option>
+                            <option value="OTHER">Other Country</option>
+                        </select>
+                        <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC">
+                        <button id="savePlateBtn">Save Plate</button>
+                    </div>
+                    <hr>
+                    <div style="margin-top:10px;">
+                        <h3>Favorite License Plate</h3>
+                        <select id="favoritePlateSelect">
+                            <option value="">Select Favorite Plate</option>
+                        </select>
+                        <button id="saveFavoriteBtn">Set as Favorite</button>
+                    </div>
+                </section>
             </div>
 
             <div class="section-card">

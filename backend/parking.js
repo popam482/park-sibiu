@@ -11,13 +11,12 @@ import {
   Timestamp,
   query,
   where,
-  onSnapshot,
-  writeBatch
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 let currentPricePerHour = 0;
-let selectedParking = null;
-let activeReservationId = null;      
+let selectedParking     = null;
+let activeReservationId        = null;
 let activeReservationParkingId = null;
 
 const DAILY_RATE = 15;
@@ -34,33 +33,21 @@ const manageBox              = document.getElementById("manageReservation");
 const resInfo                = document.getElementById("resInfo");
 
 const scheduledReleases = new Map();
+let autoReleaseInitialized = false;  // prevents duplicate listeners/intervals
+let pollIntervalId         = null;   // keeps reference so we never double-register
+const processingReservations = new Set(); 
 
-// recalculate freeSpots for all parkings based on active reservations
-async function forceResetAllFreeSpotsToTotal() {
-  try {
-    const parkingsSnap = await getDocs(collection(db, "parkings"));
-    if (parkingsSnap.empty) {
-      console.log("No parkings found.");
-      return;
-    }
-
-    const batch = writeBatch(db);
-
-    parkingsSnap.forEach((pDoc) => {
-      const p = pDoc.data();
-      const total = Number(p.totalSpots || 0);
-      batch.update(doc(db, "parkings", pDoc.id), { freeSpots: total });
-      console.log(`Reset ${pDoc.id}: freeSpots -> ${total}`);
-    });
-
-    await batch.commit();
-    console.log("Force reset done.");
-  } catch (e) {
-    console.error("Force reset failed:", e);
-  }
-}
+// auto release function for parkingspots that have expired 
 
 async function releaseExpiredSpot(reservationId, parkingId) {
+  if (!parkingId) {
+    console.warn(`Skipping release for ${reservationId} — no parkingId.`);
+    return;
+  }
+
+  if (processingReservations.has(reservationId)) return;
+  processingReservations.add(reservationId);
+
   try {
     const reservationRef = doc(db, "reservations", reservationId);
     const parkingRef     = doc(db, "parkings", String(parkingId));
@@ -74,7 +61,7 @@ async function releaseExpiredSpot(reservationId, parkingId) {
       if (!resSnap.exists() || resSnap.data().status !== "paid") return;
       if (!parkSnap.exists()) return;
 
-      const currentFree = Number(parkSnap.data().freeSpots || 0);
+      const currentFree = Number(parkSnap.data().freeSpots  || 0);
       const total       = Number(parkSnap.data().totalSpots || 0);
 
       tx.update(reservationRef, { status: "completed" });
@@ -85,12 +72,15 @@ async function releaseExpiredSpot(reservationId, parkingId) {
 
     console.log(`Reservation ${reservationId} completed — spot released.`);
   } catch (err) {
-    console.error(`Release failed for ${reservationId}:`, err.code, err.message);
+    console.error(`Release failed [${reservationId}]:`, err.code, err.message);
+  } finally {
+    processingReservations.delete(reservationId);
   }
 }
 
 function scheduleSpotRelease(reservationId, parkingId, endTime) {
-  if (scheduledReleases.has(reservationId)) return;
+  if (scheduledReleases.has(reservationId)) return; // already scheduled this session
+
   const endMs   = endTime?.toMillis ? endTime.toMillis() : Number(endTime) * 1000;
   const delayMs = endMs - Date.now();
 
@@ -98,6 +88,7 @@ function scheduleSpotRelease(reservationId, parkingId, endTime) {
     releaseExpiredSpot(reservationId, parkingId);
     return;
   }
+
   const timer = setTimeout(() => {
     releaseExpiredSpot(reservationId, parkingId);
     scheduledReleases.delete(reservationId);
@@ -109,25 +100,26 @@ function scheduleSpotRelease(reservationId, parkingId, endTime) {
 
 async function pollMyExpiredReservations(userId) {
   try {
-    const now = Timestamp.now();
-    const q   = query(
+    const snap = await getDocs(query(
       collection(db, "reservations"),
-      where("userId", "==", userId),
-      where("endTime", "<=", now)
-    );
-    const snap = await getDocs(q);
-    snap.docs.forEach((d) => {
-      const data = d.data();
-      if (data.parkingId) releaseExpiredSpot(d.id, String(data.parkingId));
-    });
+      where("userId",  "==", userId),
+      where("status",  "==", "paid"),
+      where("endTime", "<=", Timestamp.now())
+    ));
+    if (!snap.empty) {
+      console.log(`Poll: ${snap.size} expired reservation(s) found.`);
+      snap.docs.forEach((d) => releaseExpiredSpot(d.id, String(d.data().parkingId || "")));
+    }
   } catch (err) {
     console.error("Poll error:", err.code, err.message);
   }
 }
 
-// Start everything once the program knows who the user is
-onAuthStateChanged(auth, (user) => {
-  if (!user) return;
+// Called once when auth is confirmed, the flag ensures it never runs twice
+function initAutoRelease(user) {
+  if (autoReleaseInitialized) return;
+  autoReleaseInitialized = true;
+
   onSnapshot(
     query(
       collection(db, "reservations"),
@@ -136,56 +128,83 @@ onAuthStateChanged(auth, (user) => {
     ),
     (snapshot) => {
       snapshot.docs.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (data.endTime && data.parkingId) {
-          scheduleSpotRelease(docSnap.id, String(data.parkingId), data.endTime);
-        }
+        const d = docSnap.data();
+        if (d.endTime && d.parkingId) scheduleSpotRelease(docSnap.id, String(d.parkingId), d.endTime);
       });
     },
-    (err) => console.error("Reservation listener error:", err.code, err.message)
+    (err) => console.error("Reservation listener:", err.code, err.message)
   );
+
   pollMyExpiredReservations(user.uid);
-  setInterval(() => pollMyExpiredReservations(user.uid), 60_000);
+  pollIntervalId = setInterval(() => pollMyExpiredReservations(user.uid), 60_000);
+
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") pollMyExpiredReservations(user.uid);
   });
+}
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) return;
+  initAutoRelease(user); 
 });
 
-// license plates
-async function getUserLicensePlates() {
-  const user = auth.currentUser;
-  if (!user) return [];
+// plate selection
+
+async function loadUserCars(user) {
+  const carSelect  = document.getElementById("carSelect");
+  const plateInput = document.getElementById("plateNumber");
+  if (!carSelect || !user) return;
+
   try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    return snap.exists() ? (snap.data().licensePlates || []) : [];
-  } catch {
-    return [];
+    const snapshot = await getDoc(doc(db, "users", user.uid));
+    if (!snapshot.exists()) return;
+
+    const plates       = snapshot.data().licensePlates || [];
+    const favoritePlate = localStorage.getItem("favoritePlate") || "";
+
+    carSelect.innerHTML = "";
+    const otherOpt = document.createElement("option");
+    otherOpt.value = "OTHER";
+    otherOpt.textContent = "-- Type a different plate --";
+    carSelect.appendChild(otherOpt);
+
+    const sorted = [...plates].sort((a, b) => (a === favoritePlate ? -1 : b === favoritePlate ? 1 : 0));
+    sorted.forEach((plate) => {
+      const opt = document.createElement("option");
+      opt.value       = plate;
+      opt.textContent = plate + (plate === favoritePlate ? " ⭐" : "");
+      carSelect.appendChild(opt);
+    });
+
+    if (favoritePlate && plates.includes(favoritePlate)) {
+      carSelect.value = favoritePlate;
+      if (plateInput) { plateInput.value = favoritePlate; plateInput.readOnly = true; }
+    } else if (sorted.length > 0) {
+      carSelect.value = sorted[0];
+      if (plateInput) { plateInput.value = sorted[0]; plateInput.readOnly = true; }
+    } else {
+      carSelect.value = "OTHER";
+      if (plateInput) { plateInput.value = ""; plateInput.readOnly = false; }
+    }
+
+    carSelect.onchange = () => {
+      if (!plateInput) return;
+      if (carSelect.value === "OTHER") {
+        plateInput.value = "";
+        plateInput.readOnly = false;
+        plateInput.focus();
+      } else {
+        plateInput.value    = carSelect.value;
+        plateInput.readOnly = true;
+      }
+    };
+  } catch (err) {
+    console.error("Error loading plates:", err);
   }
 }
 
-function renderPlateSelector(plates) {
-  const container = document.getElementById("plateSelectContainer");
-  if (!container) return;
+// booking panel helpers
 
-  if (plates.length === 0) {
-    container.innerHTML = `
-      <label style="font-size:13px;">License Plate:</label><br>
-      <input type="text" id="plateValue" placeholder="e.g. SB01ABC"
-        style="margin:6px 0; padding:6px; width:80%; text-transform:uppercase;">
-      <small style="color:#888; display:block; margin-bottom:6px;">
-        No saved plates — <a href="profile.html">add one in your profile</a>
-      </small>`;
-  } else {
-    const options = plates.map(p => `<option value="${p}">${p}</option>`).join("");
-    container.innerHTML = `
-      <label style="font-size:13px;">License Plate:</label><br>
-      <select id="plateValue" style="margin:6px 0; padding:6px; width:80%;">
-        ${options}
-      </select><br>`;
-  }
-}
-
-// parking list and details
 function setCurrentTimeDefault() {
   const timeInput = document.getElementById("startTime");
   if (!timeInput) return;
@@ -193,150 +212,104 @@ function setCurrentTimeDefault() {
   timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-// function getStartAndEndDate(timeHHMM, durationHours) {
-//   const now = new Date();
-//   const [hh, mm] = timeHHMM.split(":").map(Number);
-//   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
-//   const end   = new Date(start.getTime() + durationHours * 3_600_000);
-//   return { start, end };
-// }
-
-function isNowInPaidInterval(openHours) {
-  if (!openHours || typeof openHours !== "string") return true;
-
-  const [startStr, endStr] = openHours.split("-").map(s => s.trim());
-  if (!startStr || !endStr) return true;
-
-  let [sh, sm] = startStr.split(":").map(Number);
-  let [eh, em] = endStr.split(":").map(Number);
-
-  if ([sh, sm, eh, em].some(Number.isNaN)) return true;
-
-  if (eh === 24) { eh = 0; em = 0; }
-
-  const now = new Date();
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-  const startMin = sh * 60 + sm;
-  const endMin = eh * 60 + em;
-
-  if (startStr === "00:00" && endStr === "24:00") return true;
-  if (startMin < endMin) return nowMin >= startMin && nowMin < endMin;
-
-  return nowMin >= startMin || nowMin < endMin;
+function parseOpenHours(openHours) {
+  if (!openHours || typeof openHours !== "string") return null;
+  const parts = openHours.split("-").map(s => s.trim());
+  if (parts.length < 2) return null;
+  const [sh, sm] = parts[0].split(":").map(Number);
+  let   [eh, em] = parts[1].split(":").map(Number);
+  if ([sh, sm, eh, em].some(Number.isNaN)) return null;
+  if (eh === 24) { eh = 0; em = 0; } // midnight
+  return { openH: sh, openM: sm, closeH: eh, closeM: em };
 }
 
-function calculatePayableHours(bookingStart, bookingEnd, openHours) {
-  if (!openHours || typeof openHours !== 'string') return 0;
+// max bookable hours from a given startTime until parking closes 
+function getMaxHours(startTimeValue, openHours) {
+  const parsed = parseOpenHours(openHours);
+  if (!parsed) return 24;
 
-  const [startStr, endStr] = openHours.split('-').map(s => s.trim());
-  if (!startStr || !endStr) return 0;
-  
-  let [sh, sm] = startStr.split(':').map(Number);
-  let [eh, em] = endStr.split(':').map(Number);
-  
-  if ([sh, sm, eh, em].some(isNaN)) return 0;
+  const [sh, sm] = startTimeValue.split(":").map(Number);
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sh, sm, 0);
 
-  if (eh === 24 && em === 0) eh = 23, em = 59;
-  
-  const today = new Date();
-  const paidStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sh, sm);
-  const paidEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), eh, em);
-
-  const overlapStart = Math.max(bookingStart.getTime(), paidStart.getTime());
-  const overlapEnd = Math.min(bookingEnd.getTime(), paidEnd.getTime());
-
-  if (overlapStart >= overlapEnd) {
-    return 0; 
+  let close;
+  if (parsed.closeH === 0 && parsed.closeM === 0) {
+    close = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+  } else {
+    close = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parsed.closeH, parsed.closeM, 0);
   }
 
-  const overlapDurationMs = overlapEnd - overlapStart;
-  const payableHours = overlapDurationMs / (1000 * 60 * 60);
+  const diffHours = (close - start) / 3_600_000;
+  return Math.max(1, Math.floor(diffHours));
+}
 
-  return payableHours;
+function updateCostPreview() {
+  const preview     = document.getElementById("costPreview");
+  const allDay      = document.getElementById("allDayCheck");
+  const durationEl  = document.getElementById("duration");
+  const startTimeEl = document.getElementById("startTime");
+  if (!preview) return;
+
+  if (allDay?.checked) {
+    preview.innerText = `Total: ${DAILY_RATE.toFixed(2)} RON (all-day rate)`;
+    return;
+  }
+
+  const hours = Number(durationEl?.value || 1);
+  const cost  = hours * Number(currentPricePerHour || 0);
+  const maxH  = selectedParking?.openHours && startTimeEl?.value
+    ? getMaxHours(startTimeEl.value, selectedParking.openHours)
+    : null;
+
+  preview.innerText = `Total: ${cost.toFixed(2)} RON` +
+    (maxH !== null ? ` (max ${maxH}h from chosen time)` : "");
 }
 
 async function openBookingPanel(parking) {
-    reservationPanel.style.display = "block";
-    document.getElementById("panelTitle").innerText = "Book a spot";
-    document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
-    
-    setCurrentTimeDefault();
-    updateDurationConstraint(); 
+  const user = auth.currentUser;
+  reservationPanel.style.display = "block";
+  document.getElementById("panelTitle").innerText          = "Book a spot";
+  document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
+  setCurrentTimeDefault();
+  if (user) await loadUserCars(user);
 
-    const startTimeInput = document.getElementById("startTime");
-    startTimeInput?.addEventListener('change', updateDurationConstraint);
+  const startEl    = document.getElementById("startTime");
+  const durationEl = document.getElementById("duration");
+  const allDayEl   = document.getElementById("allDayCheck");
 
-    if (auth.currentUser) {
-        await loadUserCars(auth.currentUser);
-    } else {
-        const carSelect = document.getElementById("carSelect");
-        if (carSelect) carSelect.innerHTML = '<option value="">Login to see cars</option>';
-    }
-
-  const allDayCheck = document.getElementById("allDayCheck");
-  const durationInput = document.getElementById("duration");
-  const allDayLabel = document.querySelector("label[for='allDayCheck']");
-
-  if (allDayCheck && durationInput && startTimeInput && allDayLabel) {
-    if (parking.effectiveDailyRate) {
-        allDayLabel.textContent = `Book for the rest of the day (${DAILY_RATE} RON)`;
-    } else {
-        allDayLabel.textContent = "Book until the end of the paid interval";
-    }
-
-    allDayCheck.onchange = () => {
-      if (allDayCheck.checked) {
-        durationInput.disabled = true;
-        updateDurationConstraint();
-        durationInput.value = durationInput.max;
-      } else {
-        durationInput.disabled = false;
-        durationInput.value = 1;
+  const refreshMax = () => {
+    if (!allDayEl?.checked && startEl?.value && selectedParking?.openHours) {
+      const maxH = getMaxHours(startEl.value, selectedParking.openHours);
+      if (durationEl) {
+        durationEl.max   = maxH;
+        if (Number(durationEl.value) > maxH) durationEl.value = maxH;
       }
-    };
-    allDayCheck.checked = false;
-    durationInput.disabled = false;
-    durationInput.value = 1;
-  }
+    }
+    updateCostPreview();
+  };
+
+  startEl?.addEventListener("change",    refreshMax);
+  durationEl?.addEventListener("input",  refreshMax);
+
+  allDayEl?.addEventListener("change", () => {
+    const isAllDay = allDayEl.checked;
+    if (durationEl) durationEl.disabled = isAllDay;
+    if (isAllDay && startEl?.value && selectedParking?.openHours) {
+      const maxH = getMaxHours(startEl.value, selectedParking.openHours);
+      if (durationEl) durationEl.value = maxH;
+    }
+    updateCostPreview();
+  });
+
+  refreshMax();
 }
 
-function updateDurationConstraint() {
-    const startTimeInput = document.getElementById("startTime");
-    const durationInput = document.getElementById("duration");
+// real time parking list and details updates
 
-    if (!startTimeInput || !durationInput || !selectedParking) return;
-
-    const [startHH, startMM] = startTimeInput.value.split(':').map(Number);
-
-    let maxHours = 24; 
-
-    if (selectedParking.openHours && selectedParking.openHours !== "00:00-24:00") {
-        const [endStr] = selectedParking.openHours.split('-').slice(-1);
-        let [endHH, endMM] = endStr.split(':').map(Number);
-
-        if (endHH === 24 && endMM === 0) endHH = 23, endMM = 59;
-
-        const startTotalMinutes = startHH * 60 + startMM;
-        const endTotalMinutes = endHH * 60 + endMM;
-
-        if (endTotalMinutes > startTotalMinutes) {
-            const diffMinutes = endTotalMinutes - startTotalMinutes;
-            const availableHours = Math.floor(diffMinutes / 60);
-            maxHours = Math.max(1, availableHours); 
-        }
-    }
-
-    durationInput.max = maxHours;
-    if (Number(durationInput.value) > maxHours) {
-        durationInput.value = maxHours;
-    }
-}
-
-// real time parking list and details
 window.renderParkingListFromLive = function (parkings) {
-  const listElement = document.getElementById("parkingList");
-  if (!listElement) return;
-  listElement.innerHTML = "";
+  const listEl = document.getElementById("parkingList");
+  if (!listEl) return;
+  listEl.innerHTML = "";
 
   parkings.forEach((p) => {
     const isFull = p.freeSpots <= 0;
@@ -350,100 +323,62 @@ window.renderParkingListFromLive = function (parkings) {
         <span style="float:right; color:#888; font-size:13px;">${p.freeSpots}/${p.totalSpots} spots</span>
       </div>`;
     li.addEventListener("click", () => showParkingDetails(p));
-    listElement.appendChild(li);
+    listEl.appendChild(li);
   });
 };
 
 window.refreshSelectedParkingFromLive = function (parkings) {
   if (!selectedParking?.id) return;
   const updated = parkings.find((p) => p.id === String(selectedParking.id));
-  if (updated && parkingDetailsView.style.display !== "none") {
-    showParkingDetails(updated);
-  }
+  if (updated && parkingDetailsView.style.display !== "none") showParkingDetails(updated);
 };
 
 // parking details
+
 function showParkingDetails(parking) {
-    selectedParking = parking;
-    currentPricePerHour = parking.pricePerHour;
+  selectedParking     = parking;
+  currentPricePerHour = parking.pricePerHour;
+  const isFull        = parking.freeSpots <= 0;
 
-    const isFull = parking.freeSpots <= 0;
-    const paidNow = isNowInPaidInterval(parking.openHours);
-    const canBook = !isFull && paidNow;
+  selectedParkingDetails.innerHTML = `
+    <p><b>${parking.name}</b></p>
+    <p>Status: <span style="color:${isFull ? "red" : "green"}; font-weight:bold;">
+      ${isFull ? "Full" : "Available"}
+    </span></p>
+    <p>Location: Sibiu</p>
+    <p>Spots: <b>${parking.freeSpots}</b> / ${parking.totalSpots}</p>
+    <p>Price: ${parking.pricePerHour} RON/hour &nbsp;|&nbsp; All-day: ${DAILY_RATE} RON</p>
+    <p>Hours: ${parking.openHours}</p>
+    <button id="bookSelectedParkingBtn"
+      style="width:100%; background:${isFull ? "#aaa" : "#007bff"}; color:white;
+             border:none; padding:10px; border-radius:5px;
+             cursor:${isFull ? "not-allowed" : "pointer"};"
+      ${isFull ? "disabled" : ""}>
+      ${isFull ? "Parking Full" : "Book Now"}
+    </button>`;
 
-    let bookingButtonHtml = '';
-    let specialOfferHtml = '';
+  parkingListView.style.display    = "none";
+  parkingDetailsView.style.display = "block";
 
-    if (canBook) {
-        const now = new Date();
+  if (!isFull) {
+    document.getElementById("bookSelectedParkingBtn")
+      ?.addEventListener("click", () => openBookingPanel(parking));
+  }
 
-        const [endStr] = (parking.openHours || "23:59").split('-').slice(-1);
-        let [endHH, endMM] = endStr.split(':').map(Number);
-        if (endHH === 24) { endHH = 23; endMM = 59; }
-        const paidPeriodEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHH, endMM);
-
-        const remainingPayableHours = calculatePayableHours(now, paidPeriodEnd, parking.openHours);
-        const costForRestOfDay = remainingPayableHours * parking.pricePerHour;
-
-        if (costForRestOfDay >= DAILY_RATE) {
-            specialOfferHtml = `<p style="color: green; font-weight: bold; margin-top: 10px;">Smart Offer: Park for the rest of the day for just ${DAILY_RATE} RON!</p>`;
-            parking.effectiveDailyRate = DAILY_RATE; // Stocăm temporar tariful de zi
-        } else {
-            specialOfferHtml = `<p style="color: #555; margin-top: 10px;">Pay per hour. Booking until the end of the paid period costs ${costForRestOfDay.toFixed(2)} RON.</p>`;
-            parking.effectiveDailyRate = null; 
-        }
-
-        bookingButtonHtml = `
-            <button id="bookSelectedParkingBtn"
-              style="width:100%; background:#007bff; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">
-              Book Now
-            </button>
-        `;
-    } else {
-        bookingButtonHtml = `
-            <button id="bookSelectedParkingBtn"
-              style="width:100%; background:#aaa; color:white; border:none; padding:10px; border-radius:5px; cursor:not-allowed;" disabled>
-              ${isFull ? "Parking Full" : "Outside paid hours"}
-            </button>
-            ${!paidNow ? `<p style="margin-top:8px; color:#666;">Booking with payment is available only in interval ${parking.openHours}.</p>` : ""}
-        `;
-    }
-
-    selectedParkingDetails.innerHTML = `
-        <p><b>${parking.name}</b></p>
-        <p>Status: <span style="color:${isFull ? "red" : "green"}; font-weight:bold;">
-          ${isFull ? "Full" : "Available"}
-        </span></p>
-        <p>Spots: <b>${parking.freeSpots}</b> / ${parking.totalSpots}</p>
-        <p>Price: ${parking.pricePerHour} RON/hour</p>
-        <p>Hours: ${parking.openHours}</p>
-        ${specialOfferHtml}
-        ${bookingButtonHtml}
-    `;
-
-    parkingListView.style.display = "none";
-    parkingDetailsView.style.display = "block";
-
-    if (canBook) {
-        document.getElementById("bookSelectedParkingBtn")
-          ?.addEventListener("click", () => openBookingPanel(parking));
-    }
-    
-    if (window.map?.flyTo && parking.lat != null && parking.lng != null) {
-        window.map.flyTo([parking.lat, parking.lng], 16);
-    }
+  if (window.map?.flyTo && parking.lat != null && parking.lng != null) {
+    window.map.flyTo([parking.lat, parking.lng], 16);
+  }
 }
 
 // controls
+
 openParkingListBtn?.addEventListener("click", () => {
   parkingPanel.style.display       = "block";
   parkingListView.style.display    = "block";
   parkingDetailsView.style.display = "none";
 });
 
-closeParkingPanelBtn?.addEventListener("click", () => {
-  parkingPanel.style.display = "none";
-});
+closeParkingPanelBtn?.addEventListener("click", () => { parkingPanel.style.display = "none"; });
 
 backToParkingListBtn?.addEventListener("click", () => {
   parkingListView.style.display    = "block";
@@ -452,6 +387,10 @@ backToParkingListBtn?.addEventListener("click", () => {
 
 document.getElementById("closePanel")?.addEventListener("click", () => {
   reservationPanel.style.display = "none";
+  const allDayEl = document.getElementById("allDayCheck");
+  if (allDayEl) allDayEl.checked = false;
+  const durationEl = document.getElementById("duration");
+  if (durationEl) { durationEl.disabled = false; durationEl.value = 1; }
 });
 
 window.showParkingDetailsFromMap = function (parking) {
@@ -459,6 +398,7 @@ window.showParkingDetailsFromMap = function (parking) {
   showParkingDetails(parking);
 };
 
+//cancel booking
 
 document.getElementById("cancelBtn")?.addEventListener("click", async () => {
   if (!confirm("Are you sure you want to cancel your booking?")) return;
@@ -467,15 +407,14 @@ document.getElementById("cancelBtn")?.addEventListener("click", async () => {
       manageBox.style.display = "none";
       return;
     }
-
     const reservationRef = doc(db, "reservations", String(activeReservationId));
     const parkingRef     = doc(db, "parkings", String(activeReservationParkingId));
 
     await runTransaction(db, async (tx) => {
-      const parkingSnap = await tx.get(parkingRef);
-      if (!parkingSnap.exists()) throw new Error("Parking not found.");
-      const currentFree = Number(parkingSnap.data().freeSpots || 0);
-      tx.update(parkingRef, { freeSpots: currentFree + 1 });
+      const parkSnap = await tx.get(parkingRef);
+      if (!parkSnap.exists()) throw new Error("Parking not found.");
+      const currentFree = Number(parkSnap.data().freeSpots || 0);
+      tx.update(parkingRef,     { freeSpots: currentFree + 1 });
       tx.update(reservationRef, { status: "cancelled" });
     });
 
@@ -484,9 +423,9 @@ document.getElementById("cancelBtn")?.addEventListener("click", async () => {
       scheduledReleases.delete(activeReservationId);
     }
 
-    activeReservationId        = null;
+    activeReservationId = null;
     activeReservationParkingId = null;
-    manageBox.style.display    = "none";
+    manageBox.style.display = "none";
     alert("Reservation cancelled successfully.");
   } catch (err) {
     console.error(err);
@@ -500,126 +439,107 @@ document.getElementById("editBtn")?.addEventListener("click", () => {
   setCurrentTimeDefault();
 });
 
+// confirm booking (creates reservation, updates parking availability with time limits, and shows manage box)
+
 document.getElementById("confirmBooking")?.addEventListener("click", async () => {
-    try {
-        const user = auth.currentUser;
-        if (!user) return alert("Please login first.");
+  const parkingId = String(selectedParking?.id || "").trim();
+  if (!parkingId) return alert("Invalid parking — select one from the list.");
 
-        const parkingId = String(selectedParking?.id || "").trim();
-        if (!parkingId) return alert("Please select a parking first.");
+  try {
+    const user = auth.currentUser;
+    if (!user) return alert("Please login first.");
 
-        if (typeof isNowInPaidInterval === "function" && !isNowInPaidInterval(selectedParking.openHours)) {
-            return alert(`Parking is outside paid hours (${selectedParking.openHours}). Booking is disabled now.`);
-        }
+    const timeChosen = document.getElementById("startTime")?.value;
+    if (!timeChosen)  return alert("Please choose a start time.");
 
-        const timeChosen = document.getElementById("startTime")?.value;
-        const hoursAmount = Number(document.getElementById("duration")?.value || 1);
-        const plateRaw = document.getElementById("plateNumber")?.value || "";
-        const plateNumber = plateRaw.replace(/\s+/g, "").toUpperCase();
-        const country = document.getElementById("countrySelect")?.value;
-        const allDayCheck = document.getElementById("allDayCheck");
+    const allDay    = document.getElementById("allDayCheck")?.checked || false;
+    const plateInput = document.getElementById("plateNumber");
+    const plateNumber = plateInput ? plateInput.value.replace(/\s+/g, "").toUpperCase() : "";
+    if (!plateNumber) return alert("Please enter or select a license plate.");
 
-        if (!timeChosen || hoursAmount < 1 || !plateNumber) {
-            return alert("Please fill in all details and choose a valid duration.");
-        }
+    const [sh, sm] = timeChosen.split(":").map(Number);
+    const now       = new Date();
+    const bookingStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sh, sm, 0);
 
-        const alphanumericRegex = /^[A-Z0-9]+$/;
-        if (!alphanumericRegex.test(plateNumber)) {
-            return alert("ERROR: License plate must contain only LETTERS and NUMBERS.");
-        }
-        if (country === "RO") {
-            const regexRO = /^(B\d{2,3}[A-Z]{3})$|^([A-Z]{2}\d{2}[A-Z]{3})$/;
-            if (!regexRO.test(plateNumber)) {
-                return alert("INVALID FORMAT! For Romania use: SB12ABC or B123ABC");
-            }
-        }
+    let hoursAmount, totalCost, bookingEnd;
 
-        const { start: bookingStart, end: bookingEnd } = getStartAndEndDate(timeChosen, hoursAmount);
-        let totalCost;
+    if (allDay) {
+      const maxH = selectedParking?.openHours
+        ? getMaxHours(timeChosen, selectedParking.openHours)
+        : 24;
+      hoursAmount = maxH;
+      totalCost   = DAILY_RATE;
+      bookingEnd  = new Date(bookingStart.getTime() + hoursAmount * 3_600_000);
+    } else {
+      hoursAmount = Number(document.getElementById("duration")?.value || 1);
+      if (hoursAmount < 1) return alert("Duration must be at least 1 hour.");
+      if (selectedParking?.openHours) {
+        const maxH = getMaxHours(timeChosen, selectedParking.openHours);
+        if (hoursAmount > maxH) return alert(`Maximum booking from ${timeChosen} is ${maxH} hour(s) for this parking.`);
+      }
 
-        if (allDayCheck.checked && selectedParking.effectiveDailyRate) {
-            totalCost = selectedParking.effectiveDailyRate;
-        } else {
-            const payableHours = calculatePayableHours(bookingStart, bookingEnd, selectedParking.openHours);
-            totalCost = payableHours * Number(currentPricePerHour || 0);
-        }
-
-        const [endStr] = (selectedParking.openHours || "23:59").split('-').slice(-1);
-        let [endHH, endMM] = endStr.split(':').map(Number);
-        if (endHH === 24) { endHH = 23; endMM = 59; }
-        const paidPeriodEnd = new Date(bookingStart.getFullYear(), bookingStart.getMonth(), bookingStart.getDate(), endHH, endMM);
-
-        if (bookingEnd.getTime() > paidPeriodEnd.getTime() && !allDayCheck.checked) {
-            const maxDuration = calculatePayableHours(bookingStart, paidPeriodEnd, selectedParking.openHours);
-            return alert(`Your booking extends beyond the paid interval. The maximum duration you can book from ${timeChosen} is approximately ${Math.floor(maxDuration)} hours.`);
-        }
-
-        const parkingRef = doc(db, "parkings", parkingId);
-        await runTransaction(db, async (tx) => {
-            const snap = await tx.get(parkingRef);
-            if (!snap.exists()) throw new Error("Parking not found.");
-
-            const free = Number(snap.data().freeSpots || 0);
-            if (free <= 0) throw new Error("No free spots available.");
-
-            tx.update(parkingRef, { freeSpots: free - 1 });
-        });
-
-        const reservationRef = await addDoc(collection(db, "reservations"), {
-            userId: user.uid,
-            parkingId: selectedParking.id,
-            parkingName: selectedParking.name,
-            plateNumber: plateNumber,
-            startTime: Timestamp.fromDate(bookingStart),
-            endTime: Timestamp.fromDate(bookingEnd),
-            durationHours: hoursAmount,
-            pricePerHour: Number(currentPricePerHour || 0), 
-            totalCost: totalCost,
-            status: "pending_payment",
-            createdAt: Timestamp.now()
-        });
-
-        activeReservationId = reservationRef.id;
-        activeReservationParkingId = selectedParking.id;
-
-        manageBox.style.display = "flex";
-        resInfo.innerText = `Reserved: ${plateNumber} at ${timeChosen} for ${hoursAmount}h — ${selectedParking.name}`;
-        document.getElementById("costText").innerText = `Total to pay: ${totalCost.toFixed(2)} RON`;
-        document.getElementById("statusText").innerText = "Status: NOT PAID";
-        document.getElementById("statusText").style.color = "blue";
-        document.getElementById("payBtn").style.display = "inline-block";
-
-        reservationPanel.style.display = "none";
-        parkingPanel.style.display = "none";
-        if (parkingDetailsView) parkingDetailsView.style.display = "none";
-        if (parkingListView) parkingListView.style.display = "block";
-
-    } catch (err) {
-        console.error("Booking error:", err);
-        alert(err.message || "Booking failed.");
+      totalCost  = hoursAmount * Number(currentPricePerHour || 0);
+      bookingEnd = new Date(bookingStart.getTime() + hoursAmount * 3_600_000);
     }
+
+    const parkingRef = doc(db, "parkings", parkingId);
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(parkingRef);
+      if (!snap.exists()) throw new Error("Parking not found.");
+      const free = Number(snap.data().freeSpots || 0);
+      if (free <= 0) throw new Error("No free spots available.");
+      tx.update(parkingRef, { freeSpots: free - 1 });
+    });
+
+    const reservationDocRef = await addDoc(collection(db, "reservations"), {
+      userId:        user.uid,
+      parkingId,
+      parkingName:   selectedParking.name,
+      plateNumber,
+      startTime:     Timestamp.fromDate(bookingStart),
+      endTime:       Timestamp.fromDate(bookingEnd),
+      durationHours: hoursAmount,
+      isAllDay:      allDay,
+      pricePerHour:  allDay ? null : Number(currentPricePerHour || 0),
+      totalCost,
+      status:        "pending_payment",
+      createdAt:     Timestamp.now()
+    });
+
+    activeReservationId        = reservationDocRef.id;
+    activeReservationParkingId = parkingId;
+
+    const allDayEl = document.getElementById("allDayCheck");
+    if (allDayEl) allDayEl.checked = false;
+    const durationEl = document.getElementById("duration");
+    if (durationEl) { durationEl.disabled = false; durationEl.value = 1; }
+
+    manageBox.style.display = "flex";
+    resInfo.innerText = `${selectedParking.name} - ${timeChosen}, ${hoursAmount}h${allDay ? " (all-day)" : ""} - Plate: ${plateNumber}`;
+    document.getElementById("costText").innerText      = `Total to pay: ${totalCost.toFixed(2)} RON`;
+    document.getElementById("statusText").innerText    = "Status: NOT PAID";
+    document.getElementById("statusText").style.color  = "blue";
+    document.getElementById("payBtn").style.display    = "inline-block";
+
+    reservationPanel.style.display = "none";
+    parkingPanel.style.display     = "none";
+  } catch (err) {
+    console.error("Booking error:", err);
+    alert(err.message || "Booking failed.");
+  }
 });
 
-
-function getStartAndEndDate(timeHHMM, durationHours) {
-  const now = new Date();
-  const [hh, mm] = timeHHMM.split(":").map(Number);
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
-  const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);
-  return { start, end };
-}
+// payment simulation (just updates reservation status to paid)
 
 document.getElementById("payBtn")?.addEventListener("click", async () => {
   try {
     if (activeReservationId) {
       await updateDoc(doc(db, "reservations", String(activeReservationId)), { status: "paid" });
     }
-
-    document.getElementById("statusText").innerText = "Status: PAID";
-    document.getElementById("statusText").style.color = "green";
-    document.getElementById("payBtn").style.display = "none";
+    document.getElementById("statusText").innerText            = "Status: PAID";
+    document.getElementById("statusText").style.color          = "green";
+    document.getElementById("payBtn").style.display            = "none";
     document.getElementById("manageReservation").style.display = "none";
-
     alert("Payment successful! Thank you.");
   } catch (err) {
     console.error(err);
@@ -627,140 +547,6 @@ document.getElementById("payBtn")?.addEventListener("click", async () => {
   }
 });
 
+//init
 
-async function loadParkings() {
-  const listElement = document.getElementById("parkingList");
-  if (!listElement) return;
-
-  try {
-    const dataFromFirebase = await getDocs(collection(db, "parkings"));
-    listElement.innerHTML = "";
-
-    dataFromFirebase.forEach((docSnap) => {
-      const p = { ...docSnap.data(), id: docSnap.id };
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
-          <b style="font-size:16px;">${p.name}</b><br>
-          Status: <span style="color:${p.freeSpots > 0 ? "green" : "red"}; font-weight:bold;">${p.freeSpots > 0 ? "Available" : "Full"}</span>
-        </div>`;
-      li.addEventListener("click", () => showParkingDetails(p));
-      listElement.appendChild(li);
-    });
-  } catch (error) {
-    console.log("Error loading parkings:", error);
-  }
-}
-
-window.showParkingDetailsFromMap = function (parking) {
-  if (parkingPanel) parkingPanel.style.display = "block";
-  showParkingDetails(parking); 
-};
-
-async function loadUserCars(user) {
-  const carSelect = document.getElementById("carSelect");
-  const plateInput = document.getElementById("plateNumber");
-  
-  if (!carSelect || !user) return;
-
-  try {
-    const userRef = doc(db, "users", user.uid);
-    const snapshot = await getDoc(userRef);
-
-    if (snapshot.exists()) {
-      const data = snapshot.data();
-      const plates = data.licensePlates || [];
-      const favoritePlate = localStorage.getItem('favoritePlate') || "";
-
-      carSelect.innerHTML = ""; 
-
-      const otherOpt = document.createElement("option");
-      otherOpt.value = "OTHER";
-      otherOpt.textContent = "-- Choose another license plate --";
-      carSelect.appendChild(otherOpt);
-
-      const sortedPlates = [...plates].sort((a, b) => (a === favoritePlate ? -1 : b === favoritePlate ? 1 : 0));
-
-      sortedPlates.forEach(plate => {
-        const option = document.createElement("option");
-        option.value = plate;
-        option.textContent = plate + (plate === favoritePlate ? " ⭐" : "");
-        carSelect.appendChild(option);
-      });
-
-      const currentFav = localStorage.getItem('favoritePlate');
-      if (currentFav && plates.includes(currentFav)) {
-        carSelect.value = currentFav;
-        if(plateInput) { plateInput.value = currentFav; plateInput.readOnly = true; }
-      } else if (sortedPlates.length > 0) {
-        carSelect.value = sortedPlates[0];
-        if(plateInput) { plateInput.value = sortedPlates[0]; plateInput.readOnly = true; }
-      } else {
-        carSelect.value = "OTHER";
-        if(plateInput) { plateInput.value = ""; plateInput.readOnly = false; }
-      }
-
-      carSelect.onchange = () => {
-        if (!plateInput) return;
-        if (carSelect.value === "OTHER") {
-          plateInput.value = "";
-          plateInput.readOnly = false; 
-          plateInput.focus();
-        } else {
-          plateInput.value = carSelect.value;
-          plateInput.readOnly = true; 
-        }
-      };
-    }
-  } catch (err) {
-    console.error("Error loading cars:", err);
-  }
-}
-
-async function refreshSelectedParkingDetails() {
-  if (!selectedParking?.id) return;
-
-  try {
-    const dataFromFirebase = await getDocs(collection(db, "parkings"));
-    let updated = null;
-
-    dataFromFirebase.forEach((docSnap) => {
-      if (docSnap.id === String(selectedParking.id)) {
-        updated = { ...docSnap.data(), id: docSnap.id };
-      }
-    });
-
-    if (updated) {
-      showParkingDetails(updated);
-    }
-  } catch (err) {
-    console.error("Failed to refresh selected parking details:", err);
-  }
-}
-document.getElementById('countrySelect')?.addEventListener('change', (e) => {
-  const plateInput = document.getElementById('plateNumber');
-  if (!plateInput) return;
-  
-  if (e.target.value === "RO") {
-    plateInput.placeholder = "Ex: SB12ABC";
-  } else {
-    plateInput.placeholder = "Up to 14 characters";
-  }
-});
-
-const plateField = document.getElementById("plateNumber");
-if (plateField) {
-    plateField.addEventListener("input", (e) => {
-        const start = e.target.selectionStart;
-
-        const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-        
-        if (e.target.value !== sanitizedValue) {
-            e.target.value = sanitizedValue;
-            const newCursorPos = Math.max(0, start); 
-            e.target.setSelectionRange(newCursorPos, newCursorPos);
-        }
-    });
-}
 setCurrentTimeDefault();
-//forceResetAllFreeSpotsToTotal();

@@ -37,6 +37,12 @@ let autoReleaseInitialized = false;  // prevents duplicate listeners/intervals
 let pollIntervalId         = null;   // keeps reference so we never double-register
 const processingReservations = new Set(); 
 
+// event listeners for filters and sorting in the parking list
+document.getElementById('searchInput')?.addEventListener('input', applyFiltersAndRender);
+document.getElementById('availableOnlyFilter')?.addEventListener('change', applyFiltersAndRender);
+document.getElementById('nonStopFilter')?.addEventListener('change', applyFiltersAndRender);
+document.getElementById('sortSelect')?.addEventListener('change', applyFiltersAndRender);
+
 // auto release function for parkingspots that have expired 
 
 async function releaseExpiredSpot(reservationId, parkingId) {
@@ -306,26 +312,32 @@ async function openBookingPanel(parking) {
 
 // real time parking list and details updates
 
-window.renderParkingListFromLive = function (parkings) {
-  const listEl = document.getElementById("parkingList");
-  if (!listEl) return;
-  listEl.innerHTML = "";
+function renderParkingList(parkings) {
+    const listElement = document.getElementById("parkingList");
+    if (!listElement) return;
+    
+    listElement.innerHTML = ""; 
 
-  parkings.forEach((p) => {
-    const isFull = p.freeSpots <= 0;
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
-        <b style="font-size:16px;">${p.name}</b><br>
-        Status: <span style="color:${isFull ? "red" : "green"}; font-weight:bold;">
-          ${isFull ? "Full" : "Available"}
-        </span>
-        <span style="float:right; color:#888; font-size:13px;">${p.freeSpots}/${p.totalSpots} spots</span>
-      </div>`;
-    li.addEventListener("click", () => showParkingDetails(p));
-    listEl.appendChild(li);
-  });
-};
+    if (parkings.length === 0) {
+        listElement.innerHTML = '<li>No parkings match your criteria.</li>';
+        return;
+    }
+
+    parkings.forEach((p) => {
+        const isFull = p.freeSpots <= 0;
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
+            <b style="font-size:16px;">${p.name}</b><br>
+            Status: <span style="color:${isFull ? "red" : "green"}; font-weight:bold;">
+              ${isFull ? "Full" : "Available"}
+            </span>
+            <span style="float:right; color:#888; font-size:13px;">${p.pricePerHour} RON/h</span>
+          </div>`;
+        li.addEventListener("click", () => showParkingDetails(p));
+        listElement.appendChild(li);
+    });
+}
 
 window.refreshSelectedParkingFromLive = function (parkings) {
   if (!selectedParking?.id) return;
@@ -339,6 +351,9 @@ function showParkingDetails(parking) {
   selectedParking     = parking;
   currentPricePerHour = parking.pricePerHour;
   const isFull        = parking.freeSpots <= 0;
+
+    parkingListView.style.display    = "none";
+    parkingDetailsView.style.display = "block";
 
   selectedParkingDetails.innerHTML = `
     <p><b>${parking.name}</b></p>
@@ -546,6 +561,38 @@ document.getElementById("payBtn")?.addEventListener("click", async () => {
     alert(err.message || "Payment update failed.");
   }
 });
+
+// filter and sort functions for the parking list
+export function applyFiltersAndRender() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const availableOnly = document.getElementById('availableOnlyFilter').checked;
+    const nonStopOnly = document.getElementById('nonStopFilter').checked;
+    const sortBy = document.getElementById('sortSelect').value;
+
+    if (!window.latestParkings) return;
+
+    let filteredParkings = window.latestParkings;
+
+    if (searchTerm) {
+        filteredParkings = filteredParkings.filter(p => p.name.toLowerCase().includes(searchTerm));
+    }
+
+    if (availableOnly) {
+        filteredParkings = filteredParkings.filter(p => p.freeSpots > 0);
+    }
+
+    if (nonStopOnly) {
+        filteredParkings = filteredParkings.filter(p => p.openHours === "00:00-24:00");
+    }
+
+    if (sortBy === 'price-asc') {
+        filteredParkings.sort((a, b) => a.pricePerHour - b.pricePerHour);
+    } else if (sortBy === 'price-desc') {
+        filteredParkings.sort((a, b) => b.pricePerHour - a.pricePerHour);
+    }
+
+    renderParkingList(filteredParkings);
+}
 
 //init
 

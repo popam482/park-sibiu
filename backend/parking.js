@@ -339,11 +339,11 @@ function renderParkingList(parkings) {
     });
 }
 
-window.refreshSelectedParkingFromLive = function (parkings) {
+export function refreshSelectedParkingFromLive(parkings) {
   if (!selectedParking?.id) return;
   const updated = parkings.find((p) => p.id === String(selectedParking.id));
   if (updated && parkingDetailsView.style.display !== "none") showParkingDetails(updated);
-};
+}
 
 // parking details
 

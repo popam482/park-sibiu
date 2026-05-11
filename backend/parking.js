@@ -19,6 +19,8 @@ let selectedParking     = null;
 let activeReservationId        = null;
 let activeReservationParkingId = null;
 
+window.activeReservationParkingId = activeReservationParkingId;
+
 const DAILY_RATE = 15;
 
 const openParkingListBtn     = document.getElementById("openParkingListBtn");
@@ -440,6 +442,13 @@ document.getElementById("cancelBtn")?.addEventListener("click", async () => {
 
     activeReservationId = null;
     activeReservationParkingId = null;
+    localStorage.removeItem('myBooking'); 
+    window.activeReservationParkingId = null;
+    localStorage.removeItem('myBookingName'); 
+    localStorage.removeItem('myBookingStatus');
+    if (typeof window.renderMarkers === "function") {
+        window.renderMarkers(window.latestParkings);
+    }
     manageBox.style.display = "none";
     alert("Reservation cancelled successfully.");
   } catch (err) {
@@ -530,14 +539,42 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     if (durationEl) { durationEl.disabled = false; durationEl.value = 1; }
 
     manageBox.style.display = "flex";
-    resInfo.innerText = `${selectedParking.name} - ${timeChosen}, ${hoursAmount}h${allDay ? " (all-day)" : ""} - Plate: ${plateNumber}`;
+    // resInfo.innerText = `${selectedParking.name} - ${timeChosen}, ${hoursAmount}h${allDay ? " (all-day)" : ""} - Plate: ${plateNumber}`;
     document.getElementById("costText").innerText      = `Total to pay: ${totalCost.toFixed(2)} RON`;
     document.getElementById("statusText").innerText    = "Status: NOT PAID";
     document.getElementById("statusText").style.color  = "blue";
-    document.getElementById("payBtn").style.display    = "inline-block";
-
+    document.getElementById("payBtn").style.display    = "inline-block"; 
+    localStorage.setItem('myBookingName', selectedParking.name);
+    manageBox.style.display = "flex";
     reservationPanel.style.display = "none";
     parkingPanel.style.display     = "none";
+
+    window.activeReservationParkingId = parkingId; 
+    localStorage.setItem('myBooking', parkingId); 
+    localStorage.setItem('activeReservationId', reservationDocRef.id);
+    localStorage.setItem('myBookingEndTime', bookingEnd.toISOString());
+    
+    const existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+
+    const newBooking = {
+        parkingId: parkingId,
+        endTime: bookingEnd.toISOString(),
+        id: reservationDocRef.id
+    };
+
+    const index = existingBookings.findIndex(b => b.parkingId === parkingId);
+    if (index > -1) {
+        existingBookings[index] = newBooking; 
+    } else {
+        existingBookings.push(newBooking); 
+    }
+
+    localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
+
+    if (typeof window.renderMarkers === "function") {
+        window.renderMarkers(window.latestParkings); 
+    }
+    
   } catch (err) {
     console.error("Booking error:", err);
     alert(err.message || "Booking failed.");
@@ -550,16 +587,42 @@ document.getElementById("payBtn")?.addEventListener("click", async () => {
   try {
     if (activeReservationId) {
       await updateDoc(doc(db, "reservations", String(activeReservationId)), { status: "paid" });
+      localStorage.setItem('myBookingStatus', 'paid');
     }
     document.getElementById("statusText").innerText            = "Status: PAID";
     document.getElementById("statusText").style.color          = "green";
     document.getElementById("payBtn").style.display            = "none";
     document.getElementById("manageReservation").style.display = "none";
     alert("Payment successful! Thank you.");
+    if (manageBox) manageBox.style.display = "none";
+
+    if (typeof window.renderMarkers === "function") {
+        window.renderMarkers(window.latestParkings);
+    }
   } catch (err) {
     console.error(err);
     alert(err.message || "Payment update failed.");
   }
+});
+window.addEventListener('load', () => {
+    activeReservationId = localStorage.getItem('activeReservationId');
+    activeReservationParkingId = localStorage.getItem('myBooking');
+    const savedStatus = localStorage.getItem('myBookingStatus');
+    
+    window.activeReservationParkingId = activeReservationParkingId;
+
+    if (activeReservationParkingId) {
+        if (savedStatus !== 'paid' && manageBox) {
+            manageBox.style.display = "flex";
+            document.getElementById("statusText").innerText = "Status: NOT PAID";
+            document.getElementById("statusText").style.color = "blue";
+        }
+    }
+    setTimeout(() => {
+        if (typeof window.renderMarkers === "function" && window.latestParkings.length > 0) {
+            window.renderMarkers(window.latestParkings);
+        }
+    }, 2000); 
 });
 
 // filter and sort functions for the parking list

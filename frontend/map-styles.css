@@ -93,3 +93,27 @@ body {
     border-radius: 10px;
     padding: 20px;
 }
+
+.yellow-marker {
+    filter: hue-rotate(140deg) brightness(1.2) saturate(2) !important;
+}
+
+.manageReservation {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 2000;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    display: none; 
+    width: 250px;
+    font-family: Arial, sans-serif;
+}
+
+.manageReservation button {
+    margin-top: 5px;
+    width: 100%;
+    cursor: pointer;
+}

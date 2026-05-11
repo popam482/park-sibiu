@@ -2,6 +2,8 @@ import { db } from './firebase-config.js';
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 window.renderMarkers = renderMarkers; 
 
+import { applyFiltersAndRender, refreshSelectedParkingFromLive } from './parking.js';
+
 const map = L.map('map').setView([45.7983, 24.1256], 13);
 window.map = map;
 
@@ -12,6 +14,9 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 
 const markersLayer = L.layerGroup().addTo(map);
 window.latestParkings = []; 
+
+window.applyFiltersAndRender = applyFiltersAndRender; 
+
 function renderMarkers(parkings) {
   markersLayer.clearLayers();
 
@@ -129,15 +134,17 @@ window.handleCancelFromMap = function() {
     }
 };
 onSnapshot(collection(db, "parkings"), (snapshot) => {
-  const parkings = snapshot.docs.map((d) => ({ ...d.data(), id: d.id }));
-  window.latestParkings = parkings;
-  renderMarkers(parkings);
-  if (typeof window.renderParkingListFromLive === "function") {
-    window.renderParkingListFromLive(parkings);
-  }
-  if (typeof window.refreshSelectedParkingFromLive === "function") {
-    window.refreshSelectedParkingFromLive(parkings);
-  }
+    window.latestParkings = snapshot.docs.map((d) => ({ ...d.data(), id: d.id }));
+
+    renderMarkers(window.latestParkings);
+    
+    if (typeof window.applyFiltersAndRender === "function") {
+        window.applyFiltersAndRender();
+    }
+
+    if (typeof window.refreshSelectedParkingFromLive === "function") {
+        window.refreshSelectedParkingFromLive(window.latestParkings);
+    }
 }, (err) => {
   console.error("Realtime listener error:", err);
 });

@@ -45,9 +45,8 @@ li:hover {
 <header>
   <div id="header-container" class="header-container">
   <button><a href="profile.html" id="profileBtn" title="Profil">👤</a></button>
-  <button id="openParkingListBtn" title="Available Parkings">
-  Available Parkings
-</button>
+  <button id="openParkingListBtn" title="Available Parkings"> Available Parkings</button>
+  <button id="historyBtn"><a href="parking-history.html" style="text-decoration:none; color:inherit;">📋 Parking & Billing History</a></button>
 </div>
 </header>
   <div id="map"></div>
@@ -55,15 +54,40 @@ li:hover {
 
 
  <div id="parkingPanel" style="display:none; position:fixed; z-index:1300; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.4); overflow:scroll;">
-  <div style="background:#fff; width:90%; max-width:500px; margin:40px auto; padding:15px; border-radius:8px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h2 style="margin:0;">Available Parkings</h2>
-      <button id="closeParkingPanelBtn">Close</button>
-    </div>
+  <div style="background:#fff; width:90%; max-width:500px; margin:40px auto; padding:15px; border-radius:8px; position:relative;">
+    <button id="closeParkingPanelBtn" title="Close" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:22px; line-height:1; cursor:pointer; color:#555; padding:2px 6px; border-radius:4px;">&#x2715;</button>
     <div id="parkingListView">
+            <div id="search-container" style="padding: 10px 0; border-bottom: 2px solid #eee; margin-bottom: 10px;">
+        <!-- Search Bar -->
+        <input type="text" id="searchInput" placeholder="Search by parking name..." style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
+
+        <!-- Filters and Sorting -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            
+            <!-- Checkbox - "Available Only" -->
+            <div style="display: flex; align-items: center;">
+                <input type="checkbox" id="availableOnlyFilter" style="margin-right: 5px;">
+                <label for="availableOnlyFilter" style="font-size: 14px;">Available Only</label>
+            </div>
+
+            <!-- Checkbox - "Non-Stop" -->
+            <div style="display: flex; align-items: center;">
+                <input type="checkbox" id="nonStopFilter" style="margin-right: 5px;">
+                <label for="nonStopFilter" style="font-size: 14px;">Open 24/7</label>
+            </div>
+
+            <!-- Sort -->
+            <select id="sortSelect" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
+                <option value="default">Sort by Default</option>
+                <option value="price-asc">Price (Low to High)</option>
+                <option value="price-desc">Price (High to Low)</option>
+            </select>
+        </div>
       <ul id="parkingList">
         <li>Loading parkings...</li>
       </ul>
+
+    </div>
     </div>
     <div id="parkingDetailsView" style="display:none;">
       <button id="backToParkingListBtn" style="margin-bottom:10px;">Back to list</button>
@@ -113,8 +137,6 @@ li:hover {
         <input type="checkbox" id="allDayCheck" style="width: auto; margin: 0; cursor: pointer;">
         <label for="allDayCheck" style="font-size: 14px; cursor: pointer;">Book until the end of the day</label>
     </div>
-
-    <div id="costPreview" style="font-weight: bold; margin: 15px 0; font-size: 16px;"></div>
 
 </div>
 

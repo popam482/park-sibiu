@@ -94,10 +94,6 @@ body {
     padding: 20px;
 }
 
-.yellow-marker {
-    filter: hue-rotate(140deg) brightness(1.2) saturate(2) !important;
-}
-
 .manageReservation {
     position: fixed;
     bottom: 20px;

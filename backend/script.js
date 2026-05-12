@@ -44,10 +44,10 @@ function renderMarkers(parkings) {
                 <b class="map-countdown" data-endtime="${specificEndTime}" style="font-size: 20px; color: #e74c3c; font-family: 'Courier New', monospace; letter-spacing: 1px;">--:--:--</b>
             </div>
         </div>
-        <button onclick="window.handleCancelFromMap()" 
-            style="margin-top:10px; width:100%; background:#e74c3c; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size: 14px; transition: 0.3s;">
-            Cancel Reservation
-        </button>
+        <button onclick="window.handleCancelFromMap('${myReservation.id}', '${p.id}')" 
+    style="...">
+    Cancel Reservation
+</button>
       `;
 
       marker.on('popupopen', () => {
@@ -125,12 +125,11 @@ function startMapCountdown() {
     updateTicker(); 
     window.mapTimerInterval = setInterval(updateTicker, 1000);
 }
-window.handleCancelFromMap = function() {
-    const cancelBtn = document.getElementById("cancelBtn");
-    if (cancelBtn) {
-        cancelBtn.click(); 
+    window.handleCancelFromMap = function(reservationId, parkingId) {
+    if (typeof window.cancelAnyReservation === "function") {
+        window.cancelAnyReservation(reservationId, parkingId);
     } else {
-        console.error("couldn't find button");
+        console.error("Funcția de cancel nu este disponibilă.");
     }
 };
 onSnapshot(collection(db, "parkings"), (snapshot) => {

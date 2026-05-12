@@ -47,12 +47,47 @@ document.getElementById('sortSelect')?.addEventListener('change', applyFiltersAn
 
 // auto release function for parkingspots that have expired 
 
-async function releaseExpiredSpot(reservationId, parkingId) {
-  if (!parkingId) {
-    console.warn(`Skipping release for ${reservationId} — no parkingId.`);
-    return;
-  }
+// async function releaseExpiredSpot(reservationId, parkingId) {
+//   if (!parkingId) {
+//     console.warn(`Skipping release for ${reservationId} — no parkingId.`);
+//     return;
+//   }
 
+//   if (processingReservations.has(reservationId)) return;
+//   processingReservations.add(reservationId);
+
+//   try {
+//     const reservationRef = doc(db, "reservations", reservationId);
+//     const parkingRef     = doc(db, "parkings", String(parkingId));
+
+//     await runTransaction(db, async (tx) => {
+//       const [resSnap, parkSnap] = await Promise.all([
+//         tx.get(reservationRef),
+//         tx.get(parkingRef)
+//       ]);
+
+//       if (!resSnap.exists() || resSnap.data().status !== "paid") return;
+//       if (!parkSnap.exists()) return;
+
+//       const currentFree = Number(parkSnap.data().freeSpots  || 0);
+//       const total       = Number(parkSnap.data().totalSpots || 0);
+
+//       tx.update(reservationRef, { status: "completed" });
+//       if (currentFree < total) {
+//         tx.update(parkingRef, { freeSpots: currentFree + 1 });
+//       }
+//     });
+
+//     console.log(`Reservation ${reservationId} completed — spot released.`);
+//   } catch (err) {
+//     console.error(`Release failed [${reservationId}]:`, err.code, err.message);
+//   } finally {
+//     processingReservations.delete(reservationId);
+//   }
+// }
+// Înlocuiește funcția releaseExpiredSpot cu aceasta pentru a curăța și LocalStorage
+async function releaseExpiredSpot(reservationId, parkingId) {
+  if (!parkingId) return;
   if (processingReservations.has(reservationId)) return;
   processingReservations.add(reservationId);
 
@@ -66,7 +101,7 @@ async function releaseExpiredSpot(reservationId, parkingId) {
         tx.get(parkingRef)
       ]);
 
-      if (!resSnap.exists() || resSnap.data().status !== "paid") return;
+      if (!resSnap.exists() || resSnap.data().status === "completed") return;
       if (!parkSnap.exists()) return;
 
       const currentFree = Number(parkSnap.data().freeSpots  || 0);
@@ -78,13 +113,83 @@ async function releaseExpiredSpot(reservationId, parkingId) {
       }
     });
 
-    console.log(`Reservation ${reservationId} completed — spot released.`);
+    let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+    existingBookings = existingBookings.filter(b => String(b.id) !== String(reservationId));
+    localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
+
+    if (activeReservationId === reservationId) {
+      activeReservationId = null;
+      activeReservationParkingId = null;
+      localStorage.removeItem('myBooking');
+      localStorage.removeItem('activeReservationId');
+      localStorage.removeItem('myBookingStatus');
+    }
+
+    if (typeof window.renderMarkers === "function") {
+      window.renderMarkers(window.latestParkings);
+    }
+
+    console.log(`Reservation ${reservationId} expired and cleaned up.`);
   } catch (err) {
-    console.error(`Release failed [${reservationId}]:`, err.code, err.message);
+    console.error(`Release failed [${reservationId}]:`, err);
   } finally {
     processingReservations.delete(reservationId);
   }
 }
+
+document.getElementById("cancelBtn")?.addEventListener("click", async () => {
+
+  const resId = activeReservationId || localStorage.getItem('activeReservationId');
+  const parkId = activeReservationParkingId || localStorage.getItem('myBooking');
+
+  if (!resId || !parkId) {
+    alert("No active reservation found to cancel.");
+    manageBox.style.display = "none";
+    return;
+  }
+
+  if (!confirm("Are you sure you want to cancel your booking?")) return;
+
+  try {
+    const reservationRef = doc(db, "reservations", String(resId));
+    const parkingRef     = doc(db, "parkings", String(parkId));
+
+    await runTransaction(db, async (tx) => {
+      const parkSnap = await tx.get(parkingRef);
+      if (!parkSnap.exists()) throw new Error("Parking not found.");
+      const currentFree = Number(parkSnap.data().freeSpots || 0);
+      tx.update(parkingRef,     { freeSpots: currentFree + 1 });
+      tx.update(reservationRef, { status: "cancelled" });
+    });
+
+    if (scheduledReleases.has(resId)) {
+      clearTimeout(scheduledReleases.get(resId));
+      scheduledReleases.delete(resId);
+    }
+
+    let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+    existingBookings = existingBookings.filter(b => String(b.parkingId) !== String(parkId));
+    localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
+
+    localStorage.removeItem('myBooking'); 
+    localStorage.removeItem('myBookingName'); 
+    localStorage.removeItem('myBookingStatus');
+    localStorage.removeItem('activeReservationId');
+    localStorage.removeItem('myBookingEndTime');
+    
+    activeReservationId = null;
+    activeReservationParkingId = null;
+    window.activeReservationParkingId = null;
+
+    manageBox.style.display = "none";
+    alert("Reservation cancelled successfully.");
+    
+    location.reload();
+  } catch (err) {
+    console.error("Cancel error:", err);
+    alert("Cancel failed: " + err.message);
+  }
+});
 
 function scheduleSpotRelease(reservationId, parkingId, endTime) {
   if (scheduledReleases.has(reservationId)) return; // already scheduled this session
@@ -416,7 +521,6 @@ window.showParkingDetailsFromMap = function (parking) {
 };
 
 //cancel booking
-
 document.getElementById("cancelBtn")?.addEventListener("click", async () => {
   if (!confirm("Are you sure you want to cancel your booking?")) return;
   try {
@@ -440,17 +544,25 @@ document.getElementById("cancelBtn")?.addEventListener("click", async () => {
       scheduledReleases.delete(activeReservationId);
     }
 
+    let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+    existingBookings = existingBookings.filter(b => String(b.parkingId) !== String(activeReservationParkingId));
+    localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
+
     activeReservationId = null;
     activeReservationParkingId = null;
     localStorage.removeItem('myBooking'); 
     window.activeReservationParkingId = null;
     localStorage.removeItem('myBookingName'); 
     localStorage.removeItem('myBookingStatus');
+    localStorage.removeItem('activeReservationId');
+    localStorage.removeItem('myBookingEndTime');
+
     if (typeof window.renderMarkers === "function") {
         window.renderMarkers(window.latestParkings);
     }
     manageBox.style.display = "none";
     alert("Reservation cancelled successfully.");
+    location.reload();
   } catch (err) {
     console.error(err);
     alert(err.message || "Cancel failed.");
@@ -604,25 +716,50 @@ document.getElementById("payBtn")?.addEventListener("click", async () => {
     alert(err.message || "Payment update failed.");
   }
 });
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
     activeReservationId = localStorage.getItem('activeReservationId');
     activeReservationParkingId = localStorage.getItem('myBooking');
     const savedStatus = localStorage.getItem('myBookingStatus');
     
     window.activeReservationParkingId = activeReservationParkingId;
 
-    if (activeReservationParkingId) {
-        if (savedStatus !== 'paid' && manageBox) {
-            manageBox.style.display = "flex";
-            document.getElementById("statusText").innerText = "Status: NOT PAID";
-            document.getElementById("statusText").style.color = "blue";
+    let myBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+    
+    if (myBookings.length > 0) {
+    
+        for (const booking of [...myBookings]) {
+            try {
+                const resSnap = await getDoc(doc(db, "reservations", booking.id));
+             
+                if (!resSnap.exists() || resSnap.data().status === "cancelled" || resSnap.data().status === "completed") {
+                    myBookings = myBookings.filter(b => b.id !== booking.id);
+                    
+                    if (activeReservationId === booking.id) {
+                        localStorage.removeItem('activeReservationId');
+                        localStorage.removeItem('myBooking');
+                        localStorage.removeItem('myBookingStatus');
+                        activeReservationId = null;
+                        activeReservationParkingId = null;
+                    }
+                }
+            } catch (e) {
+                console.error("Sync error for booking:", booking.id, e);
+            }
         }
+        localStorage.setItem('myBookingsList', JSON.stringify(myBookings));
     }
+
+    if (activeReservationParkingId && savedStatus !== 'paid' && manageBox) {
+        manageBox.style.display = "flex";
+        document.getElementById("statusText").innerText = "Status: NOT PAID";
+        document.getElementById("statusText").style.color = "blue";
+    }
+
     setTimeout(() => {
         if (typeof window.renderMarkers === "function" && window.latestParkings.length > 0) {
             window.renderMarkers(window.latestParkings);
         }
-    }, 2000); 
+    }, 1000); 
 });
 
 // filter and sort functions for the parking list
@@ -656,6 +793,41 @@ export function applyFiltersAndRender() {
 
     renderParkingList(filteredParkings);
 }
+
+window.cancelAnyReservation = async function(resId, parkId) {
+    if (!confirm("Are you sure you want to cancel this specific booking?")) return;
+
+    try {
+        const reservationRef = doc(db, "reservations", String(resId));
+        const parkingRef     = doc(db, "parkings", String(parkId));
+
+        await runTransaction(db, async (tx) => {
+            const parkSnap = await tx.get(parkingRef);
+            if (!parkSnap.exists()) throw new Error("Parking not found.");
+            
+            const currentFree = Number(parkSnap.data().freeSpots || 0);
+            tx.update(parkingRef,     { freeSpots: currentFree + 1 });
+            tx.update(reservationRef, { status: "cancelled" });
+        });
+
+        let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+        existingBookings = existingBookings.filter(b => String(b.id) !== String(resId));
+        localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
+
+        if (activeReservationId === resId) {
+            localStorage.removeItem('activeReservationId');
+            localStorage.removeItem('myBooking');
+            activeReservationId = null;
+            activeReservationParkingId = null;
+        }
+
+        alert("Reservation cancelled successfully.");
+        location.reload(); // Refresh pentru a curăța harta
+    } catch (err) {
+        console.error("Cancel error:", err);
+        alert("Could not cancel: " + err.message);
+    }
+};
 
 //init
 

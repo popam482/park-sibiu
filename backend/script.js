@@ -17,83 +17,7 @@ window.latestParkings = [];
 
 window.applyFiltersAndRender = applyFiltersAndRender; 
 
-// function renderMarkers(parkings) {
-//   markersLayer.clearLayers();
-
-//   const myBookingsList = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
-
-//   parkings.forEach((p) => {
-//     if (p.lat == null || p.lng == null) return;
-
-//     const myReservation = myBookingsList.find(b => String(b.parkingId) === String(p.id));
-//     const isMySpot = !!myReservation;
-
-//     const marker = L.marker([p.lat, p.lng]).addTo(markersLayer);
-    
-//     let popupContent = `<div style="text-align: center; min-width: 160px; font-family: sans-serif;">`;
-//     popupContent += `<strong style="font-size:14px;">${p.name}</strong><br><hr style="margin:5px 0; border:0; border-top:1px solid #eee;">`;
-
-//     if (isMySpot) {
-//       const specificEndTime = myReservation.endTime;
-
-//       popupContent += `
-//         <div style="background: #fdf2f2; padding: 12px; border-radius: 8px; border: 1px solid #f9ebeb; text-align: center;">
-//             <div style="font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 5px;">TIME REMAINING</div>
-//             <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-//                 <span style="font-size: 11px; color: #95a5a6;">Remaining:</span>
-//                 <b class="map-countdown" data-endtime="${specificEndTime}" style="font-size: 20px; color: #e74c3c; font-family: 'Courier New', monospace; letter-spacing: 1px;">--:--:--</b>
-//             </div>
-//         </div>
-//         <button onclick="window.handleCancelFromMap('${myReservation.id}', '${p.id}')" 
-//     style="...">
-//     Cancel Reservation
-// </button>
-//       `;
-
-//       marker.on('popupopen', () => {
-//           setTimeout(() => {
-//               startMapCountdown(); 
-//           }, 100);
-//       });
-
-//       marker.on('popupclose', () => {
-//           if (window.mapTimerInterval) {
-//               clearInterval(window.mapTimerInterval);
-//               window.mapTimerInterval = null;
-//           }
-//       });
-
-//       if (marker._icon) {
-//           marker._icon.style.filter = "hue-rotate(140deg) brightness(0.9) saturate(2)";
-//       }
-//     } else {
-//       const isFull = p.freeSpots <= 0;
-//       popupContent += `
-//         Spots: ${p.freeSpots}/${p.totalSpots}<br>
-//         Price: <b>${p.pricePerHour} RON/h</b><br>
-//         <span style="color:${isFull ? 'red' : 'green'}; font-weight:bold;">
-//             ${isFull ? 'Occupied' : 'Available'}
-//         </span>
-//       `;
-//     }
-
-//     popupContent += `</div>`;
-//     marker.bindPopup(popupContent);
-//     marker.on('mouseover', function() { this.openPopup(); });
-
-//     marker.on('click', () => {
-//       if (!isMySpot && typeof window.showParkingDetailsFromMap === "function") {
-//         window.showParkingDetailsFromMap(p);
-//       }
-//     });
-//   });
-// }
-// DEFINEȘTE ICONIȚELE COLORATE (Se încarcă o singură dată)
 const getParkingIcon = (color) => {
-    // Dacă ai deja imaginile pe server (ex: /img/marker-green.png), folosește iconUrl
-    // Aici folosim un marker Leaflet standard, dar definim o clasă CSS pentru el.
-    
-    // CEA MAI SIMPLĂ VARIANTĂ: Folosește o funcție care creează un URL Leaflet "clasic".
     const iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + color + '.png';
     const shadowUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png';
 
@@ -119,11 +43,10 @@ function renderMarkers(parkings) {
         const myReservation = myBookingsList.find(b => b.parkingId && String(b.parkingId) === String(p.id));
         const isMySpot = !!myReservation;
 
-        // DETERMINĂ CULOAREA ICONIȚEI (Folosește culori "normale")
-        let markerColor = 'blue'; // Implicit
+        let markerColor = 'blue'; 
 
         if (isMySpot) {
-            markerColor = 'violet'; // MOV clar
+            markerColor = 'violet'; 
         } else {
             const free = Number(p.freeSpots) || 0;
             const total = Number(p.totalSpots) || 1;
@@ -132,24 +55,21 @@ function renderMarkers(parkings) {
             if (ratio > 0.6) {
                 markerColor = 'green';
             } else if (ratio >= 0.3) {
-                markerColor = 'orange'; // Sau 'gold'
+                markerColor = 'orange'; 
             } else if (ratio > 0) {
-                markerColor = 'gold'; // Sau 'yellow'
+                markerColor = 'gold'; 
             } else {
                 markerColor = 'red';
             }
         }
 
-        // CREEAZĂ MARKERUL CU ICONIȚA CORECTĂ
         const markerIcon = getParkingIcon(markerColor);
         const marker = L.marker([p.lat, p.lng], { icon: markerIcon }).addTo(markersLayer);
 
-        // Dacă e locul tău, îl aducem în față
         if (isMySpot && marker._icon) {
             marker._icon.style.zIndex = "1000";
         }
 
-        // --- LOGICA POPUP ---
         let popupContent = `<div style="text-align: center; min-width: 160px; font-family: sans-serif;">`;
         popupContent += `<strong style="font-size:14px;">${p.name}</strong><br><hr style="margin:5px 0; border:0; border-top:1px solid #eee;">`;
 
@@ -230,6 +150,11 @@ function startMapCountdown() {
 };
 onSnapshot(collection(db, "parkings"), (snapshot) => {
     window.latestParkings = snapshot.docs.map((d) => ({ ...d.data(), id: d.id }));
+
+    if (!auth.currentUser) {
+        localStorage.removeItem('myBookingsList');
+        localStorage.removeItem('activeReservationId');
+    }
 
     renderMarkers(window.latestParkings);
     

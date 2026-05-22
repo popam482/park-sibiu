@@ -4,6 +4,9 @@ window.renderMarkers = renderMarkers;
 
 import { applyFiltersAndRender, refreshSelectedParkingFromLive } from './parking.js';
 
+import { i18n } from './translations.js';
+const currentLang = localStorage.getItem('preferredLang') || (navigator.language.startsWith('ro') ? 'ro' : 'en');
+
 const map = L.map('map').setView([45.7983, 24.1256], 13);
 window.map = map;
 
@@ -19,6 +22,7 @@ window.applyFiltersAndRender = applyFiltersAndRender;
 
 function renderMarkers(parkings) {
   markersLayer.clearLayers();
+  const lang = i18n[currentLang];
 
   const myBookingsList = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
 
@@ -38,16 +42,15 @@ function renderMarkers(parkings) {
 
       popupContent += `
         <div style="background: #fdf2f2; padding: 12px; border-radius: 8px; border: 1px solid #f9ebeb; text-align: center;">
-            <div style="font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 5px;">TIME REMAINING</div>
+            <div style="font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 5px;">${lang.map_time_remaining}</div>
             <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-                <span style="font-size: 11px; color: #95a5a6;">Remaining:</span>
+            <span style="font-size: 11px; color: #95a5a6;">${lang.map_remaining_label}</span>
                 <b class="map-countdown" data-endtime="${specificEndTime}" style="font-size: 20px; color: #e74c3c; font-family: 'Courier New', monospace; letter-spacing: 1px;">--:--:--</b>
             </div>
         </div>
-        <button onclick="window.handleCancelFromMap('${myReservation.id}', '${p.id}')" 
-    style="...">
-    Cancel Reservation
-</button>
+        <button onclick="window.handleCancelFromMap('${myReservation.id}', '${p.id}')" style="...">
+         ${lang.map_btn_cancel}
+        </button>
       `;
 
       marker.on('popupopen', () => {
@@ -68,13 +71,12 @@ function renderMarkers(parkings) {
       }
     } else {
       const isFull = p.freeSpots <= 0;
-      popupContent += `
-        Spots: ${p.freeSpots}/${p.totalSpots}<br>
-        Price: <b>${p.pricePerHour} RON/h</b><br>
+    popupContent += `
+        ${lang.map_spots} ${p.freeSpots}/${p.totalSpots}<br>
+        ${lang.map_price} <b>${p.pricePerHour} RON/h</b><br>
         <span style="color:${isFull ? 'red' : 'green'}; font-weight:bold;">
-            ${isFull ? 'Occupied' : 'Available'}
-        </span>
-      `;
+        ${isFull ? lang.map_occupied : lang.map_available}</span>
+    `;
     }
 
     popupContent += `</div>`;
@@ -91,7 +93,7 @@ function renderMarkers(parkings) {
 
 function startMapCountdown() {
     if (window.mapTimerInterval) clearInterval(window.mapTimerInterval);
-
+    const lang = i18n[currentLang];
     const updateTicker = () => {
         const displays = document.querySelectorAll('.map-countdown');
         
@@ -107,7 +109,7 @@ function startMapCountdown() {
             const distance = endTime - now;
 
             if (distance < 0) {
-                display.innerHTML = "EXPIRED";
+                display.innerHTML = lang.map_expired || "EXPIRED";
                 display.style.color = "#7f8c8d";
             } else {
                 const hours = Math.floor(distance / (1000 * 60 * 60));
@@ -145,5 +147,5 @@ onSnapshot(collection(db, "parkings"), (snapshot) => {
         window.refreshSelectedParkingFromLive(window.latestParkings);
     }
 }, (err) => {
-  console.error("Realtime listener error:", err);
+  alert(i18n[currentLang].map_load_error || "Error loading map data.");
 });

@@ -133,7 +133,19 @@ export const i18n = {
     history_th_plate: "Plate",
     history_th_cost: "Cost",
     history_th_status: "Status",
-    history_loading: "Loading your history..."
+    history_loading: "Loading your history...",
+
+//script.js
+    map_time_remaining: "TIME REMAINING",
+    map_remaining_label: "Remaining:",
+    map_btn_cancel: "Cancel Reservation",
+    map_spots: "Spots:",
+    map_price: "Price:",
+    map_occupied: "Occupied",
+    map_available: "Available",
+    map_expired: "EXPIRED",
+    map_time_remaining: "TIME REMAINING",
+    map_load_error: "Error loading live parking data!"
   },
   ro: {
  //profile.js
@@ -272,7 +284,18 @@ export const i18n = {
     history_th_plate: "Număr",
     history_th_cost: "Cost",
     history_th_status: "Status",
-    history_loading: "Se încarcă istoricul..."
+    history_loading: "Se încarcă istoricul...",
+
+//script.js
+    map_time_remaining: "TIMP RĂMAS",
+    map_remaining_label: "Rămas:",
+    map_btn_cancel: "Anulează Rezervarea",
+    map_spots: "Locuri:",
+    map_price: "Preț:",
+    map_occupied: "Ocupat",
+    map_available: "Disponibil",
+    map_expired: "EXPIRAT",
+    map_load_error: "Eroare la încărcarea datelor în timp real!"
   }
 
 };

@@ -98,7 +98,42 @@ export const i18n = {
     btn_google: "Login with Google",
     btn_logout_login_page: "Logout",
     main_title: "Car Park Sibiu",
-    sub_title: "Fast Parking For Your Travel Experience"
+    sub_title: "Fast Parking For Your Travel Experience",
+
+//parking-history.js
+    history_no_sessions: "No parking sessions found.",
+    history_error: "Error loading history.",
+    history_btn_cancel: "Cancel & Release",
+    alert_cancel_confirm: "Are you sure you want to cancel this active reservation?",
+    alert_cancel_success: "Reservation cancelled and spot released successfully!",
+    alert_cancel_error: "Error cancelling reservation: ",
+    pdf_invoice_title: "Monthly Parking Invoice - Park Sibiu",
+    pdf_date: "Date: ",
+    pdf_total_amount: "Total Amount: ",
+    pdf_details: "Details:",
+    pdf_invoice_file_name: "Invoice_ParkSibiu_",
+    alert_cancel_confirm: "Your parking session is still active. Do you want to cancel it and release the spot now?",
+    alert_cancel_success: "Reservation cancelled and spot is now free!",
+    alert_cancel_failed: "Failed to cancel: ",
+    status_paid: "PAID",
+    status_completed: "COMPLETED",
+    status_pending: "PENDING",
+    status_cancelled: "CANCELLED",
+
+//parking-history.html
+    history_back: "← Back to Map",
+    history_title: "Parking & Billing History",
+    history_billing_summary: "Monthly Billing Summary",
+    history_billing_desc: "All parking sessions are accumulated and billed at the end of the month.",
+    history_invoice_btn: "Generate Monthly Invoice (PDF)",
+    history_detailed_sessions: "Detailed Sessions",
+    history_th_date: "Date",
+    history_th_location: "Location",
+    history_th_duration: "Duration",
+    history_th_plate: "Plate",
+    history_th_cost: "Cost",
+    history_th_status: "Status",
+    history_loading: "Loading your history..."
   },
   ro: {
  //profile.js
@@ -202,7 +237,42 @@ export const i18n = {
     btn_google: "Conectare cu Google",
     btn_logout_login_page: "Deconectare",
     main_title: "Parcare Auto Sibiu",
-    sub_title: "Parcare rapidă pentru o călătorie fără griji"
+    sub_title: "Parcare rapidă pentru o călătorie fără griji",
+
+//parking-history.js
+    history_no_sessions: "Nu au fost găsite sesiuni de parcare.",
+    history_error: "Eroare la încărcarea istoricului.",
+    history_btn_cancel: "Anulează & Eliberează",
+    alert_cancel_confirm: "Ești sigur că vrei să anulezi această rezervare activă?",
+    alert_cancel_success: "Rezervarea a fost anulată și locul a fost eliberat!",
+    alert_cancel_error: "Eroare la anularea rezervării: ",
+    pdf_invoice_title: "Factură Lunară Parcare - Park Sibiu",
+    pdf_date: "Data: ",
+    pdf_total_amount: "Sumă Totală: ",
+    pdf_details: "Detalii:",
+    pdf_invoice_file_name: "Factura_ParkSibiu_",
+    alert_cancel_confirm: "Sesiunea de parcare este încă activă. Vrei să o anulezi și să eliberezi locul acum?",
+    alert_cancel_success: "Rezervarea a fost anulată, iar locul este acum liber!",
+    alert_cancel_failed: "Eroare la anulare: ",
+    status_paid: "PLĂTITĂ",
+    status_completed: "FINALIZATĂ",
+    status_pending: "ÎN AȘTEPTARE",
+    status_cancelled: "ANULATĂ",
+
+//parking-history.html
+    history_back: "← Înapoi la Hartă",
+    history_title: "Istoric Parcări & Facturare",
+    history_billing_summary: "Sumar Facturare Lunară",
+    history_billing_desc: "Toate sesiunile de parcare sunt acumulate și facturate la sfârșitul lunii.",
+    history_invoice_btn: "Generează Factură Lunară (PDF)",
+    history_detailed_sessions: "Sesiuni Detaliate",
+    history_th_date: "Dată",
+    history_th_location: "Locație",
+    history_th_duration: "Durată",
+    history_th_plate: "Număr",
+    history_th_cost: "Cost",
+    history_th_status: "Status",
+    history_loading: "Se încarcă istoricul..."
   }
 
 };

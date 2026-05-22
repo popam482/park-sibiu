@@ -22,13 +22,15 @@
 </head>
 <body>
     <div class="history-container">
-        <a href="index.html" class="back-link">← Back to Map</a>
-        <h1>Parking & Billing History</h1>
+        <a href="index.html" class="back-link" id="lnkBack">← Back to Map</a>
+        
+        <h1 id="lblTitle">Parking & Billing History</h1>
 
         <div class="billing-card">
             <div>
-                <h3 style="margin:0;">Monthly Billing Summary</h3>
-                <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
+                <h3 id="lblBillingSummary" style="margin:0;">Monthly Billing Summary</h3>
+                
+                <p id="lblBillingDesc" style="margin: 5px 0 0; color: #666; font-size: 14px;">
                     All parking sessions are accumulated and billed at the end of the month.
                 </p>
                 <h2 id="totalToPay" style="margin: 10px 0 0; color: #2c3e50;">0.00 RON</h2>
@@ -36,32 +38,50 @@
             <button id="generateInvoiceBtn" class="btn-invoice">Generate Monthly Invoice (PDF)</button>
         </div>
 
-        <h3>Detailed Sessions</h3>
+        <h3 id="lblDetailedSessions">Detailed Sessions</h3>
         <table class="session-table">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Location</th>
-                    <th>Duration</th>
-                    <th>Plate</th>
-                    <th>Cost</th>
-                    <th>Status</th>
+                    <th id="thDate">Date</th>
+                    <th id="thLocation">Location</th>
+                    <th id="thDuration">Duration</th>
+                    <th id="thPlate">Plate</th>
+                    <th id="thCost">Cost</th>
+                    <th id="thStatus">Status</th>
                 </tr>
             </thead>
             <tbody id="historyTableBody">
                 <tr>
-                    <td colspan="6" style="text-align:center;">Loading your history...</td>
+                    <td colspan="6" style="text-align:center;" id="lblLoading">Loading your history...</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <script type="module">
+        import { i18n } from '../backend/translations.js';
         import { getHistory, generatePDF } from '../backend/parking-history.js';
-        
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log("History initialized");
-        });
+        const currentLang = localStorage.getItem('preferredLang') || (navigator.language.startsWith('ro') ? 'ro' : 'en');
+
+        if (i18n && i18n[currentLang]) {
+            const t = i18n[currentLang];
+            
+            if(t.history_back) document.getElementById("lnkBack").innerText = t.history_back;
+            if(t.history_title) document.getElementById("lblTitle").innerText = t.history_title;
+            if(t.history_billing_summary) document.getElementById("lblBillingSummary").innerText = t.history_billing_summary;
+            if(t.history_billing_desc) document.getElementById("lblBillingDesc").innerText = t.history_billing_desc;
+            if(t.history_invoice_btn) document.getElementById("generateInvoiceBtn").innerText = t.history_invoice_btn;
+            if(t.history_detailed_sessions) document.getElementById("lblDetailedSessions").innerText = t.history_detailed_sessions;
+            
+            if(t.history_th_date) document.getElementById("thDate").innerText = t.history_th_date;
+            if(t.history_th_location) document.getElementById("thLocation").innerText = t.history_th_location;
+            if(t.history_th_duration) document.getElementById("thDuration").innerText = t.history_th_duration;
+            if(t.history_th_plate) document.getElementById("thPlate").innerText = t.history_th_plate;
+            if(t.history_th_cost) document.getElementById("thCost").innerText = t.history_th_cost;
+            if(t.history_th_status) document.getElementById("thStatus").innerText = t.history_th_status;
+            
+            if(t.history_loading) document.getElementById("lblLoading").innerText = t.history_loading;
+        }
     </script>
 </body>
 </html>

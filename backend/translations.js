@@ -73,8 +73,32 @@ export const i18n = {
     section_history: "Reservation History",
     loading_history: "Loading history...",
     section_security: "Security",
-    btn_reset_password: "Send Password Reset Email"
+    btn_reset_password: "Send Password Reset Email",
 
+
+//login.js
+    login_title: "Welcome to Park Sibiu",
+    label_email: "Email Address",
+    label_password: "Password",
+    placeholder_email: "Enter your email...",
+    placeholder_password: "Enter your password...",
+    btn_signin: "Sign In",
+    btn_signup: "Create Account",
+    alert_login_success: "Login Successful!",
+    alert_login_error: "Login Error: ",
+    alert_register_success: "Account Created Successfully!",
+    alert_register_error: "Sign Up Error: ",
+    alert_google_error: "Google Login Error: ",
+    alert_logout_success: "Logged out!",
+    alert_logout_error: "Logout Error: ",
+    status_logged_in: "Logged in as: ",
+    status_logged_out: "Not logged in",
+
+//login.html
+    btn_google: "Login with Google",
+    btn_logout_login_page: "Logout",
+    main_title: "Car Park Sibiu",
+    sub_title: "Fast Parking For Your Travel Experience"
   },
   ro: {
  //profile.js
@@ -155,6 +179,30 @@ export const i18n = {
     section_security: "Securitate",
     btn_reset_password: "Trimite Email Resetare Parolă",
 
+
+    //login.js
+    login_title: "Bun venit la Park Sibiu",
+    label_email: "Adresă de Email",
+    label_password: "Parolă",
+    placeholder_email: "Introdu email-ul...",
+    placeholder_password: "Introdu parola...",
+    btn_signin: "Conectare",
+    btn_signup: "Creează Cont",
+    alert_login_success: "Autentificare reușită!",
+    alert_login_error: "Eroare logare: ",
+    alert_register_success: "Cont creat cu succes!",
+    alert_register_error: "Eroare înregistrare: ",
+    alert_google_error: "Eroare autentificare Google: ",
+    alert_logout_success: "Te-ai deconectat!",
+    alert_logout_error: "Eroare la deconectare: ",
+    status_logged_in: "Conectat ca: ",
+    status_logged_out: "Neconectat",
+
+    //login.html
+    btn_google: "Conectare cu Google",
+    btn_logout_login_page: "Deconectare",
+    main_title: "Parcare Auto Sibiu",
+    sub_title: "Parcare rapidă pentru o călătorie fără griji"
   }
 
 };

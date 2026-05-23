@@ -44,9 +44,11 @@ li:hover {
 <body>
 <header>
   <div id="header-container" class="header-container">
-  <button><a href="profile.html" id="profileBtn" title="Profil">👤</a></button>
-  <button id="openParkingListBtn" title="Available Parkings"> Available Parkings</button>
-  <button id="historyBtn"><a href="parking-history.html" style="text-decoration:none; color:inherit;">📋 Parking & Billing History</a></button>
+ <button><a href="profile.html" id="profileBtn" title="Profil">👤</a></button>
+    <button id="openParkingListBtn" title="Available Parkings"><span id="nav_available_parkings">Available Parkings</span></button>
+    <button id="historyBtn">
+      <a href="parking-history.html" id="nav_history" style="text-decoration:none; color:inherit;">📋 Parking & Billing History</a>
+    </button>
 </div>
 </header>
   <div id="map"></div>
@@ -67,30 +69,30 @@ li:hover {
             <!-- Checkbox - "Available Only" -->
             <div style="display: flex; align-items: center;">
                 <input type="checkbox" id="availableOnlyFilter" style="margin-right: 5px;">
-                <label for="availableOnlyFilter" style="font-size: 14px;">Available Only</label>
+                <label for="availableOnlyFilter" style="font-size: 14px;" id="lblAvailableOnly">Available Only</label>
             </div>
 
             <!-- Checkbox - "Non-Stop" -->
             <div style="display: flex; align-items: center;">
                 <input type="checkbox" id="nonStopFilter" style="margin-right: 5px;">
-                <label for="nonStopFilter" style="font-size: 14px;">Open 24/7</label>
+                <label for="nonStopFilter" id="lblNonStop" style="font-size: 14px;">Open 24/7</label>
             </div>
 
             <!-- Sort -->
             <select id="sortSelect" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
-                <option value="default">Sort by Default</option>
-                <option value="price-asc">Price (Low to High)</option>
-                <option value="price-desc">Price (High to Low)</option>
+                <option value="default" id="optSortDefault">Sort by Default</option>
+                <option value="price-asc" id="optSortAsc">Price (Low to High)</option>
+                <option value="price-desc" id="optSortDesc">Price (High to Low)</option>
             </select>
         </div>
       <ul id="parkingList">
-        <li>Loading parkings...</li>
+        <li id="lblLoadingParkings">Loading parkings...</li>
       </ul>
 
     </div>
     </div>
     <div id="parkingDetailsView" style="display:none;">
-      <button id="backToParkingListBtn" style="margin-bottom:10px;">Back to list</button>
+      <button id="backToParkingListBtn" style="margin-bottom:10px;"><span id="backToParkingListBtnText">Back to list</span></button>
       <div id="selectedParkingDetails"></div>
     </div>
   </div>
@@ -105,14 +107,14 @@ li:hover {
  
 
     <div style="text-align: left; margin-bottom: 15px;">
-  <label style="font-size: 12px; font-weight: bold;">Your Saved Plates:</label>
+  <label style="font-size: 12px; font-weight: bold;" id="lblSavedPlates">Your Saved Plates:</label>
   <select id="carSelect" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;">
-    <option value=""> Select a saved plate </option>
+    <option value="" id="optSelectPlate"> Select a saved plate </option>
   </select>
 </div>
 
 <div style="text-align: left; margin-bottom: 15px;">
-  <label style="font-size: 12px; font-weight: bold;">Plate Number:</label>
+  <label style="font-size: 12px; font-weight: bold;" id="lblPlateNumber">Plate Number:</label>
   <input type="text" id="plateNumber" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;" placeholder="Select or type plate...">
 </div>
 
@@ -124,18 +126,18 @@ li:hover {
     
     <div style="display: flex; justify-content: space-between;">
         <div style="text-align: left; width: 45%;">
-            <label style="font-size: 12px; font-weight: bold;">Start Time:</label>
+            <label style="font-size: 12px; font-weight: bold;" id="lblStartTime">Start Time:</label>
             <input type="time" id="startTime" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
         </div>
         <div style="text-align: left; width: 45%;">
-            <label style="font-size: 12px; font-weight: bold;">Hours:</label>
+            <label style="font-size: 12px; font-weight: bold;" id="lblDurationHours">Hours:</label>
             <input type="number" id="duration" value="1" min="1" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
         </div>
     </div>
 
     <div style="display: flex; align-items: center; gap: 8px;">
         <input type="checkbox" id="allDayCheck" style="width: auto; margin: 0; cursor: pointer;">
-        <label for="allDayCheck" style="font-size: 14px; cursor: pointer;">Book until the end of the day</label>
+        <label for="allDayCheck" style="font-size: 14px; cursor: pointer;" id="lblAllDayCheck">Book until the end of the day</label>
     </div>
 
 </div>
@@ -146,7 +148,7 @@ li:hover {
 </div>
 
 <div id="manageReservation" class="manageReservation">
-    <h4>My Reservation</h4>
+    <h4 id="lblMyReservation">My Reservation</h4>
     <p id="resInfo"></p>
 
     <p id="costText" style="font-weight: bold; margin: 10px 0;"></p>
@@ -165,5 +167,110 @@ li:hover {
 
   <script type="module" src="../backend/parking.js"></script>
 
+  <script type="module">
+  // 1. Definim traducerile direct aici ca să nu mai depindem de alte fișiere pentru textele statice
+  const localTranslations = {
+    ro: {
+      nav_available_parkings: "Parcări Disponibile",
+      nav_history: "Istoric Parcări & Plăți",
+      lbl_available_only: "Doar Disponibile",
+      lbl_non_stop: "Deschis 24/7",
+      opt_sort_default: "Sortare Implicită",
+      opt_sort_asc: "Preț (Mic la Mare)",
+      opt_sort_desc: "Preț (Mare la Mic)",
+      lbl_loading_parkings: "Se încarcă parcările...",
+      back_to_list: "Înapoi la listă",
+      panel_book_title: "Rezervă un loc",
+      lbl_saved_plates: "Plăcuțe Salvate:",
+      opt_select_plate: " Selectează o plăcuță salvată ",
+      lbl_plate_number: "Număr Înmatriculare:",
+      placeholder_plate: "Selectează sau scrie numărul...",
+      lbl_start_time: "Ora de început:",
+      lbl_duration_hours: "Ore:",
+      lbl_all_day_check: "Rezervă până la sfârșitul zilei",
+      btn_confirm_booking: "Confirmă Rezervarea",
+      btn_cancel_panel: "Anulează",
+      lbl_my_reservation: "Rezervarea Mea",
+      btn_pay_now: "Plătește Acum",
+      btn_edit_time: "Modifică Ora",
+      btn_cancel_booking: "Anulează Rezervarea",
+      search_placeholder: "Caută după numele parcării..."
+    },
+    en: {
+      nav_available_parkings: "Available Parkings",
+      nav_history: "Parking & Billing History",
+      lbl_available_only: "Available Only",
+      lbl_non_stop: "Open 24/7",
+      opt_sort_default: "Sort by Default",
+      opt_sort_asc: "Price (Low to High)",
+      opt_sort_desc: "Price (High to Low)",
+      lbl_loading_parkings: "Loading parkings...",
+      back_to_list: "Back to list",
+      panel_book_title: "Book a spot",
+      lbl_saved_plates: "Your Saved Plates:",
+      opt_select_plate: " Select a saved plate ",
+      lbl_plate_number: "Plate Number:",
+      placeholder_plate: "Select or type plate...",
+      lbl_start_time: "Start Time:",
+      lbl_duration_hours: "Hours:",
+      lbl_all_day_check: "Book until the end of the day",
+      btn_confirm_booking: "Confirm Booking",
+      btn_cancel_panel: "Cancel",
+      lbl_my_reservation: "My Reservation",
+      btn_pay_now: "Pay Now",
+      btn_edit_time: "Edit Time",
+      btn_cancel_booking: "Cancel Booking",
+      search_placeholder: "Search by parking name..."
+    }
+  };
+
+  // 2. Aflăm limba salvată în browser sau setăm engleza ca fallback
+  const currentLang = localStorage.getItem('preferredLang') || (navigator.language.startsWith('ro') ? 'ro' : 'en');
+
+  // 3. Funcția care ia la rând ID-urile din HTML și le schimbă textul
+  function applyStaticTranslations() {
+    const lang = localTranslations[currentLang];
+    if (!lang) return;
+
+    // Header & Filtre
+    if (document.getElementById('nav_available_parkings')) document.getElementById('nav_available_parkings').innerText = lang.nav_available_parkings;
+    if (document.getElementById('nav_history')) document.getElementById('nav_history').innerText = "📋 " + lang.nav_history;
+    if (document.getElementById('lblAvailableOnly')) document.getElementById('lblAvailableOnly').innerText = lang.lbl_available_only;
+    if (document.getElementById('lblNonStop')) document.getElementById('lblNonStop').innerText = lang.lbl_non_stop;
+    
+    // Căutare (Placeholder)
+    if (document.getElementById('searchInput')) document.getElementById('searchInput').placeholder = lang.search_placeholder;
+
+    // Sortare & Listă
+    if (document.getElementById('optSortDefault')) document.getElementById('optSortDefault').innerText = lang.opt_sort_default;
+    if (document.getElementById('optSortAsc')) document.getElementById('optSortAsc').innerText = lang.opt_sort_asc;
+    if (document.getElementById('optSortDesc')) document.getElementById('optSortDesc').innerText = lang.opt_sort_desc;
+    if (document.getElementById('lblLoadingParkings')) document.getElementById('lblLoadingParkings').innerText = lang.lbl_loading_parkings;
+    if (document.getElementById('backToParkingListBtnText')) document.getElementById('backToParkingListBtnText').innerText = lang.back_to_list;
+
+    // Fereastra de Rezervare (Cea din screenshot)
+    if (document.getElementById('panelTitle')) document.getElementById('panelTitle').innerText = lang.panel_book_title;
+    if (document.getElementById('lblSavedPlates')) document.getElementById('lblSavedPlates').innerText = lang.lbl_saved_plates;
+    if (document.getElementById('optSelectPlate')) document.getElementById('optSelectPlate').innerText = lang.opt_select_plate;
+    if (document.getElementById('lblPlateNumber')) document.getElementById('lblPlateNumber').innerText = lang.lbl_plate_number;
+    if (document.getElementById('plateNumber')) document.getElementById('plateNumber').placeholder = lang.placeholder_plate;
+    if (document.getElementById('lblStartTime')) document.getElementById('lblStartTime').innerText = lang.lbl_start_time;
+    if (document.getElementById('lblDurationHours')) document.getElementById('lblDurationHours').innerText = lang.lbl_duration_hours;
+    if (document.getElementById('lblAllDayCheck')) document.getElementById('lblAllDayCheck').innerText = lang.lbl_all_day_check;
+    if (document.getElementById('confirmBooking')) document.getElementById('confirmBooking').innerText = lang.btn_confirm_booking;
+    if (document.getElementById('closePanel')) document.getElementById('closePanel').innerText = lang.btn_cancel_panel;
+
+    // Panou Rezervare Activă
+    if (document.getElementById('lblMyReservation')) document.getElementById('lblMyReservation').innerText = lang.lbl_my_reservation;
+    if (document.getElementById('payBtn')) document.getElementById('payBtn').innerText = lang.btn_pay_now;
+    if (document.getElementById('editBtn')) document.getElementById('editBtn').innerText = lang.btn_edit_time;
+    if (document.getElementById('cancelBtn')) document.getElementById('cancelBtn').innerText = lang.btn_cancel_booking;
+  }
+
+  // Executăm traducerea automată imediat ce se încarcă structura paginii
+  document.addEventListener('DOMContentLoaded', applyStaticTranslations);
+  // O rulăm și direct, în caz că DOM-ul e deja gata
+  applyStaticTranslations();
+</script>
 </body>
 </html>

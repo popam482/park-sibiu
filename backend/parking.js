@@ -39,6 +39,38 @@ let autoReleaseInitialized = false;  // prevents duplicate listeners/intervals
 let pollIntervalId         = null;   // keeps reference so we never double-register
 const processingReservations = new Set(); 
 
+function normalizePlateNumber(value) {
+  return String(value || "").replace(/\s+/g, "").toUpperCase();
+}
+
+function isValidRomanianPlate(plateNumber) {
+  return /^(B\d{2,3}[A-Z]{3}|[A-Z]{2}\d{2}[A-Z]{3})$/.test(plateNumber);
+}
+
+function getValidatedBookingPlate() {
+  const plateInput = document.getElementById("plateNumber");
+  const plateNumber = normalizePlateNumber(plateInput?.value);
+
+  if (plateInput) plateInput.value = plateNumber;
+
+  if (!plateNumber) {
+    alert("Please enter or select a license plate.");
+    return null;
+  }
+
+  if (!/^[A-Z0-9]+$/.test(plateNumber)) {
+    alert("License plate must contain only letters and numbers.");
+    return null;
+  }
+
+  if (!isValidRomanianPlate(plateNumber)) {
+    alert("Invalid Romanian license plate format. Use SB12ABC or B123ABC.");
+    return null;
+  }
+
+  return plateNumber;
+}
+
 // event listeners for filters and sorting in the parking list
 document.getElementById('searchInput')?.addEventListener('input', applyFiltersAndRender);
 document.getElementById('availableOnlyFilter')?.addEventListener('change', applyFiltersAndRender);
@@ -589,9 +621,8 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     if (!timeChosen)  return alert("Please choose a start time.");
 
     const allDay    = document.getElementById("allDayCheck")?.checked || false;
-    const plateInput = document.getElementById("plateNumber");
-    const plateNumber = plateInput ? plateInput.value.replace(/\s+/g, "").toUpperCase() : "";
-    if (!plateNumber) return alert("Please enter or select a license plate.");
+    const plateNumber = getValidatedBookingPlate();
+    if (!plateNumber) return;
 
     const [sh, sm] = timeChosen.split(":").map(Number);
     const now       = new Date();
@@ -671,7 +702,8 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     const newBooking = {
         parkingId: parkingId,
         endTime: bookingEnd.toISOString(),
-        id: reservationDocRef.id
+        id: reservationDocRef.id,
+        plateNumber
     };
 
     const index = existingBookings.findIndex(b => b.parkingId === parkingId);

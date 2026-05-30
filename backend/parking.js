@@ -311,6 +311,16 @@ async function loadUserCars(user) {
         plateInput.readOnly = true;
       }
     };
+      if (plateInput) {
+      plateInput.addEventListener("input", (e) => {
+        let value = e.target.value.replace(/\s+/g, '').toUpperCase();
+        value = value.replace(/[^A-Z0-9]/g, "");
+        if (value.length > 14) {
+          value = value.slice(0, 14);
+        }
+        e.target.value = value;
+      });
+    };
   } catch (err) {
     console.error("Error loading plates:", err);
   }

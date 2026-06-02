@@ -228,3 +228,17 @@ section {
         width: 90%;
     }
 }
+
+
+/* Dropdown */
+body.dark-theme select {
+    background-color: #17231b;
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dropdown options */
+body.dark-theme select option {
+    background-color: #17231b;
+    color: #f8fafc;
+}

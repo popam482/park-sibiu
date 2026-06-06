@@ -101,6 +101,15 @@ if (data.displayName) {
 });
 
 function applyTheme(isDark) {
+  const theme = isDark ? "dark" : "light";
+
+  if (window.applyParkSibiuTheme) {
+    window.applyParkSibiuTheme(theme);
+    return;
+  }
+
+  localStorage.setItem("parkSibiuTheme", theme);
+  document.documentElement.dataset.theme = theme;
   document.body.classList.toggle("dark-theme", isDark);
   document.body.classList.toggle("light-theme", !isDark);
 }

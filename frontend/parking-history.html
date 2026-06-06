@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parking History - Park Sibiu</title>
+    <script src="theme.js"></script>
     <link rel="stylesheet" href="map-styles.css">
     <link rel="icon" href="../graphics/icon.png" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11,12 +12,14 @@
 <body class="history-page">
     <div class="history-shell">
         <header class="map-toolbar history-toolbar">
-            <a class="brand" href="index.html" aria-label="Back to Park Sibiu map">
+            <a class="brand" href="login.html" aria-label="Back to Park Sibiu map">
                 <img src="../graphics/icon.png" alt="">
                 <span>Park Sibiu</span>
             </a>
             <nav class="toolbar-actions" aria-label="History navigation">
-                <button class="secondary-button"><a href="index.html">Back to Map</a></button>
+                      <button class="secondary-button"><a href="profile.html" id="profileBtn" title="Profile">Profile</a></button>
+                <button id="mapBtn" class="secondary-button"><a href="index.html">Map</a></button>
+                <button id="logoutBtn" class="primary-button">Logout</button>
             </nav>
         </header>
 

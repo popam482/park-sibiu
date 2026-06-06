@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Park Sibiu</title>
+    <script src="theme.js"></script>
     <link rel="stylesheet" href="login-styles.css">  
     <link rel="icon" href="../graphics/icon.png" />
 </head>
@@ -28,22 +29,49 @@
             </section>
 
             <section id="login-container" class="login-container" aria-label="Authentication">
-                <div class="form-heading">
-                    <p class="eyebrow">Welcome</p>
-                    <h3>Sign in to continue</h3>
+                <div class="auth-panel">
+                    <div class="form-heading">
+                        <p class="eyebrow">Welcome</p>
+                        <h3>Sign in to continue</h3>
+                    </div>
+
+                    <label for="email">Email address</label>
+                    <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+
+                    <label for="password">Password</label>
+                    <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" />
+
+                    <div class="button-group">
+                        <button id="signinBtn" class="primary-button">Sign In</button>
+                        <button id="signupBtn" class="secondary-button">Sign Up</button>
+                        <button id="googleBtn" class="google-button">Login with Google</button>
+                    </div>
                 </div>
 
-                <label for="email">Email address</label>
-                <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+                <div class="logged-in-menu" aria-label="Account menu">
+                    <div class="form-heading">
+                        <p class="eyebrow">Dashboard</p>
+                        <h3>Where would you like to go?</h3>
+                    </div>
 
-                <label for="password">Password</label>
-                <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" />
+                    <nav class="menu-grid" aria-label="Logged in navigation">
+                        <a class="menu-card" href="profile.html">
+                            <span class="menu-label">Profile</span>
+                            <span class="menu-copy">Account settings and saved plates</span>
+                        </a>
+                        <a class="menu-card" href="index.html">
+                            <span class="menu-label">Map</span>
+                            <span class="menu-copy">Find available parking nearby</span>
+                        </a>
+                        <a class="menu-card" href="parking-history.html">
+                            <span class="menu-label">Payment History</span>
+                            <span class="menu-copy">Reservations, costs, and invoices</span>
+                        </a>
+                    </nav>
 
-                <div class="button-group">
-                    <button id="signinBtn" class="primary-button">Sign In</button>
-                    <button id="signupBtn" class="secondary-button">Sign Up</button>
-                    <button id="googleBtn" class="google-button">Login with Google</button>
-                    <button id="logoutBtn" class="secondary-button">Logout</button>
+                    <div class="button-group menu-actions">
+                        <button id="logoutBtn" class="secondary-button">Logout</button>
+                    </div>
                 </div>
             </section>
         </main>

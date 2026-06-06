@@ -16,6 +16,7 @@
     --shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
 }
 
+html[data-theme="light"],
 body.light-theme {
     --surface: rgba(248, 250, 247, 0.94);
     --surface-strong: #ffffff;
@@ -28,6 +29,7 @@ body.light-theme {
     --border: rgba(16, 24, 20, 0.14);
 }
 
+html[data-theme="dark"],
 body.dark-theme {
     --surface: rgba(16, 24, 20, 0.94);
     --surface-strong: rgba(255, 255, 255, 0.08);

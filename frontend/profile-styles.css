@@ -255,12 +255,26 @@ select {
     font-size: 1rem;
     background: var(--surface-strong);
     transition: border-color 160ms ease, box-shadow 160ms ease;
+    background-color: var(--surface-strong);
 }
 
 input:focus,
 select:focus {
     border-color: var(--brand);
     box-shadow: 0 0 0 4px rgba(47, 111, 70, 0.14);
+}
+
+html[data-theme="dark"] select,
+body.dark-theme select {
+    color: var(--text);
+    background-color: #101814;
+    color-scheme: dark;
+}
+
+html[data-theme="dark"] select option,
+body.dark-theme select option {
+    color: #f8faf7;
+    background-color: #101814;
 }
 
 button {

@@ -219,7 +219,7 @@ input {
     color: var(--text);
     font: inherit;
     font-size: 1rem;
-    background: var(--surface-strong);
+    background-color: var(--surface-strong);
     transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 

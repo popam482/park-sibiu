@@ -5,181 +5,106 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Park Sibiu</title>
-  <link rel="icon" href="../graphics/park-icon-unsigned.png" />
+  <link rel="icon" href="../graphics/icon.png" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="map-styles.css" />
-  <style>
-    html,
-    body {
-      margin: 0;
-      height: 100%;
-      padding: 0;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    li {
-      margin-bottom: 10px;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 5px;
-    }
-
-    /* Hover effect for list items */
-    li:hover {
-      background-color: #eef2f7;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    /* Styling for the hidden details section */
-    .details-box {
-      margin-top: 10px;
-      padding: 10px;
-      background-color: #ffffff;
-      border-radius: 8px;
-      border-left: 4px solid #3498db;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      animation: fadeIn 0.4s ease;
-    }
-
-    /* Simple animation for when details appear */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-5px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  </style>
-
 </head>
 
-<body>
-  <header>
-    <button><a href="profile.html" id="profileBtn" title="Profil">👤</a></button>
-    <button id="openParkingListBtn" title="Available Parkings"> Available Parkings</button>
-    <button id="historyBtn"><a href="parking-history.html" style="text-decoration:none; color:inherit;">📋 Parking &
-        Billing History</a></button>
+<body class="map-page">
+  <header class="map-toolbar">
+    <a class="brand" href="login.html" aria-label="Park Sibiu map">
+      <img src="../graphics/icon.png" alt="">
+      <span>Park Sibiu</span>
+    </a>
+
+    <nav class="toolbar-actions" aria-label="Map navigation">
+      <button class="secondary-button"><a href="profile.html" id="profileBtn" title="Profile">Profile</a></button>
+      <button id="openParkingListBtn" class="primary-button" title="Available Parkings">Available Parkings</button>
+      <button id="historyBtn" class="secondary-button"><a href="parking-history.html">Parking & Billing History</a></button>
+    </nav>
   </header>
+
   <div id="map"></div>
 
-
-
-  <div id="parkingPanel"
-    style="display:none; position:fixed; z-index:1300; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.4); overflow:scroll;">
-    <div
-      style="background:#fff; width:90%; max-width:500px; margin:40px auto; padding:15px; border-radius:8px; position:relative;">
-      <button id="closeParkingPanelBtn" title="Close"
-        style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:22px; line-height:1; cursor:pointer; color:#555; padding:2px 6px; border-radius:4px;">&#x2715;</button>
+  <div id="parkingPanel" class="panel-overlay">
+    <div class="panel-card parking-card">
+      <button id="closeParkingPanelBtn" class="icon-button" title="Close">&#x2715;</button>
       <div id="parkingListView">
-        <div id="search-container" style="padding: 10px 0; border-bottom: 2px solid #eee; margin-bottom: 10px;">
-          <!-- Search Bar -->
-          <input type="text" id="searchInput" placeholder="Search by parking name..."
-            style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        <div id="search-container" class="search-panel">
+          <label class="sr-only" for="searchInput">Search by parking name</label>
+          <input type="text" id="searchInput" placeholder="Search by parking name...">
 
-          <!-- Filters and Sorting -->
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div class="filter-row">
+            <label class="filter-option" for="availableOnlyFilter">
+              <input type="checkbox" id="availableOnlyFilter">
+              <span>Available Only</span>
+            </label>
 
-            <!-- Checkbox - "Available Only" -->
-            <div style="display: flex; align-items: center;">
-              <input type="checkbox" id="availableOnlyFilter" style="margin-right: 5px;">
-              <label for="availableOnlyFilter" style="font-size: 14px;">Available Only</label>
-            </div>
+            <label class="filter-option" for="nonStopFilter">
+              <input type="checkbox" id="nonStopFilter">
+              <span>Open 24/7</span>
+            </label>
 
-            <!-- Checkbox - "Non-Stop" -->
-            <div style="display: flex; align-items: center;">
-              <input type="checkbox" id="nonStopFilter" style="margin-right: 5px;">
-              <label for="nonStopFilter" style="font-size: 14px;">Open 24/7</label>
-            </div>
-
-            <!-- Sort -->
-            <select id="sortSelect" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
+            <label class="sr-only" for="sortSelect">Sort parkings</label>
+            <select id="sortSelect">
               <option value="default">Sort by Default</option>
               <option value="price-asc">Price (Low to High)</option>
               <option value="price-desc">Price (High to Low)</option>
             </select>
           </div>
-          <ul id="parkingList">
+
+          <ul id="parkingList" class="parking-list">
             <li>Loading parkings...</li>
           </ul>
-
         </div>
       </div>
-      <div id="parkingDetailsView" style="display:none;">
-        <button id="backToParkingListBtn" style="margin-bottom:10px;">Back to list</button>
+
+      <div id="parkingDetailsView" class="parking-details-view">
+        <button id="backToParkingListBtn" class="secondary-button">Back to list</button>
         <div id="selectedParkingDetails"></div>
       </div>
     </div>
   </div>
 
-  <div id="reservationPanel"
-    style="display:none; position:fixed; z-index:1400; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); overflow:scroll;">
-    <div
-      style="background-color: #ffffff; margin: 10% auto; padding: 25px; width: 320px; border-radius: 10px; text-align: center; font-family: Arial, sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-
+  <div id="reservationPanel" class="panel-overlay reservation-overlay">
+    <div class="panel-card reservation-card">
       <h3 id="panelTitle">Book a spot</h3>
-      <p id="selectedParkingName" style="color: #555; font-weight: bold;"></p>
+      <p id="selectedParkingName" class="selected-parking-name"></p>
 
-
-
-      <div style="text-align: left; margin-bottom: 15px;">
-        <label style="font-size: 12px; font-weight: bold;">Your Saved Plates:</label>
-        <select id="carSelect"
-          style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;">
+      <div class="field-group">
+        <label for="carSelect">Your Saved Plates</label>
+        <select id="carSelect">
           <option value=""> Select a saved plate </option>
         </select>
       </div>
 
-      <div style="text-align: left; margin-bottom: 15px;">
-        <label style="font-size: 12px; font-weight: bold;">Plate Number:</label>
-        <input type="text" id="plateNumber"
-          style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;"
-          placeholder="Select or type plate...">
+      <div class="field-group">
+        <label for="plateNumber">Plate Number</label>
+        <input type="text" id="plateNumber" placeholder="Select or type plate...">
       </div>
 
-      <select id="countrySelect" style="display: none;">
+      <select id="countrySelect">
         <option value="RO" selected>Romania</option>
       </select>
 
-      <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
-
-        <div style="display: flex; justify-content: space-between;">
-          <div style="text-align: left; width: 45%;">
-            <label style="font-size: 12px; font-weight: bold;">Start Time:</label>
-            <input type="time" id="startTime"
-              style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
-          </div>
-          <div style="text-align: left; width: 45%;">
-            <label style="font-size: 12px; font-weight: bold;">Hours:</label>
-            <input type="number" id="duration" value="1" min="1"
-              style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
-          </div>
+      <div class="time-grid">
+        <div class="field-group">
+          <label for="startTime">Start Time</label>
+          <input type="time" id="startTime">
         </div>
-
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <input type="checkbox" id="allDayCheck" style="width: auto; margin: 0; cursor: pointer;">
-          <label for="allDayCheck" style="font-size: 14px; cursor: pointer;">Book until the end of the day</label>
+        <div class="field-group">
+          <label for="duration">Hours</label>
+          <input type="number" id="duration" value="1" min="1">
         </div>
-
       </div>
 
-      <button id="confirmBooking"
-        style="width: 100%; background: #27ae60; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 10px;">Confirm
-        Booking</button>
-      <button id="closePanel"
-        style="width: 100%; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Cancel</button>
+      <label class="filter-option all-day-option" for="allDayCheck">
+        <input type="checkbox" id="allDayCheck">
+        <span>Book until the end of the day</span>
+      </label>
+
+      <button id="confirmBooking" class="primary-button">Confirm Booking</button>
+      <button id="closePanel" class="danger-button">Cancel</button>
     </div>
   </div>
 
@@ -187,14 +112,14 @@
     <h4>My Reservation</h4>
     <p id="resInfo"></p>
 
-    <p id="costText" style="font-weight: bold; margin: 10px 0;"></p>
-    <button id="payBtn">Pay Now</button>
-    <p id="statusText" style="color: black; font-weight: bold; margin-top: 5px;"></p>
+    <p id="costText" class="cost-text"></p>
+    <button id="payBtn" class="primary-button">Pay Now</button>
+    <p id="statusText" class="status-text"></p>
 
-    <hr style="margin: 15px 0;">
+    <hr>
 
-    <button id="editBtn">Edit Time</button>
-    <button id="cancelBtn">Cancel Booking</button>
+    <button id="editBtn" class="secondary-button">Edit Time</button>
+    <button id="cancelBtn" class="danger-button">Cancel Booking</button>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

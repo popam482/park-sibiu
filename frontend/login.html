@@ -2,28 +2,52 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Park Sibiu</title>
     <link rel="stylesheet" href="login-styles.css">  
-    <link rel="icon" href="../graphics/park-icon-unsigned.png" />
+    <link rel="icon" href="../graphics/icon.png" />
 </head>
 <body>
-    <header>
-    <div id="login-container" class="login-container">
-        <input id="email" type="email" placeholder="Email" />
-        <input id="password" type="password" placeholder="Password" />
-        <br>
+    <div class="page-shell">
+        <header class="site-header">
+            <a class="brand" href="login.html" aria-label="Park Sibiu home">
+                <img src="../graphics/icon.png" alt="" />
+                <span>Park Sibiu</span>
+            </a>
+            <p id="status" class="status-pill">Not logged in</p>
+        </header>
 
-        <button id="signinBtn">Sign In</button>
-        <button id="signupBtn">Sign Up</button>
-        <button id="googleBtn">Login with Google</button>
-        <button id="logoutBtn">Logout</button>
+        <main class="login-layout">
+            <section class="hero-panel" aria-labelledby="page-title">
+                <p class="eyebrow">Smart city parking</p>
+                <h1 id="page-title">Car Park Sibiu</h1>
+                <h2>Fast parking for your travel experience.</h2>
+                <p class="hero-copy">
+                    Find nearby parking, manage reservations, and keep your trips through Sibiu simple from the first click.
+                </p>
+            </section>
+
+            <section id="login-container" class="login-container" aria-label="Authentication">
+                <div class="form-heading">
+                    <p class="eyebrow">Welcome</p>
+                    <h3>Sign in to continue</h3>
+                </div>
+
+                <label for="email">Email address</label>
+                <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+
+                <label for="password">Password</label>
+                <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" />
+
+                <div class="button-group">
+                    <button id="signinBtn" class="primary-button">Sign In</button>
+                    <button id="signupBtn" class="secondary-button">Sign Up</button>
+                    <button id="googleBtn" class="google-button">Login with Google</button>
+                    <button id="logoutBtn" class="secondary-button">Logout</button>
+                </div>
+            </section>
+        </main>
     </div>
-    <p id="status">Not logged in</p> 
-    </header>
-    <div class="gradient"></div>
-    <h1>Car Park Sibiu</h1>
-    <h2>Fast Parking For Your Travel Experience</h2>
-    
 
     <script type="module" src="../backend/login.js"></script>
 </body>

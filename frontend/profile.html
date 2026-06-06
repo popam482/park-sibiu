@@ -5,96 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile - Park Sibiu</title>
     <link rel="stylesheet" href="profile-styles.css">
-    <link rel="icon" href="../graphics/park-icon-unsigned.png" />
+    <link rel="icon" href="../graphics/icon.png" />
 </head>
 <body id="app-body">
-    <header id="profile-container" class="profile-container">
-        <button id="mapBtn"><a href="index.html">Map</a></button>
-        <button id="logoutBtn">Logout</button>
-    </header>
+    <div class="page-shell">
+        <header id="profile-container" class="profile-container">
+            <a class="brand" href="index.html" aria-label="Go to map">
+                <img src="../graphics/icon.png" alt="">
+                <span>Park Sibiu</span>
+            </a>
+            <nav class="header-actions" aria-label="Profile navigation">
+                <button id="mapBtn" class="secondary-button"><a href="index.html">Map</a></button>
+                <button id="logoutBtn" class="primary-button">Logout</button>
+            </nav>
+        </header>
 
-    <main class="profile-main">
-        <div class="information-container">
-            <h1>Profile Settings</h1>
+        <main class="profile-main">
+            <aside class="image-panel" aria-label="Parking preview">
+                <div class="image-card">
+                    <p class="eyebrow">Your dashboard</p>
+                    <h1>Profile Settings</h1>
+                    <p>Manage your account, saved plates, preferences, and parking history in one place.</p>
+                </div>
+            </aside>
 
-            <div class="section-card">
-                <h3>Personal &amp; Vehicle Information</h3>
-                <section>
-                    <div id="nameInputArea">
-                        <label for="displayName">Display Name:</label>
-                        <input type="text" id="displayName" placeholder="Enter your name">
-                        <button id="saveNameBtn">Save Name</button>
+            <div class="information-container">
+                <section class="section-card">
+                    <div class="section-heading">
+                        <p class="eyebrow">Account</p>
+                        <h2>Personal Information</h2>
                     </div>
-                    <h2 id="greetingArea" style="display: none;"></h2>
-                    <p id="subGreetingtext" style="display: none;"></p>
+                    <div id="nameInputArea" class="form-grid">
+                        <div class="field-group">
+                            <label for="displayName">Display Name</label>
+                            <input type="text" id="displayName" placeholder="Enter your name">
+                        </div>
+                        <button id="saveNameBtn" class="primary-button">Save Name</button>
+                    </div>
+                    <div class="greeting-block">
+                        <h2 id="greetingArea" style="display: none;"></h2>
+                        <p id="subGreetingtext" style="display: none;"></p>
+                    </div>
                 </section>
-                <hr>
-                <section>
-                    <h2>Manage License Plates</h2>
-                    <div id="platesSection" style="margin-top:15px;">
-                        <button id="togglePlatesBtn">View Saved Plates</button>
-                        <div id="platesAccordion" style="display:none;">
+
+                <section class="section-card">
+                    <div class="section-heading">
+                        <p class="eyebrow">Vehicles</p>
+                        <h2>Manage License Plates</h2>
+                    </div>
+
+                    <div id="platesSection" class="stacked-panel">
+                        <button id="togglePlatesBtn" class="secondary-button">View Saved Plates</button>
+                        <div id="platesAccordion" class="plates-accordion" style="display:none;">
                             <ul id="savedPlatesList"></ul>
                         </div>
                     </div>
-                    <hr>
-                    <div id="addPlateForm" style="margin-top:15px;">
-                        <h3>Add New License Plate</h3>
-                        <label for="countryProfileSelect">Country:</label>
-                        <select id="countryProfileSelect">
-                            <option value="RO">Romania (Strict Format)</option>
-                            <option value="OTHER">Other Country</option>
-                        </select>
-                        <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC">
-                        <button id="savePlateBtn">Save Plate</button>
-                    </div>
-                    <hr>
-                    <div style="margin-top:10px;">
-                        <h3>Favorite License Plate</h3>
-                        <select id="favoritePlateSelect">
-                            <option value="">Select Favorite Plate</option>
-                        </select>
-                        <button id="saveFavoriteBtn">Set as Favorite</button>
-                    </div>
-                </section>
-            </div>
 
-            <div class="section-card">
-                <h3>Reservation History</h3>
-                <ul id="reservationHistoryList">
-                    <li>Loading history...</li>
-                </ul>
-            </div>
-
-            <div class="section-card">
-                <h3>Preferences</h3>
-                <section>
-                    <div>
-                        <label for="languageSelect">Language:</label>
-                        <select id="languageSelect">
-                            <option value="en">English</option>
-                            <option value="ro">Romanian</option>
-                        </select>
+                    <div id="addPlateForm" class="form-grid two-columns">
+                        <div class="field-group">
+                            <label for="countryProfileSelect">Country</label>
+                            <select id="countryProfileSelect">
+                                <option value="RO">Romania (Strict Format)</option>
+                                <option value="OTHER">Other Country</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label for="newPlateNumber">License Plate</label>
+                            <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC">
+                        </div>
+                        <button id="savePlateBtn" class="primary-button">Save Plate</button>
                     </div>
-                    <div>
-                        <label for="darkModeToggle">Dark Mode:</label>
-                        <input type="checkbox" id="darkModeToggle">
+
+                    <div class="form-grid favorite-grid">
+                        <div class="field-group">
+                            <label for="favoritePlateSelect">Favorite License Plate</label>
+                            <select id="favoritePlateSelect">
+                                <option value="">Select Favorite Plate</option>
+                            </select>
+                        </div>
+                        <button id="saveFavoriteBtn" class="secondary-button">Set as Favorite</button>
                     </div>
                 </section>
-            </div>
 
-            <div class="section-card">
-                <h3>Security</h3>
-                <section>
-                    <button id="resetPasswordBtn">Send Password Reset Email</button>
+                <section class="section-card">
+                    <div class="section-heading">
+                        <p class="eyebrow">Activity</p>
+                        <h2>Reservation History</h2>
+                    </div>
+                    <ul id="reservationHistoryList" class="history-list">
+                        <li>Loading history...</li>
+                    </ul>
+                </section>
+
+                <section class="section-card">
+                    <div class="section-heading">
+                        <p class="eyebrow">Settings</p>
+                        <h2>Preferences</h2>
+                    </div>
+                    <div class="preferences-grid">
+                        <div class="field-group">
+                            <label for="languageSelect">Language</label>
+                            <select id="languageSelect">
+                                <option value="en">English</option>
+                                <option value="ro">Romanian</option>
+                            </select>
+                        </div>
+                        <label class="toggle-row" for="darkModeToggle">
+                            <span>Dark Mode</span>
+                            <input type="checkbox" id="darkModeToggle">
+                        </label>
+                    </div>
+                </section>
+
+                <section class="section-card security-card">
+                    <div class="section-heading">
+                        <p class="eyebrow">Security</p>
+                        <h2>Password Access</h2>
+                    </div>
+                    <button id="resetPasswordBtn" class="secondary-button">Send Password Reset Email</button>
                 </section>
             </div>
-        </div>
-
-        <div class="image-panel">
-            <div class="image-placeholder"></div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script type="module" src="../backend/profile.js"></script>
 </body>

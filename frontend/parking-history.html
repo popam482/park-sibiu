@@ -4,61 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parking History - Park Sibiu</title>
-    <link rel="stylesheet" href="map-styles.css"> 
-    <link rel="icon" href="../graphics/park-icon-unsigned.png" />
+    <link rel="stylesheet" href="map-styles.css">
+    <link rel="icon" href="../graphics/icon.png" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        .history-container { padding: 20px; max-width: 800px; margin: auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .billing-card { background: #fdf2e9; border-left: 5px solid #e67e22; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        .session-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .session-table th, .session-table td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
-        .session-table th { background-color: #f8f9fa; color: #333; }
-        .status-paid { color: #27ae60; font-weight: bold; }
-        .status-pending { color: #e67e22; font-weight: bold; }
-        .btn-invoice { background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-invoice:hover { background: #d35400; }
-        .back-link { display: inline-block; margin-bottom: 20px; text-decoration: none; color: #3498db; font-weight: bold; }
-    </style>
 </head>
-<body>
-    <div class="history-container">
-        <a href="index.html" class="back-link">← Back to Map</a>
-        <h1>Parking & Billing History</h1>
+<body class="history-page">
+    <div class="history-shell">
+        <header class="map-toolbar history-toolbar">
+            <a class="brand" href="index.html" aria-label="Back to Park Sibiu map">
+                <img src="../graphics/icon.png" alt="">
+                <span>Park Sibiu</span>
+            </a>
+            <nav class="toolbar-actions" aria-label="History navigation">
+                <button class="secondary-button"><a href="index.html">Back to Map</a></button>
+            </nav>
+        </header>
 
-        <div class="billing-card">
-            <div>
-                <h3 style="margin:0;">Monthly Billing Summary</h3>
-                <p style="margin: 5px 0 0; color: #666; font-size: 14px;">
-                    All parking sessions are accumulated and billed at the end of the month.
-                </p>
-                <h2 id="totalToPay" style="margin: 10px 0 0; color: #2c3e50;">0.00 RON</h2>
-            </div>
-            <button id="generateInvoiceBtn" class="btn-invoice">Generate Monthly Invoice (PDF)</button>
-        </div>
+        <main class="history-container">
+            <section class="history-hero">
+                <p class="eyebrow">Billing</p>
+                <h1>Parking & Billing History</h1>
+                <p>Review your monthly parking sessions, costs, and payment status.</p>
+            </section>
 
-        <h3>Detailed Sessions</h3>
-        <table class="session-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Location</th>
-                    <th>Duration</th>
-                    <th>Plate</th>
-                    <th>Cost</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="historyTableBody">
-                <tr>
-                    <td colspan="6" style="text-align:center;">Loading your history...</td>
-                </tr>
-            </tbody>
-        </table>
+            <section class="billing-card">
+                <div>
+                    <p class="eyebrow">Monthly Summary</p>
+                    <h2 id="totalToPay">0.00 RON</h2>
+                    <p>All parking sessions are accumulated and billed at the end of the month.</p>
+                </div>
+                <button id="generateInvoiceBtn" class="primary-button btn-invoice">Generate Monthly Invoice (PDF)</button>
+            </section>
+
+            <section class="table-card">
+                <div class="section-heading">
+                    <p class="eyebrow">Sessions</p>
+                    <h2>Detailed Sessions</h2>
+                </div>
+                <div class="table-scroll">
+                    <table class="session-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Location</th>
+                                <th>Duration</th>
+                                <th>Plate</th>
+                                <th>Cost</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="6" class="empty-state">Loading your history...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
     </div>
 
     <script type="module">
         import { getHistory, generatePDF } from '../backend/parking-history.js';
-        
+
         document.addEventListener('DOMContentLoaded', async () => {
             console.log("History initialized");
         });

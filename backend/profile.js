@@ -437,7 +437,7 @@ async function loadBookingHistory(userId) {
 
 function showGreeting(name) {
     nameInputArea.style.display = "none";
-    greetingArea.innerText = `Hello, ${name}! 👋`;
+    greetingArea.innerText = `Hello, ${name}!`;
     greetingArea.style.display = "block";
 
     const cuteMessages = [

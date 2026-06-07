@@ -204,7 +204,7 @@ html[data-theme="dark"] .leaflet-control-attribution {
     place-items: center;
     width: 40px;
     min-height: 40px;
-    padding: 0;
+    padding:0;
     color: var(--text-muted);
     border-color: var(--border);
     background: var(--surface-strong);
@@ -214,7 +214,7 @@ html[data-theme="dark"] .leaflet-control-attribution {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding-top: 18px;
+    padding-top: 40px;
 }
 
 .field-group {

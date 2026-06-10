@@ -17,78 +17,94 @@ window.latestParkings = [];
 
 window.applyFiltersAndRender = applyFiltersAndRender; 
 
-function renderMarkers(parkings) {
-  markersLayer.clearLayers();
+const getParkingIcon = (color) => {
+    const iconUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + color + '.png';
+    const shadowUrl = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png';
 
-  const myBookingsList = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
-
-  parkings.forEach((p) => {
-    if (p.lat == null || p.lng == null) return;
-
-    const myReservation = myBookingsList.find(b => String(b.parkingId) === String(p.id));
-    const isMySpot = !!myReservation;
-
-    const marker = L.marker([p.lat, p.lng]).addTo(markersLayer);
-    
-    let popupContent = `<div style="text-align: center; min-width: 160px; font-family: sans-serif;">`;
-    popupContent += `<strong style="font-size:14px;">${p.name}</strong><br><hr style="margin:5px 0; border:0; border-top:1px solid #eee;">`;
-
-    if (isMySpot) {
-      const specificEndTime = myReservation.endTime;
-
-      popupContent += `
-        <div style="background: #fdf2f2; padding: 12px; border-radius: 8px; border: 1px solid #f9ebeb; text-align: center;">
-            <div style="font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 5px;">TIME REMAINING</div>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-                <span style="font-size: 11px; color: #95a5a6;">Remaining:</span>
-                <b class="map-countdown" data-endtime="${specificEndTime}" style="font-size: 20px; color: #e74c3c; font-family: 'Courier New', monospace; letter-spacing: 1px;">--:--:--</b>
-            </div>
-        </div>
-        <button onclick="window.handleCancelFromMap('${myReservation.id}', '${p.id}')" 
-    style="...">
-    Cancel Reservation
-</button>
-      `;
-
-      marker.on('popupopen', () => {
-          setTimeout(() => {
-              startMapCountdown(); 
-          }, 100);
-      });
-
-      marker.on('popupclose', () => {
-          if (window.mapTimerInterval) {
-              clearInterval(window.mapTimerInterval);
-              window.mapTimerInterval = null;
-          }
-      });
-
-      if (marker._icon) {
-          marker._icon.style.filter = "hue-rotate(140deg) brightness(0.9) saturate(2)";
-      }
-    } else {
-      const isFull = p.freeSpots <= 0;
-      popupContent += `
-        Spots: ${p.freeSpots}/${p.totalSpots}<br>
-        Price: <b>${p.pricePerHour} RON/h</b><br>
-        <span style="color:${isFull ? 'red' : 'green'}; font-weight:bold;">
-            ${isFull ? 'Occupied' : 'Available'}
-        </span>
-      `;
-    }
-
-    popupContent += `</div>`;
-    marker.bindPopup(popupContent);
-    marker.on('mouseover', function() { this.openPopup(); });
-
-    marker.on('click', () => {
-      if (!isMySpot && typeof window.showParkingDetailsFromMap === "function") {
-        window.showParkingDetailsFromMap(p);
-      }
+    return new L.Icon({
+        iconUrl: iconUrl,
+        shadowUrl: shadowUrl,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
     });
-  });
-}
+};
 
+function renderMarkers(parkings) {
+    if (!markersLayer) return;
+    markersLayer.clearLayers();
+
+    const myBookingsList = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+
+    parkings.forEach((p) => {
+        if (p.lat == null || p.lng == null || !p.id) return;
+
+        const myReservation = myBookingsList.find(b => b.parkingId && String(b.parkingId) === String(p.id));
+        const isMySpot = !!myReservation;
+
+        let markerColor = 'blue'; 
+
+        if (isMySpot) {
+            markerColor = 'violet'; 
+        } else {
+            const free = Number(p.freeSpots) || 0;
+            const total = Number(p.totalSpots) || 1;
+            const ratio = free / total;
+
+            if (ratio > 0.6) {
+                markerColor = 'green';
+            } else if (ratio >= 0.3) {
+                markerColor = 'orange'; 
+            } else if (ratio > 0) {
+                markerColor = 'gold'; 
+            } else {
+                markerColor = 'red';
+            }
+        }
+
+        const markerIcon = getParkingIcon(markerColor);
+        const marker = L.marker([p.lat, p.lng], { icon: markerIcon }).addTo(markersLayer);
+
+        if (isMySpot && marker._icon) {
+            marker._icon.style.zIndex = "1000";
+        }
+
+        let popupContent = `<div style="text-align: center; min-width: 160px; font-family: sans-serif;">`;
+        popupContent += `<strong style="font-size:14px;">${p.name}</strong><br><hr style="margin:5px 0; border:0; border-top:1px solid #eee;">`;
+
+        if (isMySpot) {
+            const specificEndTime = myReservation.endTime;
+            popupContent += `
+                <div style="background: #eef2ff; padding: 12px; border-radius: 8px; border: 1px solid #e0e7ff; text-align: center;">
+                    <div style="font-size: 11px; color: #4f46e5; font-weight: bold; margin-bottom: 5px;">MY RESERVATION</div>
+                    <b class="map-countdown" data-endtime="${specificEndTime}" style="font-size: 20px; color: #1e40af; font-family: monospace;">--:--:--</b>
+                </div>
+                <button onclick="window.handleCancelFromMap('${myReservation.id}', '${p.id}')" 
+                        style="margin-top:10px; width:100%; padding:8px; border:none; border-radius:5px; background:#ef4444; color:white; cursor:pointer;">
+                        Cancel Reservation
+                </button>`;
+            marker.on('popupopen', () => { setTimeout(startMapCountdown, 100); });
+        } else {
+            const isFull = p.freeSpots <= 0;
+            popupContent += `
+                Spots: ${p.freeSpots}/${p.totalSpots}<br>
+                Price: <b>${p.pricePerHour} RON/h</b><br>
+                <span style="color:${isFull ? 'red' : 'green'}; font-weight:bold;">
+                    ${isFull ? 'Occupied' : 'Available'}
+                </span>`;
+        }
+
+        popupContent += `</div>`;
+        marker.bindPopup(popupContent);
+        marker.on('mouseover', function() { this.openPopup(); });
+        marker.on('click', () => {
+            if (!isMySpot && typeof window.showParkingDetailsFromMap === "function") {
+                window.showParkingDetailsFromMap(p);
+            }
+        });
+    });
+}
 function startMapCountdown() {
     if (window.mapTimerInterval) clearInterval(window.mapTimerInterval);
 
@@ -134,6 +150,11 @@ function startMapCountdown() {
 };
 onSnapshot(collection(db, "parkings"), (snapshot) => {
     window.latestParkings = snapshot.docs.map((d) => ({ ...d.data(), id: d.id }));
+
+    if (!auth.currentUser) {
+        localStorage.removeItem('myBookingsList');
+        localStorage.removeItem('activeReservationId');
+    }
 
     renderMarkers(window.latestParkings);
     

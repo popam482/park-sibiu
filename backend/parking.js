@@ -355,27 +355,27 @@ function getMaxHours(startTimeValue, openHours) {
   const diffHours = (close - start) / 3_600_000;
   return Math.max(1, Math.floor(diffHours));
 }
-
 function updateCostPreview() {
-  const preview     = document.getElementById("costPreview");
-  const allDay      = document.getElementById("allDayCheck");
-  const durationEl  = document.getElementById("duration");
-  const startTimeEl = document.getElementById("startTime");
-  if (!preview) return;
+    const preview = document.getElementById("costPreview");
+    const allDay = document.getElementById("allDayCheck")?.checked;
+    const startTimeEl = document.getElementById("startTime");
+    const durationEl = document.getElementById("duration");
+    if (!preview) return;
 
-  if (allDay?.checked) {
-    preview.innerText = `Total: ${DAILY_RATE.toFixed(2)} RON (all-day rate)`;
-    return;
-  }
+    const pricePerHour = Number(currentPricePerHour || 0);
+    let displayCost = 0;
 
-  const hours = Number(durationEl?.value || 1);
-  const cost  = hours * Number(currentPricePerHour || 0);
-  const maxH  = selectedParking?.openHours && startTimeEl?.value
-    ? getMaxHours(startTimeEl.value, selectedParking.openHours)
-    : null;
-
-  preview.innerText = `Total: ${cost.toFixed(2)} RON` +
-    (maxH !== null ? ` (max ${maxH}h from chosen time)` : "");
+    if (allDay && startTimeEl?.value) {
+        const maxH = getMaxHours(startTimeEl.value, selectedParking.openHours);
+        const hourlyTotal = maxH * pricePerHour;
+        // Folosim aceeași logică de minim
+        displayCost = Math.min(hourlyTotal, DAILY_RATE);
+        preview.innerText = `Total: ${displayCost.toFixed(2)} RON (Best Rate Applied)`;
+    } else {
+        const hours = Number(durationEl?.value || 1);
+        displayCost = hours * pricePerHour;
+        preview.innerText = `Total: ${displayCost.toFixed(2)} RON`;
+    }
 }
 
 async function openBookingPanel(parking) {
@@ -521,59 +521,59 @@ window.showParkingDetailsFromMap = function (parking) {
 };
 
 //cancel booking
-document.getElementById("cancelBtn")?.addEventListener("click", async () => {
-  if (!confirm("Are you sure you want to cancel your booking?")) return;
-  try {
-    if (!activeReservationId || !activeReservationParkingId) {
-      manageBox.style.display = "none";
-      return;
-    }
-    const reservationRef = doc(db, "reservations", String(activeReservationId));
-    const parkingRef     = doc(db, "parkings", String(activeReservationParkingId));
+// document.getElementById("cancelBtn")?.addEventListener("click", async () => {
+//   if (!confirm("Are you sure you want to cancel your booking?")) return;
+//   try {
+//     if (!activeReservationId || !activeReservationParkingId) {
+//       manageBox.style.display = "none";
+//       return;
+//     }
+//     const reservationRef = doc(db, "reservations", String(activeReservationId));
+//     const parkingRef     = doc(db, "parkings", String(activeReservationParkingId));
 
-    await runTransaction(db, async (tx) => {
-      const parkSnap = await tx.get(parkingRef);
-      if (!parkSnap.exists()) throw new Error("Parking not found.");
-      const currentFree = Number(parkSnap.data().freeSpots || 0);
-      tx.update(parkingRef,     { freeSpots: currentFree + 1 });
-      tx.update(reservationRef, { status: "cancelled" });
-    });
+//     await runTransaction(db, async (tx) => {
+//       const parkSnap = await tx.get(parkingRef);
+//       if (!parkSnap.exists()) throw new Error("Parking not found.");
+//       const currentFree = Number(parkSnap.data().freeSpots || 0);
+//       tx.update(parkingRef,     { freeSpots: currentFree + 1 });
+//       tx.update(reservationRef, { status: "cancelled" });
+//     });
 
-    if (scheduledReleases.has(activeReservationId)) {
-      clearTimeout(scheduledReleases.get(activeReservationId));
-      scheduledReleases.delete(activeReservationId);
-    }
+//     if (scheduledReleases.has(activeReservationId)) {
+//       clearTimeout(scheduledReleases.get(activeReservationId));
+//       scheduledReleases.delete(activeReservationId);
+//     }
 
-    let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
-    existingBookings = existingBookings.filter(b => String(b.parkingId) !== String(activeReservationParkingId));
-    localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
+//     let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+//     existingBookings = existingBookings.filter(b => String(b.parkingId) !== String(activeReservationParkingId));
+//     localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
 
-    activeReservationId = null;
-    activeReservationParkingId = null;
-    localStorage.removeItem('myBooking'); 
-    window.activeReservationParkingId = null;
-    localStorage.removeItem('myBookingName'); 
-    localStorage.removeItem('myBookingStatus');
-    localStorage.removeItem('activeReservationId');
-    localStorage.removeItem('myBookingEndTime');
+//     activeReservationId = null;
+//     activeReservationParkingId = null;
+//     localStorage.removeItem('myBooking'); 
+//     window.activeReservationParkingId = null;
+//     localStorage.removeItem('myBookingName'); 
+//     localStorage.removeItem('myBookingStatus');
+//     localStorage.removeItem('activeReservationId');
+//     localStorage.removeItem('myBookingEndTime');
 
-    if (typeof window.renderMarkers === "function") {
-        window.renderMarkers(window.latestParkings);
-    }
-    manageBox.style.display = "none";
-    alert("Reservation cancelled successfully.");
-    location.reload();
-  } catch (err) {
-    console.error(err);
-    alert(err.message || "Cancel failed.");
-  }
-});
+//     if (typeof window.renderMarkers === "function") {
+//         window.renderMarkers(window.latestParkings);
+//     }
+//     manageBox.style.display = "none";
+//     alert("Reservation cancelled successfully.");
+//     location.reload();
+//   } catch (err) {
+//     console.error(err);
+//     alert(err.message || "Cancel failed.");
+//   }
+// });
 
-document.getElementById("editBtn")?.addEventListener("click", () => {
-  reservationPanel.style.display = "block";
-  document.getElementById("panelTitle").innerText = "Edit your time";
-  setCurrentTimeDefault();
-});
+// document.getElementById("editBtn")?.addEventListener("click", () => {
+//   reservationPanel.style.display = "block";
+//   document.getElementById("panelTitle").innerText = "Edit your time";
+//   setCurrentTimeDefault();
+// });
 
 // confirm booking (creates reservation, updates parking availability with time limits, and shows manage box)
 
@@ -599,23 +599,33 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
 
     let hoursAmount, totalCost, bookingEnd;
 
-    if (allDay) {
-      const maxH = selectedParking?.openHours
+    const maxH = selectedParking?.openHours
         ? getMaxHours(timeChosen, selectedParking.openHours)
         : 24;
-      hoursAmount = maxH;
-      totalCost   = DAILY_RATE;
-      bookingEnd  = new Date(bookingStart.getTime() + hoursAmount * 3_600_000);
-    } else {
-      hoursAmount = Number(document.getElementById("duration")?.value || 1);
-      if (hoursAmount < 1) return alert("Duration must be at least 1 hour.");
-      if (selectedParking?.openHours) {
-        const maxH = getMaxHours(timeChosen, selectedParking.openHours);
-        if (hoursAmount > maxH) return alert(`Maximum booking from ${timeChosen} is ${maxH} hour(s) for this parking.`);
-      }
 
-      totalCost  = hoursAmount * Number(currentPricePerHour || 0);
-      bookingEnd = new Date(bookingStart.getTime() + hoursAmount * 3_600_000);
+    if (allDay) {
+        hoursAmount = maxH;
+        bookingEnd = new Date(bookingStart.getTime() + hoursAmount * 3_600_000);
+        
+        const hourlyTotal = hoursAmount * Number(currentPricePerHour || 0);
+        
+        if (hourlyTotal < DAILY_RATE) {
+            totalCost = hourlyTotal;
+            console.log("Applying hourly rate (cheaper than daily)");
+        } else {
+            totalCost = DAILY_RATE;
+            console.log("Applying daily rate cap (15 RON)");
+        }
+    } else {
+        hoursAmount = Number(document.getElementById("duration")?.value || 1);
+        if (hoursAmount < 1) return alert("Duration must be at least 1 hour.");
+        
+        if (selectedParking?.openHours) {
+            if (hoursAmount > maxH) return alert(`Maximum booking from ${timeChosen} is ${maxH} hour(s) for this parking.`);
+        }
+
+        totalCost = hoursAmount * Number(currentPricePerHour || 0);
+        bookingEnd = new Date(bookingStart.getTime() + hoursAmount * 3_600_000);
     }
 
     const parkingRef = doc(db, "parkings", parkingId);
@@ -692,6 +702,7 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     alert(err.message || "Booking failed.");
   }
 });
+
 
 // payment simulation (just updates reservation status to paid)
 

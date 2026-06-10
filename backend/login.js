@@ -8,7 +8,7 @@ import {
     signOut, 
     onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-
+import { i18n } from "./translations.js";
 
 const emailEl = document.getElementById("email");
 const passwordEl = document.getElementById("password");
@@ -17,7 +17,7 @@ const signinBtn = document.getElementById("signinBtn");
 const signupBtn = document.getElementById("signupBtn");
 const googleBtn = document.getElementById("googleBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-
+const currentLang = localStorage.getItem('preferredLang') || (navigator.language.startsWith('ro') ? 'ro' : 'en');
 // Ensures a user document exists in Firestore after login
 
 async function ensureUserProfile(user) {
@@ -32,6 +32,10 @@ async function ensureUserProfile(user) {
                 displayName: user.displayName || "",
                 licensePlates: [],
                 role: "user",
+                preferences: {
+                    language: currentLang, // Îi punem nativ limba pe care o are acum la login
+                    theme: "light"
+                },
                 createdAt: serverTimestamp()
             });
         }
@@ -48,10 +52,10 @@ if (signinBtn) {
             const password = passwordEl.value;
             const cred = await signInWithEmailAndPassword(auth, email, password);
             await ensureUserProfile(cred.user);
-            alert("Login Successful!");
+            alert(i18n[currentLang].alert_login_success);
             window.location.href = "index.html"; 
         } catch (e) {
-            alert("Login Error: " + e.message);
+            alert(i18n[currentLang].alert_login_error + e.message);
         }
     });
 }
@@ -64,9 +68,9 @@ if (signupBtn) {
             const password = passwordEl.value;
             const cred = await createUserWithEmailAndPassword(auth, email, password);
             await ensureUserProfile(cred.user);
-            alert("Account Created Successfully!");
+            alert(i18n[currentLang].alert_register_success);
         } catch (e) {
-            alert("Sign Up Error: " + e.message);
+            alert(i18n[currentLang].alert_register_error + e.message);
         }
     });
 }
@@ -80,7 +84,7 @@ if (googleBtn) {
             await ensureUserProfile(cred.user);
             window.location.href = "index.html";
         } catch (e) {
-            alert("Google Login Error: " + e.message);
+            alert(i18n[currentLang].alert_google_error + e.message);
         }
     });
 }
@@ -89,10 +93,22 @@ if (googleBtn) {
 if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
         try {
+            localStorage.removeItem('myBookingsList');
+            localStorage.removeItem('activeReservationId');
+            localStorage.removeItem('myBooking');
+            localStorage.removeItem('myBookingStatus');
+            localStorage.removeItem('myBookingName');
+            localStorage.removeItem('myBookingEndTime');
+
             await signOut(auth);
-            alert("Logged out!");
+<<<<<<< HEAD
+            alert(i18n[currentLang].alert_logout_success);
+=======
+            alert("Logged out successfully!");
+             window.location.href = "login.html"; 
+>>>>>>> 0a1f7fcbb148e3c2461069dce0a2d8eafe1c60a7
         } catch (e) {
-            alert("Logout Error: " + e.message);
+            alert(i18n[currentLang].alert_logout_error + e.message);
         }
     });
 }
@@ -100,15 +116,51 @@ if (logoutBtn) {
 // Auth State Observer
 onAuthStateChanged(auth, (user) => {
   if (statusEl) {
-    statusEl.textContent = user
-      ? `Logged in as: ${user.email || user.displayName}`
-      : "Not logged in";
+   statusEl.textContent = user
+      ? `${i18n[currentLang].status_logged_in}${user.email || user.displayName}`
+      : i18n[currentLang].status_logged_out;
   }
 
   if (logoutBtn) logoutBtn.style.display = user ? "block" : "none";
 
   if (user) {
-    console.log("User is already logged in, redirecting...");
+    console.log("User is already logged in, redirecting...", user.uid);
+    
+    const currentLocalUser = localStorage.getItem('lastLoggedUid');
+    if (currentLocalUser && currentLocalUser !== user.uid) {
+        console.log("New account detected! Cleaning up old session data from the previous user:", currentLocalUser);
+        localStorage.removeItem('myBookingsList');
+        localStorage.removeItem('activeReservationId');
+        localStorage.removeItem('myBooking');
+        localStorage.removeItem('myBookingStatus');
+        localStorage.removeItem('myBookingName');
+        localStorage.removeItem('myBookingEndTime');
+    }
+    localStorage.setItem('lastLoggedUid', user.uid);
+    
+  } else {
+    localStorage.removeItem('lastLoggedUid');
+    localStorage.removeItem('myBookingsList');
+    localStorage.removeItem('activeReservationId');
   }
 });
+<<<<<<< HEAD
+function updateLoginPageLanguage(lang) {
+    document.querySelectorAll("[data-i18n]").forEach(element => {
+        const key = element.getAttribute("data-i18n");
+        if (i18n[lang] && i18n[lang][key]) {
+            element.innerText = i18n[lang][key];
+        }
+    });
 
+    if (emailEl && i18n[lang].placeholder_email) {
+        emailEl.placeholder = i18n[lang].placeholder_email;
+    }
+    if (passwordEl && i18n[lang].placeholder_password) {
+        passwordEl.placeholder = i18n[lang].placeholder_password;
+    }
+}
+
+updateLoginPageLanguage(currentLang);
+=======
+>>>>>>> 0a1f7fcbb148e3c2461069dce0a2d8eafe1c60a7

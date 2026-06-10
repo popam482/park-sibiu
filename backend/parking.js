@@ -14,6 +14,9 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
+import { i18n } from './translations.js';
+const currentLang = localStorage.getItem('preferredLang') || (navigator.language.startsWith('ro') ? 'ro' : 'en');
+
 let currentPricePerHour = 0;
 let selectedParking     = null;
 let activeReservationId        = null;
@@ -35,57 +38,17 @@ const manageBox              = document.getElementById("manageReservation");
 const resInfo                = document.getElementById("resInfo");
 
 const scheduledReleases = new Map();
-let autoReleaseInitialized = false;  // prevents duplicate listeners/intervals
-let pollIntervalId         = null;   // keeps reference so we never double-register
+let autoReleaseInitialized = false;
+let pollIntervalId         = null;
 const processingReservations = new Set(); 
 
-// event listeners for filters and sorting in the parking list
+// Event listeners for filters and sorting
 document.getElementById('searchInput')?.addEventListener('input', applyFiltersAndRender);
 document.getElementById('availableOnlyFilter')?.addEventListener('change', applyFiltersAndRender);
 document.getElementById('nonStopFilter')?.addEventListener('change', applyFiltersAndRender);
 document.getElementById('sortSelect')?.addEventListener('change', applyFiltersAndRender);
 
-// auto release function for parkingspots that have expired 
-
-// async function releaseExpiredSpot(reservationId, parkingId) {
-//   if (!parkingId) {
-//     console.warn(`Skipping release for ${reservationId} — no parkingId.`);
-//     return;
-//   }
-
-//   if (processingReservations.has(reservationId)) return;
-//   processingReservations.add(reservationId);
-
-//   try {
-//     const reservationRef = doc(db, "reservations", reservationId);
-//     const parkingRef     = doc(db, "parkings", String(parkingId));
-
-//     await runTransaction(db, async (tx) => {
-//       const [resSnap, parkSnap] = await Promise.all([
-//         tx.get(reservationRef),
-//         tx.get(parkingRef)
-//       ]);
-
-//       if (!resSnap.exists() || resSnap.data().status !== "paid") return;
-//       if (!parkSnap.exists()) return;
-
-//       const currentFree = Number(parkSnap.data().freeSpots  || 0);
-//       const total       = Number(parkSnap.data().totalSpots || 0);
-
-//       tx.update(reservationRef, { status: "completed" });
-//       if (currentFree < total) {
-//         tx.update(parkingRef, { freeSpots: currentFree + 1 });
-//       }
-//     });
-
-//     console.log(`Reservation ${reservationId} completed — spot released.`);
-//   } catch (err) {
-//     console.error(`Release failed [${reservationId}]:`, err.code, err.message);
-//   } finally {
-//     processingReservations.delete(reservationId);
-//   }
-// }
-// Înlocuiește funcția releaseExpiredSpot cu aceasta pentru a curăța și LocalStorage
+// CORECTIE: Funcție pentru eliberarea spoturilor expirate
 async function releaseExpiredSpot(reservationId, parkingId) {
   if (!parkingId) return;
   if (processingReservations.has(reservationId)) return;
@@ -137,62 +100,9 @@ async function releaseExpiredSpot(reservationId, parkingId) {
   }
 }
 
-document.getElementById("cancelBtn")?.addEventListener("click", async () => {
-
-  const resId = activeReservationId || localStorage.getItem('activeReservationId');
-  const parkId = activeReservationParkingId || localStorage.getItem('myBooking');
-
-  if (!resId || !parkId) {
-    alert("No active reservation found to cancel.");
-    manageBox.style.display = "none";
-    return;
-  }
-
-  if (!confirm("Are you sure you want to cancel your booking?")) return;
-
-  try {
-    const reservationRef = doc(db, "reservations", String(resId));
-    const parkingRef     = doc(db, "parkings", String(parkId));
-
-    await runTransaction(db, async (tx) => {
-      const parkSnap = await tx.get(parkingRef);
-      if (!parkSnap.exists()) throw new Error("Parking not found.");
-      const currentFree = Number(parkSnap.data().freeSpots || 0);
-      tx.update(parkingRef,     { freeSpots: currentFree + 1 });
-      tx.update(reservationRef, { status: "cancelled" });
-    });
-
-    if (scheduledReleases.has(resId)) {
-      clearTimeout(scheduledReleases.get(resId));
-      scheduledReleases.delete(resId);
-    }
-
-    let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
-    existingBookings = existingBookings.filter(b => String(b.parkingId) !== String(parkId));
-    localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
-
-    localStorage.removeItem('myBooking'); 
-    localStorage.removeItem('myBookingName'); 
-    localStorage.removeItem('myBookingStatus');
-    localStorage.removeItem('activeReservationId');
-    localStorage.removeItem('myBookingEndTime');
-    
-    activeReservationId = null;
-    activeReservationParkingId = null;
-    window.activeReservationParkingId = null;
-
-    manageBox.style.display = "none";
-    alert("Reservation cancelled successfully.");
-    
-    location.reload();
-  } catch (err) {
-    console.error("Cancel error:", err);
-    alert("Cancel failed: " + err.message);
-  }
-});
-
+// CORECTIE: Scheduler pentru eliberarea spoturilor
 function scheduleSpotRelease(reservationId, parkingId, endTime) {
-  if (scheduledReleases.has(reservationId)) return; // already scheduled this session
+  if (scheduledReleases.has(reservationId)) return;
 
   const endMs   = endTime?.toMillis ? endTime.toMillis() : Number(endTime) * 1000;
   const delayMs = endMs - Date.now();
@@ -211,6 +121,7 @@ function scheduleSpotRelease(reservationId, parkingId, endTime) {
   console.log(`Reservation ${reservationId} auto-releases in ${Math.round(delayMs / 1000)}s.`);
 }
 
+// CORECTIE: Polling pentru rezervări expirate
 async function pollMyExpiredReservations(userId) {
   try {
     const snap = await getDocs(query(
@@ -228,7 +139,7 @@ async function pollMyExpiredReservations(userId) {
   }
 }
 
-// Called once when auth is confirmed, the flag ensures it never runs twice
+// CORECTIE: Inițializare auto-release
 function initAutoRelease(user) {
   if (autoReleaseInitialized) return;
   autoReleaseInitialized = true;
@@ -261,8 +172,7 @@ onAuthStateChanged(auth, (user) => {
   initAutoRelease(user); 
 });
 
-// plate selection
-
+// CORECTIE: Încarcare mașini utilizator
 async function loadUserCars(user) {
   const carSelect  = document.getElementById("carSelect");
   const plateInput = document.getElementById("plateNumber");
@@ -278,7 +188,7 @@ async function loadUserCars(user) {
     carSelect.innerHTML = "";
     const otherOpt = document.createElement("option");
     otherOpt.value = "OTHER";
-    otherOpt.textContent = "-- Type a different plate --";
+    otherOpt.textContent = i18n[currentLang].parking_other_plate || "Other plate";
     carSelect.appendChild(otherOpt);
 
     const sorted = [...plates].sort((a, b) => (a === favoritePlate ? -1 : b === favoritePlate ? 1 : 0));
@@ -311,13 +221,22 @@ async function loadUserCars(user) {
         plateInput.readOnly = true;
       }
     };
+      if (plateInput) {
+      plateInput.addEventListener("input", (e) => {
+        let value = e.target.value.replace(/\s+/g, '').toUpperCase();
+        value = value.replace(/[^A-Z0-9]/g, "");
+        if (value.length > 14) {
+          value = value.slice(0, 14);
+        }
+        e.target.value = value;
+      });
+    };
   } catch (err) {
     console.error("Error loading plates:", err);
   }
 }
 
-// booking panel helpers
-
+// CORECTIE: Setare oră implicită curentă
 function setCurrentTimeDefault() {
   const timeInput = document.getElementById("startTime");
   if (!timeInput) return;
@@ -325,6 +244,7 @@ function setCurrentTimeDefault() {
   timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
+// CORECTIE: Parsare ore deschidere
 function parseOpenHours(openHours) {
   if (!openHours || typeof openHours !== "string") return null;
   const parts = openHours.split("-").map(s => s.trim());
@@ -332,11 +252,11 @@ function parseOpenHours(openHours) {
   const [sh, sm] = parts[0].split(":").map(Number);
   let   [eh, em] = parts[1].split(":").map(Number);
   if ([sh, sm, eh, em].some(Number.isNaN)) return null;
-  if (eh === 24) { eh = 0; em = 0; } // midnight
+  if (eh === 24) { eh = 0; em = 0; }
   return { openH: sh, openM: sm, closeH: eh, closeM: em };
 }
 
-// max bookable hours from a given startTime until parking closes 
+// CORECTIE: Calculare ore maxime disponibile
 function getMaxHours(startTimeValue, openHours) {
   const parsed = parseOpenHours(openHours);
   if (!parsed) return 24;
@@ -356,15 +276,17 @@ function getMaxHours(startTimeValue, openHours) {
   return Math.max(1, Math.floor(diffHours));
 }
 
+// CORECTIE: Actualizare previzualizare cost
 function updateCostPreview() {
-  const preview     = document.getElementById("costPreview");
-  const allDay      = document.getElementById("allDayCheck");
-  const durationEl  = document.getElementById("duration");
+  const preview = document.getElementById("costPreview");
+  const allDayCheck = document.getElementById("allDayCheck");
   const startTimeEl = document.getElementById("startTime");
+  const durationEl = document.getElementById("duration");
   if (!preview) return;
 
-  if (allDay?.checked) {
-    preview.innerText = `Total: ${DAILY_RATE.toFixed(2)} RON (all-day rate)`;
+  const lang = i18n[currentLang];
+  if (allDayCheck?.checked) {
+    preview.innerText = `${lang.preview_total || "Total"}: ${DAILY_RATE.toFixed(2)} RON ${lang.preview_all_day || "all-day"}`;
     return;
   }
 
@@ -374,15 +296,23 @@ function updateCostPreview() {
     ? getMaxHours(startTimeEl.value, selectedParking.openHours)
     : null;
 
-  preview.innerText = `Total: ${cost.toFixed(2)} RON` +
-    (maxH !== null ? ` (max ${maxH}h from chosen time)` : "");
+  let note = "";
+  if (maxH !== null) {
+    note = lang.preview_max_hours 
+      ? ` (${lang.preview_max_hours.replace("{maxH}", maxH)})`
+      : ` (max ${maxH}h from chosen time)`;
+  }
+
+  preview.innerText = `${lang.preview_total || "Total"}: ${cost.toFixed(2)} RON` + note;
 }
 
+// CORECTIE: Deschidere panou rezervare
 async function openBookingPanel(parking) {
   const user = auth.currentUser;
+  const lang = i18n[currentLang];
   reservationPanel.style.display = "block";
-  document.getElementById("panelTitle").innerText          = "Book a spot";
-  document.getElementById("selectedParkingName").innerText = "Parking: " + parking.name;
+  document.getElementById("panelTitle").innerText          = lang.panel_book_title || "Book a spot";
+  document.getElementById("selectedParkingName").innerText = (lang.panel_parking_label || "Parking: ") + parking.name;
   setCurrentTimeDefault();
   if (user) await loadUserCars(user);
 
@@ -417,33 +347,33 @@ async function openBookingPanel(parking) {
   refreshMax();
 }
 
-// real time parking list and details updates
-
+// CORECTIE: Afișare listă parcare
 function renderParkingList(parkings) {
-    const listElement = document.getElementById("parkingList");
-    if (!listElement) return;
-    
-    listElement.innerHTML = ""; 
+  const listElement = document.getElementById("parkingList");
+  const lang = i18n[currentLang];
+  if (!listElement) return;
+  
+  listElement.innerHTML = ""; 
 
-    if (parkings.length === 0) {
-        listElement.innerHTML = '<li>No parkings match your criteria.</li>';
-        return;
-    }
+  if (parkings.length === 0) {
+    listElement.innerHTML = `<li>${lang.list_no_match || "No parkings match your criteria."}</li>`;
+    return;
+  }
 
-    parkings.forEach((p) => {
-        const isFull = p.freeSpots <= 0;
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
-            <b style="font-size:16px;">${p.name}</b><br>
-            Status: <span style="color:${isFull ? "red" : "green"}; font-weight:bold;">
-              ${isFull ? "Full" : "Available"}
-            </span>
-            <span style="float:right; color:#888; font-size:13px;">${p.pricePerHour} RON/h</span>
-          </div>`;
-        li.addEventListener("click", () => showParkingDetails(p));
-        listElement.appendChild(li);
-    });
+  parkings.forEach((p) => {
+    const isFull = p.freeSpots <= 0;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">
+        <b style="font-size:16px;">${p.name}</b><br>
+        ${lang.list_status_label || "Status"}: <span style="color:${isFull ? "red" : "green"}; font-weight:bold;">
+          ${isFull ? (lang.list_status_full || "Full") : (lang.list_status_avail || "Available")}
+        </span>
+        <span style="float:right; color:#888; font-size:13px;">${p.pricePerHour} RON/h</span>
+      </div>`;
+    li.addEventListener("click", () => showParkingDetails(p));
+    listElement.appendChild(li);
+  });
 }
 
 export function refreshSelectedParkingFromLive(parkings) {
@@ -452,35 +382,32 @@ export function refreshSelectedParkingFromLive(parkings) {
   if (updated && parkingDetailsView.style.display !== "none") showParkingDetails(updated);
 }
 
-// parking details
-
+// CORECTIE: Afișare detalii parcare
 function showParkingDetails(parking) {
   selectedParking     = parking;
   currentPricePerHour = parking.pricePerHour;
   const isFull        = parking.freeSpots <= 0;
+  const lang          = i18n[currentLang];
 
-    parkingListView.style.display    = "none";
-    parkingDetailsView.style.display = "block";
+  parkingListView.style.display    = "none";
+  parkingDetailsView.style.display = "block";
 
   selectedParkingDetails.innerHTML = `
     <p><b>${parking.name}</b></p>
-    <p>Status: <span style="color:${isFull ? "red" : "green"}; font-weight:bold;">
-      ${isFull ? "Full" : "Available"}
+    <p>${lang.details_status_label || "Status"}: <span style="color:${isFull ? "red" : "green"}; font-weight:bold;">
+      ${isFull ? (lang.details_status_full || "Full") : (lang.details_status_avail || "Available")}
     </span></p>
-    <p>Location: Sibiu</p>
-    <p>Spots: <b>${parking.freeSpots}</b> / ${parking.totalSpots}</p>
-    <p>Price: ${parking.pricePerHour} RON/hour &nbsp;|&nbsp; All-day: ${DAILY_RATE} RON</p>
-    <p>Hours: ${parking.openHours}</p>
+    <p>${lang.details_location_label || "Location"}: Sibiu</p>
+    <p>${lang.details_spots_label || "Spots"}: <b>${parking.freeSpots}</b> / ${parking.totalSpots}</p>
+    <p>${lang.details_price_label || "Price"}: ${parking.pricePerHour} RON/${lang.details_unit_hour || "hour"} &nbsp;|&nbsp; ${lang.details_all_day_label || "All-day"}: ${DAILY_RATE} RON</p>
+    <p>${lang.details_hours_label || "Hours"}: ${parking.openHours}</p>
     <button id="bookSelectedParkingBtn"
       style="width:100%; background:${isFull ? "#aaa" : "#007bff"}; color:white;
              border:none; padding:10px; border-radius:5px;
              cursor:${isFull ? "not-allowed" : "pointer"};"
       ${isFull ? "disabled" : ""}>
-      ${isFull ? "Parking Full" : "Book Now"}
+      ${isFull ? (lang.details_btn_full || "Parking Full") : (lang.details_btn_book || "Book Now")}
     </button>`;
-
-  parkingListView.style.display    = "none";
-  parkingDetailsView.style.display = "block";
 
   if (!isFull) {
     document.getElementById("bookSelectedParkingBtn")
@@ -492,8 +419,7 @@ function showParkingDetails(parking) {
   }
 }
 
-// controls
-
+// CORECTIE: Event listeners pentru control panouri
 openParkingListBtn?.addEventListener("click", () => {
   parkingPanel.style.display       = "block";
   parkingListView.style.display    = "block";
@@ -520,16 +446,22 @@ window.showParkingDetailsFromMap = function (parking) {
   showParkingDetails(parking);
 };
 
-//cancel booking
+// CORECTIE: Anulare rezervare
 document.getElementById("cancelBtn")?.addEventListener("click", async () => {
-  if (!confirm("Are you sure you want to cancel your booking?")) return;
+  const resId = activeReservationId || localStorage.getItem('activeReservationId');
+  const parkId = activeReservationParkingId || localStorage.getItem('myBooking');
+
+  if (!resId || !parkId) {
+    alert(i18n[currentLang].alert_no_reservation || "No active reservation found to cancel.");
+    if (manageBox) manageBox.style.display = "none";
+    return;
+  }
+
+  if (!confirm(i18n[currentLang].confirm_cancel || "Are you sure you want to cancel your booking?")) return;
+
   try {
-    if (!activeReservationId || !activeReservationParkingId) {
-      manageBox.style.display = "none";
-      return;
-    }
-    const reservationRef = doc(db, "reservations", String(activeReservationId));
-    const parkingRef     = doc(db, "parkings", String(activeReservationParkingId));
+    const reservationRef = doc(db, "reservations", String(resId));
+    const parkingRef     = doc(db, "parkings", String(parkId));
 
     await runTransaction(db, async (tx) => {
       const parkSnap = await tx.get(parkingRef);
@@ -539,91 +471,103 @@ document.getElementById("cancelBtn")?.addEventListener("click", async () => {
       tx.update(reservationRef, { status: "cancelled" });
     });
 
-    if (scheduledReleases.has(activeReservationId)) {
-      clearTimeout(scheduledReleases.get(activeReservationId));
-      scheduledReleases.delete(activeReservationId);
+    if (scheduledReleases.has(resId)) {
+      clearTimeout(scheduledReleases.get(resId));
+      scheduledReleases.delete(resId);
     }
 
     let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
-    existingBookings = existingBookings.filter(b => String(b.parkingId) !== String(activeReservationParkingId));
+    existingBookings = existingBookings.filter(b => String(b.id) !== String(resId));
     localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
 
-    activeReservationId = null;
-    activeReservationParkingId = null;
     localStorage.removeItem('myBooking'); 
-    window.activeReservationParkingId = null;
     localStorage.removeItem('myBookingName'); 
     localStorage.removeItem('myBookingStatus');
     localStorage.removeItem('activeReservationId');
     localStorage.removeItem('myBookingEndTime');
+    
+    activeReservationId = null;
+    activeReservationParkingId = null;
+    window.activeReservationParkingId = null;
 
-    if (typeof window.renderMarkers === "function") {
-        window.renderMarkers(window.latestParkings);
-    }
-    manageBox.style.display = "none";
-    alert("Reservation cancelled successfully.");
+    if (manageBox) manageBox.style.display = "none";
+    alert(i18n[currentLang].alert_cancel_success);
+    
     location.reload();
   } catch (err) {
-    console.error(err);
-    alert(err.message || "Cancel failed.");
+    console.error("Cancel error:", err);
+    alert(i18n[currentLang].alert_cancel_failed + (err.message || ""));
   }
 });
 
 document.getElementById("editBtn")?.addEventListener("click", () => {
   reservationPanel.style.display = "block";
-  document.getElementById("panelTitle").innerText = "Edit your time";
+  document.getElementById("panelTitle").innerText = i18n[currentLang].panel_edit_title || "Edit reservation";
   setCurrentTimeDefault();
 });
 
-// confirm booking (creates reservation, updates parking availability with time limits, and shows manage box)
-
+// CORECTIE: Confirmare și creare rezervare
 document.getElementById("confirmBooking")?.addEventListener("click", async () => {
   const parkingId = String(selectedParking?.id || "").trim();
-  if (!parkingId) return alert("Invalid parking — select one from the list.");
+  const lang = i18n[currentLang];
+  if (!parkingId) return alert(lang.alert_invalid_parking || "Invalid parking selected.");
 
   try {
     const user = auth.currentUser;
-    if (!user) return alert("Please login first.");
+    if (!user) return alert(lang.alert_login_required || "Please login first.");
 
     const timeChosen = document.getElementById("startTime")?.value;
-    if (!timeChosen)  return alert("Please choose a start time.");
+    if (!timeChosen)  return alert(lang.alert_choose_start_time || "Please choose a start time.");
 
     const allDay    = document.getElementById("allDayCheck")?.checked || false;
     const plateInput = document.getElementById("plateNumber");
     const plateNumber = plateInput ? plateInput.value.replace(/\s+/g, "").toUpperCase() : "";
-    if (!plateNumber) return alert("Please enter or select a license plate.");
+    if (!plateNumber) return alert(lang.alert_enter_plate || "Please enter a license plate.");
 
     const [sh, sm] = timeChosen.split(":").map(Number);
     const now       = new Date();
     const bookingStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sh, sm, 0);
 
     let hoursAmount, totalCost, bookingEnd;
+    const maxH = selectedParking?.openHours
+      ? getMaxHours(timeChosen, selectedParking.openHours)
+      : 24;
 
     if (allDay) {
-      const maxH = selectedParking?.openHours
-        ? getMaxHours(timeChosen, selectedParking.openHours)
-        : 24;
       hoursAmount = maxH;
-      totalCost   = DAILY_RATE;
-      bookingEnd  = new Date(bookingStart.getTime() + hoursAmount * 3_600_000);
+      const hourlyTotal = hoursAmount * Number(currentPricePerHour || 0);
+      
+      if (hourlyTotal < DAILY_RATE) {
+        totalCost = hourlyTotal;
+        console.log("Applying hourly rate (cheaper than daily)");
+      } else {
+        totalCost = DAILY_RATE;
+        console.log("Applying daily rate cap (15 RON)");
+      }
+      bookingEnd = new Date(bookingStart.getTime() + hoursAmount * 3_600_000);
     } else {
       hoursAmount = Number(document.getElementById("duration")?.value || 1);
-      if (hoursAmount < 1) return alert("Duration must be at least 1 hour.");
+      if (hoursAmount < 1) return alert(lang.alert_min_duration || "Duration must be at least 1 hour.");
+      
       if (selectedParking?.openHours) {
-        const maxH = getMaxHours(timeChosen, selectedParking.openHours);
-        if (hoursAmount > maxH) return alert(`Maximum booking from ${timeChosen} is ${maxH} hour(s) for this parking.`);
+        if (hoursAmount > maxH) {
+          const errMsg = lang.alert_max_hours_limit
+            ? lang.alert_max_hours_limit.replace("{time}", timeChosen).replace("{maxH}", maxH)
+            : `Maximum booking from ${timeChosen} is ${maxH} hour(s) for this parking.`;
+          return alert(errMsg);
+        }
       }
 
-      totalCost  = hoursAmount * Number(currentPricePerHour || 0);
+      totalCost = hoursAmount * Number(currentPricePerHour || 0);
       bookingEnd = new Date(bookingStart.getTime() + hoursAmount * 3_600_000);
     }
 
     const parkingRef = doc(db, "parkings", parkingId);
     await runTransaction(db, async (tx) => {
       const snap = await tx.get(parkingRef);
-      if (!snap.exists()) throw new Error("Parking not found.");
+      if (!snap.exists()) throw new Error(lang.error_parking_not_found || "Parking not found.");
       const free = Number(snap.data().freeSpots || 0);
-      if (free <= 0) throw new Error("No free spots available.");
+      if (free <= 0) throw new Error(lang.error_no_free_spots || "No free spots available.");
       tx.update(parkingRef, { freeSpots: free - 1 });
     });
 
@@ -650,14 +594,13 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     const durationEl = document.getElementById("duration");
     if (durationEl) { durationEl.disabled = false; durationEl.value = 1; }
 
-    manageBox.style.display = "flex";
-    // resInfo.innerText = `${selectedParking.name} - ${timeChosen}, ${hoursAmount}h${allDay ? " (all-day)" : ""} - Plate: ${plateNumber}`;
-    document.getElementById("costText").innerText      = `Total to pay: ${totalCost.toFixed(2)} RON`;
-    document.getElementById("statusText").innerText    = "Status: NOT PAID";
+    if (manageBox) manageBox.style.display = "flex";
+    document.getElementById("costText").innerText      = `${lang.manage_total_to_pay || "Total to pay"}: ${totalCost.toFixed(2)} RON`;
+    document.getElementById("statusText").innerText    = `${lang.manage_status_label || "Status"}: ${lang.status_not_paid || "Not paid"}`;
     document.getElementById("statusText").style.color  = "blue";
-    document.getElementById("payBtn").style.display    = "inline-block"; 
+    document.getElementById("payBtn").style.display    = "inline-block";
     localStorage.setItem('myBookingName', selectedParking.name);
-    manageBox.style.display = "flex";
+    
     reservationPanel.style.display = "none";
     parkingPanel.style.display     = "none";
 
@@ -669,166 +612,172 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
     const existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
 
     const newBooking = {
-        parkingId: parkingId,
-        endTime: bookingEnd.toISOString(),
-        id: reservationDocRef.id
+      parkingId: parkingId,
+      endTime: bookingEnd.toISOString(),
+      id: reservationDocRef.id
     };
 
     const index = existingBookings.findIndex(b => b.parkingId === parkingId);
     if (index > -1) {
-        existingBookings[index] = newBooking; 
+      existingBookings[index] = newBooking; 
     } else {
-        existingBookings.push(newBooking); 
+      existingBookings.push(newBooking); 
     }
 
     localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
 
     if (typeof window.renderMarkers === "function") {
-        window.renderMarkers(window.latestParkings); 
+      window.renderMarkers(window.latestParkings); 
     }
     
   } catch (err) {
     console.error("Booking error:", err);
-    alert(err.message || "Booking failed.");
+    alert(err.message || lang.alert_booking_failed || "Booking failed");
   }
 });
 
-// payment simulation (just updates reservation status to paid)
-
+// CORECTIE: Simulare plată
 document.getElementById("payBtn")?.addEventListener("click", async () => {
   try {
+    const lang = i18n[currentLang];
     if (activeReservationId) {
       await updateDoc(doc(db, "reservations", String(activeReservationId)), { status: "paid" });
       localStorage.setItem('myBookingStatus', 'paid');
     }
-    document.getElementById("statusText").innerText            = "Status: PAID";
-    document.getElementById("statusText").style.color          = "green";
-    document.getElementById("payBtn").style.display            = "none";
-    document.getElementById("manageReservation").style.display = "none";
-    alert("Payment successful! Thank you.");
+    document.getElementById("statusText").innerText   = `${lang.manage_status_label || "Status"}: ${lang.status_paid || "Paid"}`;
+    document.getElementById("statusText").style.color = "green";
+    document.getElementById("payBtn").style.display   = "none";
     if (manageBox) manageBox.style.display = "none";
+    alert(lang.alert_payment_success || "Payment successful!");
 
     if (typeof window.renderMarkers === "function") {
-        window.renderMarkers(window.latestParkings);
+      window.renderMarkers(window.latestParkings);
     }
   } catch (err) {
     console.error(err);
-    alert(err.message || "Payment update failed.");
+    alert(i18n[currentLang].alert_payment_failed + (err.message || ""));
   }
 });
+
+// CORECTIE: Inițializare la încărcarea paginii
 window.addEventListener('load', async () => {
-    activeReservationId = localStorage.getItem('activeReservationId');
-    activeReservationParkingId = localStorage.getItem('myBooking');
-    const savedStatus = localStorage.getItem('myBookingStatus');
-    
-    window.activeReservationParkingId = activeReservationParkingId;
+  activeReservationId = localStorage.getItem('activeReservationId');
+  activeReservationParkingId = localStorage.getItem('myBooking');
+  const savedStatus = localStorage.getItem('myBookingStatus');
+  const lang = i18n[currentLang];
+  
+  window.activeReservationParkingId = activeReservationParkingId;
 
-    let myBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
-    
-    if (myBookings.length > 0) {
-    
-        for (const booking of [...myBookings]) {
-            try {
-                const resSnap = await getDoc(doc(db, "reservations", booking.id));
-             
-                if (!resSnap.exists() || resSnap.data().status === "cancelled" || resSnap.data().status === "completed") {
-                    myBookings = myBookings.filter(b => b.id !== booking.id);
-                    
-                    if (activeReservationId === booking.id) {
-                        localStorage.removeItem('activeReservationId');
-                        localStorage.removeItem('myBooking');
-                        localStorage.removeItem('myBookingStatus');
-                        activeReservationId = null;
-                        activeReservationParkingId = null;
-                    }
-                }
-            } catch (e) {
-                console.error("Sync error for booking:", booking.id, e);
-            }
-        }
-        localStorage.setItem('myBookingsList', JSON.stringify(myBookings));
-    }
-
-    if (activeReservationParkingId && savedStatus !== 'paid' && manageBox) {
-        manageBox.style.display = "flex";
-        document.getElementById("statusText").innerText = "Status: NOT PAID";
-        document.getElementById("statusText").style.color = "blue";
-    }
-
-    setTimeout(() => {
-        if (typeof window.renderMarkers === "function" && window.latestParkings.length > 0) {
-            window.renderMarkers(window.latestParkings);
-        }
-    }, 1000); 
-});
-
-// filter and sort functions for the parking list
-export function applyFiltersAndRender() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const availableOnly = document.getElementById('availableOnlyFilter').checked;
-    const nonStopOnly = document.getElementById('nonStopFilter').checked;
-    const sortBy = document.getElementById('sortSelect').value;
-
-    if (!window.latestParkings) return;
-
-    let filteredParkings = window.latestParkings;
-
-    if (searchTerm) {
-        filteredParkings = filteredParkings.filter(p => p.name.toLowerCase().includes(searchTerm));
-    }
-
-    if (availableOnly) {
-        filteredParkings = filteredParkings.filter(p => p.freeSpots > 0);
-    }
-
-    if (nonStopOnly) {
-        filteredParkings = filteredParkings.filter(p => p.openHours === "00:00-24:00");
-    }
-
-    if (sortBy === 'price-asc') {
-        filteredParkings.sort((a, b) => a.pricePerHour - b.pricePerHour);
-    } else if (sortBy === 'price-desc') {
-        filteredParkings.sort((a, b) => b.pricePerHour - a.pricePerHour);
-    }
-
-    renderParkingList(filteredParkings);
-}
-
-window.cancelAnyReservation = async function(resId, parkId) {
-    if (!confirm("Are you sure you want to cancel this specific booking?")) return;
-
-    try {
-        const reservationRef = doc(db, "reservations", String(resId));
-        const parkingRef     = doc(db, "parkings", String(parkId));
-
-        await runTransaction(db, async (tx) => {
-            const parkSnap = await tx.get(parkingRef);
-            if (!parkSnap.exists()) throw new Error("Parking not found.");
-            
-            const currentFree = Number(parkSnap.data().freeSpots || 0);
-            tx.update(parkingRef,     { freeSpots: currentFree + 1 });
-            tx.update(reservationRef, { status: "cancelled" });
-        });
-
-        let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
-        existingBookings = existingBookings.filter(b => String(b.id) !== String(resId));
-        localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
-
-        if (activeReservationId === resId) {
+  let myBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+  
+  if (myBookings.length > 0) {
+    for (const booking of [...myBookings]) {
+      try {
+        const resSnap = await getDoc(doc(db, "reservations", booking.id));
+       
+        if (!resSnap.exists() || resSnap.data().status === "cancelled" || resSnap.data().status === "completed") {
+          myBookings = myBookings.filter(b => b.id !== booking.id);
+          
+          if (activeReservationId === booking.id) {
             localStorage.removeItem('activeReservationId');
             localStorage.removeItem('myBooking');
+            localStorage.removeItem('myBookingStatus');
             activeReservationId = null;
             activeReservationParkingId = null;
+          }
         }
-
-        alert("Reservation cancelled successfully.");
-        location.reload(); // Refresh pentru a curăța harta
-    } catch (err) {
-        console.error("Cancel error:", err);
-        alert("Could not cancel: " + err.message);
+      } catch (e) {
+        console.error("Sync error for booking:", booking.id, e);
+      }
     }
+    localStorage.setItem('myBookingsList', JSON.stringify(myBookings));
+  }
+
+  if (activeReservationParkingId && savedStatus !== 'paid' && manageBox) {
+    manageBox.style.display = "flex";
+    document.getElementById("statusText").innerText = `${lang.manage_status_label || "Status"}: ${lang.status_not_paid || "Not paid"}`;
+    document.getElementById("statusText").style.color = "blue";
+  }
+
+  setTimeout(() => {
+    if (typeof window.renderMarkers === "function" && window.latestParkings && window.latestParkings.length > 0) {
+      window.renderMarkers(window.latestParkings);
+    }
+  }, 1000); 
+});
+
+// CORECTIE: Filtrare și sortare
+export function applyFiltersAndRender() {
+  const searchInput = document.getElementById('searchInput');
+  const availableOnlyFilter = document.getElementById('availableOnlyFilter');
+  const nonStopFilter = document.getElementById('nonStopFilter');
+  const sortSelect = document.getElementById('sortSelect');
+
+  if (!searchInput || !availableOnlyFilter || !nonStopFilter || !sortSelect || !window.latestParkings) return;
+
+  const searchTerm = searchInput.value.toLowerCase();
+  const availableOnly = availableOnlyFilter.checked;
+  const nonStopOnly = nonStopFilter.checked;
+  const sortBy = sortSelect.value;
+
+  let filteredParkings = window.latestParkings;
+
+  if (searchTerm) {
+    filteredParkings = filteredParkings.filter(p => p.name.toLowerCase().includes(searchTerm));
+  }
+
+  if (availableOnly) {
+    filteredParkings = filteredParkings.filter(p => p.freeSpots > 0);
+  }
+
+  if (nonStopOnly) {
+    filteredParkings = filteredParkings.filter(p => p.openHours === "00:00-24:00");
+  }
+
+  if (sortBy === 'price-asc') {
+    filteredParkings.sort((a, b) => a.pricePerHour - b.pricePerHour);
+  } else if (sortBy === 'price-desc') {
+    filteredParkings.sort((a, b) => b.pricePerHour - a.pricePerHour);
+  }
+
+  renderParkingList(filteredParkings);
+}
+
+// CORECTIE: Anulare orice rezervare
+window.cancelAnyReservation = async function(resId, parkId) {
+  if (!confirm(i18n[currentLang].confirm_cancel_specific || "Are you sure?")) return;
+
+  try {
+    const reservationRef = doc(db, "reservations", String(resId));
+    const parkingRef     = doc(db, "parkings", String(parkId));
+
+    await runTransaction(db, async (tx) => {
+      const parkSnap = await tx.get(parkingRef);
+      if (!parkSnap.exists()) throw new Error(i18n[currentLang].error_parking_not_found || "Parking not found");
+      
+      const currentFree = Number(parkSnap.data().freeSpots || 0);
+      tx.update(parkingRef,     { freeSpots: currentFree + 1 });
+      tx.update(reservationRef, { status: "cancelled" });
+    });
+
+    let existingBookings = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
+    existingBookings = existingBookings.filter(b => String(b.id) !== String(resId));
+    localStorage.setItem('myBookingsList', JSON.stringify(existingBookings));
+
+    if (activeReservationId === resId) {
+      localStorage.removeItem('activeReservationId');
+      localStorage.removeItem('myBooking');
+      activeReservationId = null;
+      activeReservationParkingId = null;
+    }
+
+    alert(i18n[currentLang].alert_cancel_success || "Cancelled successfully!");
+    location.reload();
+  } catch (err) {
+    console.error("Cancel error:", err);
+    alert((i18n[currentLang].alert_cancel_specific_failed || "Cancel failed: ") + err.message);
+  }
 };
 
-//init
-
+// Inițializare
 setCurrentTimeDefault();

@@ -10,106 +10,110 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="map-styles.css" />
 </head>
-
-<body class="map-page">
-  <header class="map-toolbar">
-    <a class="brand" href="login.html" aria-label="Park Sibiu map">
-      <img src="../graphics/icon.png" alt="">
-      <span>Park Sibiu</span>
-    </a>
-
-    <nav class="toolbar-actions" aria-label="Map navigation">
-      <button class="secondary-button"><a href="profile.html" id="profileBtn" title="Profile">Profile</a></button>
-      <button id="openParkingListBtn" class="primary-button" title="Available Parkings">Available Parkings</button>
-      <button id="historyBtn" class="secondary-button"><a href="parking-history.html">Parking & Billing History</a></button>
-    </nav>
-  </header>
-
+<body>
+<header>
+  <div id="header-container" class="header-container">
+  <button><a href="profile.html" id="profileBtn" title="Profil">👤</a></button>
+  <button id="openParkingListBtn" title="Available Parkings"> Available Parkings</button>
+  <button id="historyBtn"><a href="parking-history.html" style="text-decoration:none; color:inherit;">📋 Parking & Billing History</a></button>
+</div>
+</header>
   <div id="map"></div>
 
-  <div id="parkingPanel" class="panel-overlay">
-    <div class="panel-card parking-card">
-      <button id="closeParkingPanelBtn" class="icon-button" title="Close">&#x2715;</button>
-      <div id="parkingListView">
-        <div id="search-container" class="search-panel">
-          <label class="sr-only" for="searchInput">Search by parking name</label>
-          <input type="text" id="searchInput" placeholder="Search by parking name...">
 
-          <div class="filter-row">
-            <label class="filter-option" for="availableOnlyFilter">
-              <input type="checkbox" id="availableOnlyFilter">
-              <span>Available Only</span>
-            </label>
 
-            <label class="filter-option" for="nonStopFilter">
-              <input type="checkbox" id="nonStopFilter">
-              <span>Open 24/7</span>
-            </label>
+ <div id="parkingPanel" style="display:none; position:fixed; z-index:1300; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.4); overflow:scroll;">
+  <div style="background:#fff; width:90%; max-width:500px; margin:40px auto; padding:15px; border-radius:8px; position:relative;">
+    <button id="closeParkingPanelBtn" title="Close" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:22px; line-height:1; cursor:pointer; color:#555; padding:2px 6px; border-radius:4px;">&#x2715;</button>
+    <div id="parkingListView">
+            <div id="search-container" style="padding: 10px 0; border-bottom: 2px solid #eee; margin-bottom: 10px;">
+        <!-- Search Bar -->
+        <input type="text" id="searchInput" placeholder="Search by parking name..." style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
 
-            <label class="sr-only" for="sortSelect">Sort parkings</label>
-            <select id="sortSelect">
-              <option value="default">Sort by Default</option>
-              <option value="price-asc">Price (Low to High)</option>
-              <option value="price-desc">Price (High to Low)</option>
+        <!-- Filters and Sorting -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            
+            <!-- Checkbox - "Available Only" -->
+            <div style="display: flex; align-items: center;">
+                <input type="checkbox" id="availableOnlyFilter" style="margin-right: 5px;">
+                <label for="availableOnlyFilter" style="font-size: 14px;">Available Only</label>
+            </div>
+
+            <!-- Checkbox - "Non-Stop" -->
+            <div style="display: flex; align-items: center;">
+                <input type="checkbox" id="nonStopFilter" style="margin-right: 5px;">
+                <label for="nonStopFilter" style="font-size: 14px;">Open 24/7</label>
+            </div>
+
+            <!-- Sort -->
+            <select id="sortSelect" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
+                <option value="default">Sort by Default</option>
+                <option value="price-asc">Price (Low to High)</option>
+                <option value="price-desc">Price (High to Low)</option>
             </select>
-          </div>
-
-          <ul id="parkingList" class="parking-list">
-            <li>Loading parkings...</li>
-          </ul>
         </div>
-      </div>
+      <ul id="parkingList">
+        <li>Loading parkings...</li>
+      </ul>
 
-      <div id="parkingDetailsView" class="parking-details-view">
-        <button id="backToParkingListBtn" class="secondary-button">Back to list</button>
-        <div id="selectedParkingDetails"></div>
-      </div>
+    </div>
+    </div>
+    <div id="parkingDetailsView" style="display:none;">
+      <button id="backToParkingListBtn" style="margin-bottom:10px;">Back to list</button>
+      <div id="selectedParkingDetails"></div>
     </div>
   </div>
+</div>
 
   <div id="reservationPanel" class="panel-overlay reservation-overlay">
     <div class="panel-card reservation-card">
       <h3 id="panelTitle">Book a spot</h3>
       <p id="selectedParkingName" class="selected-parking-name"></p>
 
-      <div class="field-group">
-        <label for="carSelect">Your Saved Plates</label>
-        <select id="carSelect">
-          <option value=""> Select a saved plate </option>
-        </select>
-      </div>
+ 
 
-      <div class="field-group">
-        <label for="plateNumber">Plate Number</label>
-        <input type="text" id="plateNumber" placeholder="Select or type plate...">
-      </div>
+    <div style="text-align: left; margin-bottom: 15px;">
+  <label style="font-size: 12px; font-weight: bold;">Your Saved Plates:</label>
+  <select id="carSelect" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;">
+    <option value=""> Select a saved plate </option>
+  </select>
+</div>
+
+<div style="text-align: left; margin-bottom: 15px;">
+  <label style="font-size: 12px; font-weight: bold;">Plate Number:</label>
+  <input type="text" id="plateNumber" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc;" placeholder="Select or type plate...">
+</div>
 
       <select id="countrySelect">
         <option value="RO" selected>Romania</option>
       </select>
 
-      <div class="time-grid">
-        <div class="field-group">
-          <label for="startTime">Start Time</label>
-          <input type="time" id="startTime">
+<div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+    
+    <div style="display: flex; justify-content: space-between;">
+        <div style="text-align: left; width: 45%;">
+            <label style="font-size: 12px; font-weight: bold;">Start Time:</label>
+            <input type="time" id="startTime" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
         </div>
-        <div class="field-group">
-          <label for="duration">Hours</label>
-          <input type="number" id="duration" value="1" min="1">
+        <div style="text-align: left; width: 45%;">
+            <label style="font-size: 12px; font-weight: bold;">Hours:</label>
+            <input type="number" id="duration" value="1" min="1" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
         </div>
       </div>
 
-      <label class="filter-option all-day-option" for="allDayCheck">
-        <input type="checkbox" id="allDayCheck">
-        <span>Book until the end of the day</span>
-      </label>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="allDayCheck" style="width: auto; margin: 0; cursor: pointer;">
+        <label for="allDayCheck" style="font-size: 14px; cursor: pointer;">Book until the end of the day</label>
+    </div>
+
+</div>
 
       <button id="confirmBooking" class="primary-button">Confirm Booking</button>
       <button id="closePanel" class="danger-button">Cancel</button>
     </div>
   </div>
 
-  <div id="manageReservation" class="manageReservation">
+<div id="manageReservation" class="manageReservation">
     <h4>My Reservation</h4>
     <p id="resInfo"></p>
 
@@ -129,6 +133,111 @@
 
   <script type="module" src="../backend/parking.js"></script>
 
+  <script type="module">
+  // 1. Definim traducerile direct aici ca să nu mai depindem de alte fișiere pentru textele statice
+  const localTranslations = {
+    ro: {
+      nav_available_parkings: "Parcări Disponibile",
+      nav_history: "Istoric Parcări & Plăți",
+      lbl_available_only: "Doar Disponibile",
+      lbl_non_stop: "Deschis 24/7",
+      opt_sort_default: "Sortare Implicită",
+      opt_sort_asc: "Preț (Mic la Mare)",
+      opt_sort_desc: "Preț (Mare la Mic)",
+      lbl_loading_parkings: "Se încarcă parcările...",
+      back_to_list: "Înapoi la listă",
+      panel_book_title: "Rezervă un loc",
+      lbl_saved_plates: "Plăcuțe Salvate:",
+      opt_select_plate: " Selectează o plăcuță salvată ",
+      lbl_plate_number: "Număr Înmatriculare:",
+      placeholder_plate: "Selectează sau scrie numărul...",
+      lbl_start_time: "Ora de început:",
+      lbl_duration_hours: "Ore:",
+      lbl_all_day_check: "Rezervă până la sfârșitul zilei",
+      btn_confirm_booking: "Confirmă Rezervarea",
+      btn_cancel_panel: "Anulează",
+      lbl_my_reservation: "Rezervarea Mea",
+      btn_pay_now: "Plătește Acum",
+      btn_edit_time: "Modifică Ora",
+      btn_cancel_booking: "Anulează Rezervarea",
+      search_placeholder: "Caută după numele parcării..."
+    },
+    en: {
+      nav_available_parkings: "Available Parkings",
+      nav_history: "Parking & Billing History",
+      lbl_available_only: "Available Only",
+      lbl_non_stop: "Open 24/7",
+      opt_sort_default: "Sort by Default",
+      opt_sort_asc: "Price (Low to High)",
+      opt_sort_desc: "Price (High to Low)",
+      lbl_loading_parkings: "Loading parkings...",
+      back_to_list: "Back to list",
+      panel_book_title: "Book a spot",
+      lbl_saved_plates: "Your Saved Plates:",
+      opt_select_plate: " Select a saved plate ",
+      lbl_plate_number: "Plate Number:",
+      placeholder_plate: "Select or type plate...",
+      lbl_start_time: "Start Time:",
+      lbl_duration_hours: "Hours:",
+      lbl_all_day_check: "Book until the end of the day",
+      btn_confirm_booking: "Confirm Booking",
+      btn_cancel_panel: "Cancel",
+      lbl_my_reservation: "My Reservation",
+      btn_pay_now: "Pay Now",
+      btn_edit_time: "Edit Time",
+      btn_cancel_booking: "Cancel Booking",
+      search_placeholder: "Search by parking name..."
+    }
+  };
+
+  // 2. Aflăm limba salvată în browser sau setăm engleza ca fallback
+  const currentLang = localStorage.getItem('preferredLang') || (navigator.language.startsWith('ro') ? 'ro' : 'en');
+
+  // 3. Funcția care ia la rând ID-urile din HTML și le schimbă textul
+  function applyStaticTranslations() {
+    const lang = localTranslations[currentLang];
+    if (!lang) return;
+
+    // Header & Filtre
+    if (document.getElementById('nav_available_parkings')) document.getElementById('nav_available_parkings').innerText = lang.nav_available_parkings;
+    if (document.getElementById('nav_history')) document.getElementById('nav_history').innerText = "📋 " + lang.nav_history;
+    if (document.getElementById('lblAvailableOnly')) document.getElementById('lblAvailableOnly').innerText = lang.lbl_available_only;
+    if (document.getElementById('lblNonStop')) document.getElementById('lblNonStop').innerText = lang.lbl_non_stop;
+    
+    // Căutare (Placeholder)
+    if (document.getElementById('searchInput')) document.getElementById('searchInput').placeholder = lang.search_placeholder;
+
+    // Sortare & Listă
+    if (document.getElementById('optSortDefault')) document.getElementById('optSortDefault').innerText = lang.opt_sort_default;
+    if (document.getElementById('optSortAsc')) document.getElementById('optSortAsc').innerText = lang.opt_sort_asc;
+    if (document.getElementById('optSortDesc')) document.getElementById('optSortDesc').innerText = lang.opt_sort_desc;
+    if (document.getElementById('lblLoadingParkings')) document.getElementById('lblLoadingParkings').innerText = lang.lbl_loading_parkings;
+    if (document.getElementById('backToParkingListBtnText')) document.getElementById('backToParkingListBtnText').innerText = lang.back_to_list;
+
+    // Fereastra de Rezervare (Cea din screenshot)
+    if (document.getElementById('panelTitle')) document.getElementById('panelTitle').innerText = lang.panel_book_title;
+    if (document.getElementById('lblSavedPlates')) document.getElementById('lblSavedPlates').innerText = lang.lbl_saved_plates;
+    if (document.getElementById('optSelectPlate')) document.getElementById('optSelectPlate').innerText = lang.opt_select_plate;
+    if (document.getElementById('lblPlateNumber')) document.getElementById('lblPlateNumber').innerText = lang.lbl_plate_number;
+    if (document.getElementById('plateNumber')) document.getElementById('plateNumber').placeholder = lang.placeholder_plate;
+    if (document.getElementById('lblStartTime')) document.getElementById('lblStartTime').innerText = lang.lbl_start_time;
+    if (document.getElementById('lblDurationHours')) document.getElementById('lblDurationHours').innerText = lang.lbl_duration_hours;
+    if (document.getElementById('lblAllDayCheck')) document.getElementById('lblAllDayCheck').innerText = lang.lbl_all_day_check;
+    if (document.getElementById('confirmBooking')) document.getElementById('confirmBooking').innerText = lang.btn_confirm_booking;
+    if (document.getElementById('closePanel')) document.getElementById('closePanel').innerText = lang.btn_cancel_panel;
+
+    // Panou Rezervare Activă
+    if (document.getElementById('lblMyReservation')) document.getElementById('lblMyReservation').innerText = lang.lbl_my_reservation;
+    if (document.getElementById('payBtn')) document.getElementById('payBtn').innerText = lang.btn_pay_now;
+    if (document.getElementById('editBtn')) document.getElementById('editBtn').innerText = lang.btn_edit_time;
+    if (document.getElementById('cancelBtn')) document.getElementById('cancelBtn').innerText = lang.btn_cancel_booking;
+  }
+
+  // Executăm traducerea automată imediat ce se încarcă structura paginii
+  document.addEventListener('DOMContentLoaded', applyStaticTranslations);
+  // O rulăm și direct, în caz că DOM-ul e deja gata
+  applyStaticTranslations();
+</script>
 </body>
 
 </html>

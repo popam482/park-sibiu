@@ -13,6 +13,7 @@ import {
   deleteDoc 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { onAuthStateChanged, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+import { i18n } from "./translations.js";
 
 const nameInput = document.getElementById("displayName");
 const langSelect = document.getElementById("languageSelect");
@@ -32,7 +33,7 @@ const greetingArea = document.getElementById("greetingArea");
 const subGreetingtext = document.getElementById("subGreetingtext");
 
 let licensePlates = [];
-
+let currentMessageIndex = 0;
 function validateROPlate(plate) {
     const cleanPlate = plate.replace(/\s+/g, '').toUpperCase();
     const regex = /^(B\d{2,3}[A-Z]{3})$|^([A-Z]{2}\d{2}[A-Z]{3})$/;
@@ -42,18 +43,23 @@ function validateROPlate(plate) {
 document.getElementById('togglePlatesBtn')?.addEventListener('click', () => {
     const accordion = document.getElementById('platesAccordion');
     const btn = document.getElementById('togglePlatesBtn');
+    const lang = langSelect.value || "en";
     if (accordion.style.display === "none") {
         accordion.style.display = "block";
-        btn.innerText = "Hide Saved Plates ▲";
+        btn.innerText = i18n[lang].hide_plates;
     } else {
         accordion.style.display = "none";
-        btn.innerText = "View Saved Plates ▼";
+        btn.innerText = i18n[lang].view_plates;
     }
 });
 
 document.getElementById('countryProfileSelect')?.addEventListener('change', (e) => {
-    if (newPlateInput) {
-        newPlateInput.placeholder = (e.target.value === "RO") ? "Ex: B123ABC" : "Enter plate number";
+  if (newPlateInput) {
+        const lang = langSelect.value || "en";
+
+        newPlateInput.placeholder = (e.target.value === "RO") 
+            ? i18n[lang].placeholder_ro 
+            : i18n[lang].placeholder_en;
     }
 });
 
@@ -65,6 +71,7 @@ onAuthStateChanged(auth, async (user) => {
 
   try {
     const userRef = doc(db, "users", user.uid);
+    currentMessageIndex = Math.floor(Math.random() * 11);
     const snapshot = await getDoc(userRef);
 
     if (snapshot.exists()) {
@@ -86,8 +93,10 @@ if (data.displayName) {
       }
 
       if (data.preferences) {
-        langSelect.value = data.preferences.language || "en";
+        const userLang = data.preferences.language || "en";
+        langSelect.value = userLang;
         darkToggle.checked = data.preferences.theme === "dark";
+        updatePageLanguage(userLang);
       }
     }
 
@@ -112,30 +121,32 @@ function normalizePlate(value) {
 async function persistLicensePlates() {
   const user = auth.currentUser;
   if (!user) return;
-
+  const lang = langSelect.value || "en";
   try {
     const userRef = doc(db, "users", user.uid);
     await setDoc(userRef, { 
       licensePlates: licensePlates 
     }, { merge: true });
     
-    alert("License plates updated!");
+    alert(i18n[lang].alert_plates_updated);
   } catch (err) {
     console.error("Failed to save license plates:", err);
-    alert("Could not update license plates.");
+    alert(i18n[lang].alert_plates_failed);
   }
 }
 
 function renderPlates() {
   if (!platesList) return;
   platesList.innerHTML = "";
-  
+  const lang = langSelect.value || "en";
   if (favoriteSelect) {
-    favoriteSelect.innerHTML = '<option value=""> Select Favorite Plate </option>';
+    favoriteSelect.innerHTML = lang === "ro" 
+      ? '<option value=""> Selectează Plăcuța Favorită </option>' 
+      : '<option value=""> Select Favorite Plate </option>';
   }
 
   if (licensePlates.length === 0) {
-    platesList.innerHTML = "<li>No license plates added yet.</li>";
+   platesList.innerHTML = `<li>${i18n[lang].no_plates}</li>`;
     return;
   }
 
@@ -152,7 +163,7 @@ function renderPlates() {
     li.innerHTML = `<span>${plate} ${isFav ? '⭐' : ''}</span>`;
 
     const removeBtn = document.createElement("button");
-    removeBtn.textContent = "Remove";
+    removeBtn.textContent = lang === "ro" ? "Șterge" : "Remove";
     removeBtn.style.background = "#e74c3c";
     removeBtn.style.color = "white";
     removeBtn.style.border = "none";
@@ -190,20 +201,25 @@ function renderHistory(reservations) {
   if (!listEl) return;
 
   listEl.innerHTML = "";
+  const lang = langSelect.value || "en";
 
   if (reservations.length === 0) {
-    listEl.innerHTML = "<li>No reservations found in your history.</li>";
+    listEl.innerHTML = `<li>${i18n[lang].no_bookings}</li>`;
     return;
   }
 
   reservations.forEach(res => {
     const li = document.createElement("li");
-    const date = res.startTime.toDate().toLocaleDateString('ro-RO');
-    const time = res.startTime.toDate().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+
+    const locale = lang === "ro" ? "ro-RO" : "en-US";
+    const date = res.startTime.toDate().toLocaleDateString(locale);
+    const time = res.startTime.toDate().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+    const connector = lang === "ro" ? "la" : "at";
+    const unit = lang === "ro" ? "h" : "h"; 
     
     li.innerHTML = `
       <strong>${res.parkingName}</strong><br>
-      <small>${date} at ${time} - ${res.durationHours}h</small><br>
+      <small>${date} ${connector} ${time} - ${res.durationHours}${unit}</small><br>
       <span style="float:right;">${res.totalCost} RON</span>
     `;
     listEl.appendChild(li);
@@ -226,7 +242,8 @@ async function fetchAndRenderHistory(userId) {
   } catch (err) {
     console.error("Failed to fetch reservation history:", err);
     const listEl = document.getElementById("reservationHistoryList");
-    if(listEl) listEl.innerHTML = "<li>Could not load history.</li>";
+    const lang = langSelect.value || "en";
+    if(listEl) listEl.innerHTML = `<li>${i18n[lang].error_history}</li>`;
   }
 }
 
@@ -236,22 +253,25 @@ if (savePlateBtn) {
         const raw = newPlateInput?.value?.trim() || "";
         const plate = normalizePlate(raw);
         if (!plate) return;
+
+        const lang = langSelect.value || "en";
+
         const alphanumericRegex = /^[A-Z0-9]+$/;
         if (!alphanumericRegex.test(plate)) {
-            return alert("ERROR: License plate must contain only LETTERS and NUMBERS (no dots, symbols, or spaces).");
+            return alert(i18n[lang].alert_plate_invalid_chars);
         }
 
         if (country === "RO") {
             if (!validateROPlate(plate)) {
-                return alert("INVALID FORMAT! For Romania use: SB12ABC or B123ABC");
+              return alert(i18n[lang].alert_plate_invalid_ro);
             }
         } else {
             if (plate.length < 3 || plate.length > 14) {
-                return alert("Plate number is too short or too long (3-14 characters).");
+              return alert(i18n[lang].alert_plate_length);
             }
         }
         if (licensePlates.includes(plate)) {
-            alert("This license plate is already in your list.");
+            alert(i18n[lang].alert_plate_exists);
             return;
         }
         licensePlates.push(plate);
@@ -260,20 +280,29 @@ if (savePlateBtn) {
         if (newPlateInput) newPlateInput.value = "";
     });
 }
-
 async function savePreferences() {
   const user = auth.currentUser;
   if (!user) return;
+
+  const currentLang = langSelect.value; 
 
   try {
     const userRef = doc(db, "users", user.uid);
     await setDoc(userRef, {
       preferences: {
-        language: langSelect.value,
+        language: currentLang,
         theme: darkToggle.checked ? "dark" : "light"
       }
     }, { merge: true });
+    
     applyTheme(darkToggle.checked);
+    updatePageLanguage(currentLang);
+    renderPlates();
+    loadBookingHistory(user.uid);
+    if (auth.currentUser?.displayName) {
+        showGreeting(auth.currentUser.displayName);
+    }
+
   } catch (err) {
     console.error("Failed to save preferences:", err);
   }
@@ -285,9 +314,9 @@ saveNameBtn.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) return;
   const newName = nameInput.value.trim();
-
+  const lang = langSelect.value || "en";
   if (!newName) {
-      alert("Please enter a name.");
+      alert(i18n[lang].alert_enter_name);
       return;
   }
 
@@ -298,25 +327,26 @@ saveNameBtn.addEventListener("click", async () => {
     showGreeting(newName); 
   } catch (err) {
     console.error("Failed to save name:", err);
-    alert("Could not update display name.");
+    alert(i18n[lang].alert_name_failed);
   }
 });
 
 
 resetBtn.addEventListener("click", async () => {
+  const lang = langSelect.value || "en";
   try {
     const email = auth.currentUser?.email;
 
     if (!email) {
-      alert("No email found for this account.");
+      alert(i18n[lang].alert_no_email);
       return;
     }
 
     await sendPasswordResetEmail(auth, email);
-    alert("Check your email to change password.");
+    alert(i18n[lang].alert_reset_sent);
   } catch (err) {
     console.error("Password reset failed:", err);
-    alert("Could not send password reset email.");
+    alert(i18n[lang].alert_reset_failed);
   }
 });
 
@@ -326,30 +356,28 @@ logoutBtn.addEventListener("click", async () => {
     window.location.href = "login.html";
   } catch (err) {
     console.error("Logout failed:", err);
-    alert("Could not log out.");
+    const lang = langSelect.value || "en";
+    alert(i18n[lang].alert_logout_failed);
   }
 });
 
-document.getElementById('countryProfileSelect')?.addEventListener('change', (e) => {
-    const input = document.getElementById('newPlateNumber');
-    if (e.target.value === "RO") {
-        input.placeholder = "Ex: B123ABC";
-    } else {
-        input.placeholder = "Enter plate number";
-    }
-});
 document.getElementById('saveFavoriteBtn')?.addEventListener('click', () => {
   const selectedFav = favoriteSelect.value;
-  if (!selectedFav) return alert("Select a plate first!");
+  const lang = langSelect.value || "en";
+  if (!selectedFav) return alert(i18n[lang].alert_plate_empty);
   
   localStorage.setItem('favoritePlate', selectedFav);
-  alert(`Plate ${selectedFav} is now your favorite!`);
+  const successMessage = lang === "ro" 
+    ? `Plăcuța ${selectedFav} este acum favorita ta!` 
+    : `Plate ${selectedFav} is now your favorite!`;
+
+  alert(successMessage);
   renderPlates(); 
 });
 async function loadBookingHistory(userId) {
     const container = document.getElementById("bookingHistoryContainer");
     if (!container) return;
-
+    const lang = langSelect.value || "en";
     try {
         const q = query(
             collection(db, "reservations"),
@@ -362,27 +390,27 @@ async function loadBookingHistory(userId) {
         container.innerHTML = "";
 
         if (querySnapshot.empty) {
-            container.innerHTML = "<p>No bookings found.</p>";
+           container.innerHTML = `<p>${i18n[lang].no_bookings}</p>`;
             return;
         }
 
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             const reservationId = docSnap.id;
-            const status = data.status || "pending";
-            const statusClass = status === 'paid' ? '' : (status === 'cancelled' ? 'cancelled' : 'pending');
-            const dateStr = data.createdAt?.toDate().toLocaleString('ro-RO') || "N/A";
+            const statusClass = data.status === 'paid' ? '' : (data.status === 'cancelled' ? 'cancelled' : 'pending');
+            const locale = lang === "ro" ? "ro-RO" : "en-US";
+            const dateStr = data.createdAt?.toDate().toLocaleString(locale) || "N/A";
 
             const card = document.createElement("div");
             card.className = `booking-card ${statusClass}`;
             card.style.position = "relative";
 
-            card.innerHTML = `
+          card.innerHTML = `
                 <div style="margin-right: 35px;">
                     <strong>${data.parkingName || "Parking"}</strong><br>
-                    Plate: ${data.plateNumber}<br>
-                    Time: ${dateStr}<br>
-                    Cost: ${data.totalCost} RON | Status: <strong>${status.toUpperCase()}</strong>
+                    ${i18n[lang].history_plate}: ${data.plateNumber}<br>
+                    ${i18n[lang].history_time}: ${dateStr}<br>
+                    ${i18n[lang].history_cost}: ${data.totalCost} RON | ${i18n[lang].history_status}: <strong>${data.status.toUpperCase()}</strong>
                 </div>
             `;
 
@@ -466,15 +494,40 @@ async function loadBookingHistory(userId) {
 
             const deleteBtn = document.createElement("button");
             deleteBtn.innerHTML = "&times;";
-            deleteBtn.className = "btn-delete-small";
+            deleteBtn.title = lang === "ro" ? "Șterge din istoric" : "Delete from history";
+            deleteBtn.style.cssText = `
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: #ff4d4d;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                font-size: 16px;
+                line-height: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                transition: 0.3s;
+            `;
+
+            deleteBtn.onmouseover = () => deleteBtn.style.background = "#cc0000";
+            deleteBtn.onmouseout = () => deleteBtn.style.background = "#ff4d4d";
+
             deleteBtn.onclick = async () => {
-                if (confirm("Are you sure you want to delete this booking from history?")) {
+                if (confirm(i18n[lang].alert_confirm_delete_booking)) {
                     try {
                         await deleteDoc(doc(db, "reservations", reservationId));
-                        card.remove();
-                        if (container.children.length === 0) container.innerHTML = "<p>No bookings found.</p>";
+                        card.remove(); 
+                        if (container.children.length === 0) {
+                            container.innerHTML = `<p>${i18n[lang].no_bookings}</p>`;
+                        }
                     } catch (err) {
-                        console.error(err);
+                        console.error("Error deleting reservation:", err);
+                        alert(i18n[lang].alert_delete_booking_failed);
                     }
                 }
             };
@@ -483,27 +536,37 @@ async function loadBookingHistory(userId) {
             container.appendChild(card);
         });
     } catch (err) {
-        console.error(err);
-        container.innerHTML = "<p>Error loading history.</p>";
+        console.error("Error loading history:", err);
+        container.innerHTML = `<p>${i18n[lang].error_history}</p>`;
     }
 }
+
+// function showGreeting(name) {
+//     const lang = langSelect.value || "en";
+//     nameInputArea.style.display = "none";
+//     greetingArea.innerText = `${i18n[lang].greeting_hello}, ${name}! 👋`;
+//     greetingArea.style.display = "block";
+
+//    const cuteMessages = [];
+//     for (let i = 0; i < 10; i++) {
+//         if (i18n[lang][`cute_msg_${i}`]) {
+//             cuteMessages.push(i18n[lang][`cute_msg_${i}`]);
+//         }
+//     }
+
+//     const randomMessage = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
+//     subGreetingtext.innerText = randomMessage;
+//     subGreetingtext.style.display = "block";
+// }
 function showGreeting(name) {
+    const lang = langSelect.value || "en";
     nameInputArea.style.display = "none";
-    greetingArea.innerText = `Hello, ${name}! 👋`;
+    greetingArea.innerText = `${i18n[lang].greeting_hello}, ${name}! 👋`;
     greetingArea.style.display = "block";
 
-    const cuteMessages = [
-        "Ready to find the perfect parking spot?",
-        "Have a wonderful day in Sibiu!",
-        "Your car missed you!",
-        "Looking sharp today!",
-        "Let's make parking easy for you.",
-        "Glad to see you back!",
-        "Stay awesome!"
-    ];
-
-    const randomMessage = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
-    subGreetingtext.innerText = randomMessage;
+    const selectedMessage = i18n[lang][`cute_msg_${currentMessageIndex}`] || i18n[lang][`cute_msg_0`];
+    
+    subGreetingtext.innerText = selectedMessage;
     subGreetingtext.style.display = "block";
 }
 
@@ -517,35 +580,27 @@ if (newPlateInput) {
         }
     });
 }
-function generatePDF(data) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFontSize(22);
-    doc.setTextColor(40, 116, 166);
-    doc.text("PARK SIBIU - DIGITAL RECEIPT", 105, 20, null, "center");
+
+function updatePageLanguage(lang) {
+  localStorage.setItem('preferredLang', lang);
+  
+  document.querySelectorAll("[data-i18n]").forEach(element => {
+    const key = element.getAttribute("data-i18n");
+    if (i18n[lang] && i18n[lang][key]) {
+      element.innerText = i18n[lang][key];
+    }
+  });
+  if (newPlateInput) {
+    const countrySelect = document.getElementById('countryProfileSelect');
+    const currentCountry = countrySelect ? countrySelect.value : "RO";
     
-    doc.setLineWidth(0.5);
-    doc.line(20, 25, 190, 25);
-
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Date of Issue: ${new Date().toLocaleString()}`, 20, 35);
-    doc.text(`Transaction ID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}`, 20, 42);
-
-    doc.setFontSize(14);
-    doc.text("Parking Details:", 20, 60);
-    doc.setFontSize(12);
-    doc.text(`Location: ${data.parkingName || 'Sibiu Public Parking'}`, 30, 70);
-    doc.text(`License Plate: ${data.plateNumber}`, 30, 77);
-    doc.text(`Booking Date: ${data.dateStr}`, 30, 84);
-    
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(20, 95, 170, 20);
-    doc.setFontSize(16);
-    doc.text(`TOTAL PAID: ${data.totalCost} RON`, 105, 108, null, "center");
-
-    doc.setFontSize(10);
-    doc.setTextColor(150, 150, 150);
-    doc.text("Thank you for using Park Sibiu! Keep this for your records.", 105, 130, null, "center");
-    doc.save(`Receipt_${data.plateNumber}_${data.reservationId}.pdf`);
+    newPlateInput.placeholder = (currentCountry === "RO") 
+        ? i18n[lang].placeholder_ro 
+        : i18n[lang].placeholder_en;
+  }
+  const currentName = nameInput.value.trim();
+  if (currentName && greetingArea.style.display === "block") {
+      showGreeting(currentName);
+  }
 }
+updatePageLanguage("en");

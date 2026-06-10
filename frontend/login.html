@@ -13,16 +13,18 @@
         <input id="password" type="password" placeholder="Password" />
         <br>
 
-        <button id="signinBtn">Sign In</button>
-        <button id="signupBtn">Sign Up</button>
-        <button id="googleBtn">Login with Google</button>
-        <button id="logoutBtn">Logout</button>
+        <button id="signinBtn" data-i18n="btn_signin">Sign In</button>
+        <button id="signupBtn" data-i18n="btn_signup">Sign Up</button>
+        <button id="googleBtn" data-i18n="btn_google">Login with Google</button>
+        <button id="logoutBtn" data-i18n="btn_logout_login_page">Logout</button>
     </div>
-    <p id="status">Not logged in</p> 
+    <p id="status" data-i18n="status_logged_out">Not logged in</p> 
     </header>
+    
     <div class="gradient"></div>
-    <h1>Car Park Sibiu</h1>
-    <h2>Fast Parking For Your Travel Experience</h2>
+    
+    <h1 id="mainTitle" data-i18n="main_title">Car Park Sibiu</h1>
+    <h2 id="subTitle" data-i18n="sub_title">Fast Parking For Your Travel Experience</h2>
     
 
     <script type="module" src="../backend/login.js"></script>

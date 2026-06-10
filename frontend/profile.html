@@ -3,104 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Park Sibiu</title>
+    <title data-i18n="page_title">User Profile - Park Sibiu</title>
     <link rel="stylesheet" href="profile-styles.css">
     <link rel="icon" href="../graphics/park-icon-unsigned.png" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body id="app-body">
     <header id="profile-container" class="profile-container">
-        <button id="mapBtn"><a href="index.html">Map</a></button>
-        <button id="logoutBtn">Logout</button>
+        <button id="mapBtn"><a href="index.html" data-i18n="nav_map">Map</a></button>
+        <button id="logoutBtn" data-i18n="nav_logout">Logout</button>
     </header>
 
    <main class="profile-main">
         <div class="information-container">
-            <h1>Profile Settings</h1>
+           <h1 data-i18n="profile_settings_title">Profile Settings</h1>
 
             <div class="section-card">
-                <h3>Personal &amp; Vehicle Information</h3>
+                <h3 data-i18n="section_personal_info">Personal &amp; Vehicle Information</h3>
                 <section>
                     <div id="nameInputArea">
-                        <label for="displayName">Display Name:</label>
+                        <label for="displayName" data-i18n="label_display_name">Display Name:</label>
                         <input type="text" id="displayName" placeholder="Enter your name">
-                        <button id="saveNameBtn">Save Name</button>
+                        <button id="saveNameBtn" data-i18n="btn_save_name">Save Name</button>
                     </div>
-                    <h2 id="greetingArea" style="display: none; color: #2c3e50; margin-bottom: 5px;"></h2>
-                    <p id="subGreetingtext" style="display: none; color: #7f8c8d; font-style: italic; margin-top: 0;"></p>
-                    
-                    <hr>
-                    <h2>Manage License Plates</h2>
+                    <h2 id="greetingArea" style="display: none;"></h2>
+                    <p id="subGreetingtext" style="display: none;"></p>
+                </section>
+                <hr>
+                <section>
+                    <h2 data-i18n="title_manage_plates">Manage License Plates</h2>
                     <div id="platesSection" style="margin-top:15px;">
-                        <button id="togglePlatesBtn" style="background:#3498db; color:white; padding:8px 12px; border:none; border-radius:5px; cursor:pointer;">
-                            View Saved Plates 
-                        </button>
-                        <div id="platesAccordion" style="display:none; background:#f9f9f9; padding:10px; border-radius:8px; margin-top:8px;">
+                        <button id="togglePlatesBtn" data-i18n="view_plates">View Saved Plates</button>
+                        <div id="platesAccordion" style="display:none;">
                             <ul id="savedPlatesList"></ul>
                         </div>
                     </div>
 
                     <hr>
                     <div id="addPlateForm" style="margin-top:15px;">
-                        <h3>Add New License Plate</h3>
-                        <label for="countryProfileSelect">Country:</label>
-                        <select id="countryProfileSelect" style="width:100%; padding:5px; border-radius:5px;">
-                            <option value="RO">Romania (Strict Format)</option>
-                            <option value="OTHER">Other Country</option>
+                        <h3 data-i18n="title_add_plate">Add New License Plate</h3>
+                        <label for="countryProfileSelect" data-i18n="label_country">Country:</label>
+                        <select id="countryProfileSelect">
+                            <option value="RO" data-i18n="opt_country_ro">Romania (Strict Format)</option>
+                            <option value="OTHER" data-i18n="opt_country_other">Other Country</option>
                         </select>
-                        <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC" style="width:95%; padding:8px; margin-top:5px; border-radius:5px; border:1px solid #ccc; text-transform:uppercase;">
-                        <button id="savePlateBtn" style="margin-top:10px; background:#27ae60; color:white; border:none; padding:8px; border-radius:5px; width:100%;">
-                            Save Plate
-                        </button>
+                        <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC">
+                        <button id="savePlateBtn" data-i18n="btn_save_plate">Save Plate</button>
                     </div>
 
                     <hr>
                     <div style="margin-top:10px;">
-                        <h3>Favorite License Plate</h3>
-                        <select id="favoritePlateSelect" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;">
-                            <option value=""> Select Favorite Plate </option>
+                        <h3 data-i18n="title_favorite_plate">Favorite License Plate</h3>
+                        <select id="favoritePlateSelect">
+                            <option value=""></option>
                         </select>
-                        <button id="saveFavoriteBtn" style="margin-top:10px; background:#f1c40f; color:black; border:none; padding:8px; border-radius:5px; width:100%;">
-                            Save as Favorite
-                        </button>
+                        <button id="saveFavoriteBtn" data-i18n="btn_set_favorite">Set as Favorite</button>
                     </div>
                 </section>
             </div>
 
             <div class="section-card">
-                <h3>Booking History</h3>
-                <div id="bookingHistoryContainer">
-                    <p>Loading history...</p>
-                </div>
-            </div>
-                <div class="section-card">
-                <h3>Reservation History</h3>
+                <h3 data-i18n="section_history">Reservation History</h3>
                 <ul id="reservationHistoryList">
-                    <li>Loading history...</li>
+                    <li data-i18n="loading_history">Loading history...</li>
                 </ul>
             </div>
 
             <div class="section-card">
-                <h3>Preferences</h3>
+                <h3 data-i18n="pref_title">Preferences</h3>
                 <section>
                     <div>
-                        <label for="languageSelect">Language:</label>
+                        <label for="languageSelect" data-i18n="pref_language">Language:</label>
                         <select id="languageSelect">
                             <option value="en">English</option>
                             <option value="ro">Romanian</option>
                         </select>
                     </div>
                     <div>
-                        <label for="darkModeToggle">Dark Mode:</label>
+                        <label for="darkModeToggle" data-i18n="pref_dark_mode">Dark Mode:</label>
                         <input type="checkbox" id="darkModeToggle">
                     </div>
                 </section>
             </div>
 
             <div class="section-card">
-                <h3>Security</h3>
+                <h3 data-i18n="section_security">Security</h3>
                 <section>
-                    <button id="resetPasswordBtn">Send Password Reset Email</button>
+                    <button id="resetPasswordBtn" data-i18n="btn_reset_password">Send Password Reset Email</button>
                 </section>
             </div>
         </div> <div class="image-panel">

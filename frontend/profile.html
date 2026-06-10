@@ -6,6 +6,7 @@
     <title>User Profile - Park Sibiu</title>
     <link rel="stylesheet" href="profile-styles.css">
     <link rel="icon" href="../graphics/park-icon-unsigned.png" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body id="app-body">
     <header id="profile-container" class="profile-container">
@@ -13,7 +14,7 @@
         <button id="logoutBtn">Logout</button>
     </header>
 
-    <main class="profile-main">
+   <main class="profile-main">
         <div class="information-container">
             <h1>Profile Settings</h1>
 
@@ -25,41 +26,54 @@
                         <input type="text" id="displayName" placeholder="Enter your name">
                         <button id="saveNameBtn">Save Name</button>
                     </div>
-                    <h2 id="greetingArea" style="display: none;"></h2>
-                    <p id="subGreetingtext" style="display: none;"></p>
-                </section>
-                <hr>
-                <section>
+                    <h2 id="greetingArea" style="display: none; color: #2c3e50; margin-bottom: 5px;"></h2>
+                    <p id="subGreetingtext" style="display: none; color: #7f8c8d; font-style: italic; margin-top: 0;"></p>
+                    
+                    <hr>
                     <h2>Manage License Plates</h2>
                     <div id="platesSection" style="margin-top:15px;">
-                        <button id="togglePlatesBtn">View Saved Plates</button>
-                        <div id="platesAccordion" style="display:none;">
+                        <button id="togglePlatesBtn" style="background:#3498db; color:white; padding:8px 12px; border:none; border-radius:5px; cursor:pointer;">
+                            View Saved Plates 
+                        </button>
+                        <div id="platesAccordion" style="display:none; background:#f9f9f9; padding:10px; border-radius:8px; margin-top:8px;">
                             <ul id="savedPlatesList"></ul>
                         </div>
                     </div>
+
                     <hr>
                     <div id="addPlateForm" style="margin-top:15px;">
                         <h3>Add New License Plate</h3>
                         <label for="countryProfileSelect">Country:</label>
-                        <select id="countryProfileSelect">
+                        <select id="countryProfileSelect" style="width:100%; padding:5px; border-radius:5px;">
                             <option value="RO">Romania (Strict Format)</option>
                             <option value="OTHER">Other Country</option>
                         </select>
-                        <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC">
-                        <button id="savePlateBtn">Save Plate</button>
+                        <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC" style="width:95%; padding:8px; margin-top:5px; border-radius:5px; border:1px solid #ccc; text-transform:uppercase;">
+                        <button id="savePlateBtn" style="margin-top:10px; background:#27ae60; color:white; border:none; padding:8px; border-radius:5px; width:100%;">
+                            Save Plate
+                        </button>
                     </div>
+
                     <hr>
                     <div style="margin-top:10px;">
                         <h3>Favorite License Plate</h3>
-                        <select id="favoritePlateSelect">
-                            <option value="">Select Favorite Plate</option>
+                        <select id="favoritePlateSelect" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc;">
+                            <option value=""> Select Favorite Plate </option>
                         </select>
-                        <button id="saveFavoriteBtn">Set as Favorite</button>
+                        <button id="saveFavoriteBtn" style="margin-top:10px; background:#f1c40f; color:black; border:none; padding:8px; border-radius:5px; width:100%;">
+                            Save as Favorite
+                        </button>
                     </div>
                 </section>
             </div>
 
             <div class="section-card">
+                <h3>Booking History</h3>
+                <div id="bookingHistoryContainer">
+                    <p>Loading history...</p>
+                </div>
+            </div>
+                <div class="section-card">
                 <h3>Reservation History</h3>
                 <ul id="reservationHistoryList">
                     <li>Loading history...</li>
@@ -89,9 +103,7 @@
                     <button id="resetPasswordBtn">Send Password Reset Email</button>
                 </section>
             </div>
-        </div>
-
-        <div class="image-panel">
+        </div> <div class="image-panel">
             <div class="image-placeholder"></div>
         </div>
     </main>

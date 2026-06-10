@@ -1,6 +1,5 @@
-import { db } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-window.renderMarkers = renderMarkers; 
 
 import { applyFiltersAndRender, refreshSelectedParkingFromLive } from './parking.js';
 
@@ -16,67 +15,120 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 }).addTo(map);
 
 const markersLayer = L.layerGroup().addTo(map);
-window.latestParkings = []; 
+window.latestParkings = [];
 
-window.applyFiltersAndRender = applyFiltersAndRender; 
+function getParkingIcon(color) {
+  const colors = {
+    'green': '#27ae60',
+    'orange': '#f39c12',
+    'gold': '#f1c40f',
+    'red': '#e74c3c',
+    'violet': '#9b59b6',
+    'blue': '#3498db'
+  };
+
+  const htmlIcon = `
+    <div style="
+      width: 30px;
+      height: 40px;
+      background: ${colors[color] || colors['blue']};
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <div style="
+        transform: rotate(45deg);
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+      ">🅿</div>
+    </div>
+  `;
+
+  return L.divIcon({
+    html: htmlIcon,
+    iconSize: [30, 40],
+    iconAnchor: [15, 40],
+    popupAnchor: [0, -40],
+    className: 'parking-marker'
+  });
+}
+
 
 function renderMarkers(parkings) {
+  if (!markersLayer || !parkings || parkings.length === 0) return;
+  
   markersLayer.clearLayers();
   const lang = i18n[currentLang];
-
   const myBookingsList = JSON.parse(localStorage.getItem('myBookingsList') || "[]");
 
   parkings.forEach((p) => {
-    if (p.lat == null || p.lng == null) return;
+    if (p.lat == null || p.lng == null || !p.id) return;
 
-    const myReservation = myBookingsList.find(b => String(b.parkingId) === String(p.id));
+    const myReservation = myBookingsList.find(b => b.parkingId && String(b.parkingId) === String(p.id));
     const isMySpot = !!myReservation;
 
-    const marker = L.marker([p.lat, p.lng]).addTo(markersLayer);
-    
+    let markerColor = 'blue';
+
+    if (isMySpot) {
+      markerColor = 'violet';
+    } else {
+      const free = Number(p.freeSpots) || 0;
+      const total = Number(p.totalSpots) || 1;
+      const ratio = free / total;
+
+      if (ratio > 0.6) {
+        markerColor = 'green';
+      } else if (ratio >= 0.3) {
+        markerColor = 'orange';
+      } else if (ratio > 0) {
+        markerColor = 'gold';
+      } else {
+        markerColor = 'red';
+      }
+    }
+
+    const markerIcon = getParkingIcon(markerColor);
+    const marker = L.marker([p.lat, p.lng], { icon: markerIcon }).addTo(markersLayer);
+
+    if (isMySpot && marker._icon) {
+      marker._icon.style.zIndex = "1000";
+    }
+
     let popupContent = `<div style="text-align: center; min-width: 160px; font-family: sans-serif;">`;
     popupContent += `<strong style="font-size:14px;">${p.name}</strong><br><hr style="margin:5px 0; border:0; border-top:1px solid #eee;">`;
 
     if (isMySpot) {
       const specificEndTime = myReservation.endTime;
-
       popupContent += `
-        <div style="background: #fdf2f2; padding: 12px; border-radius: 8px; border: 1px solid #f9ebeb; text-align: center;">
-            <div style="font-size: 12px; color: #7f8c8d; font-weight: bold; margin-bottom: 5px;">${lang.map_time_remaining}</div>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-            <span style="font-size: 11px; color: #95a5a6;">${lang.map_remaining_label}</span>
-                <b class="map-countdown" data-endtime="${specificEndTime}" style="font-size: 20px; color: #e74c3c; font-family: 'Courier New', monospace; letter-spacing: 1px;">--:--:--</b>
-            </div>
+        <div style="background: #eef2ff; padding: 12px; border-radius: 8px; border: 1px solid #e0e7ff; text-align: center;">
+          <div style="font-size: 11px; color: #4f46e5; font-weight: bold; margin-bottom: 5px;">${lang.map_my_reservation || "MY RESERVATION"}</div>
+          <b class="map-countdown" data-endtime="${specificEndTime}" style="font-size: 20px; color: #1e40af; font-family: monospace;">--:--:--</b>
         </div>
-        <button onclick="window.handleCancelFromMap('${myReservation.id}', '${p.id}')" style="...">
-         ${lang.map_btn_cancel}
-        </button>
-      `;
-
-      marker.on('popupopen', () => {
-          setTimeout(() => {
-              startMapCountdown(); 
-          }, 100);
+        <button onclick="window.handleCancelFromMap('${myReservation.id}', '${p.id}')" 
+                style="margin-top:10px; width:100%; padding:8px; border:none; border-radius:5px; background:#ef4444; color:white; cursor:pointer; font-weight: bold;">
+          ${lang.map_btn_cancel || "Cancel Reservation"}
+        </button>`;
+      
+      marker.on('popupopen', () => { 
+        setTimeout(startMapCountdown, 100); 
       });
-
-      marker.on('popupclose', () => {
-          if (window.mapTimerInterval) {
-              clearInterval(window.mapTimerInterval);
-              window.mapTimerInterval = null;
-          }
-      });
-
-      if (marker._icon) {
-          marker._icon.style.filter = "hue-rotate(140deg) brightness(0.9) saturate(2)";
-      }
     } else {
       const isFull = p.freeSpots <= 0;
-    popupContent += `
-        ${lang.map_spots} ${p.freeSpots}/${p.totalSpots}<br>
-        ${lang.map_price} <b>${p.pricePerHour} RON/h</b><br>
-        <span style="color:${isFull ? 'red' : 'green'}; font-weight:bold;">
-        ${isFull ? lang.map_occupied : lang.map_available}</span>
-    `;
+      popupContent += `
+        <div style="padding: 8px; text-align: left;">
+          <div>${lang.map_spots || "Spots"}: <b>${p.freeSpots}/${p.totalSpots}</b></div>
+          <div>${lang.map_price || "Price"}: <b>${p.pricePerHour} RON/h</b></div>
+          <div style="margin-top: 8px;">
+            <span style="color:${isFull ? 'red' : 'green'}; font-weight:bold;">
+              ${isFull ? (lang.map_occupied || "Occupied") : (lang.map_available || "Available")}
+            </span>
+          </div>
+        </div>`;
     }
 
     popupContent += `</div>`;
@@ -92,60 +144,80 @@ function renderMarkers(parkings) {
 }
 
 function startMapCountdown() {
-    if (window.mapTimerInterval) clearInterval(window.mapTimerInterval);
-    const lang = i18n[currentLang];
-    const updateTicker = () => {
-        const displays = document.querySelectorAll('.map-countdown');
-        
-        if (displays.length === 0) {
-            clearInterval(window.mapTimerInterval);
-            return;
-        }
-
-        displays.forEach(display => {
-            const endTimeStr = display.getAttribute('data-endtime');
-            const endTime = new Date(endTimeStr).getTime();
-            const now = new Date().getTime();
-            const distance = endTime - now;
-
-            if (distance < 0) {
-                display.innerHTML = lang.map_expired || "EXPIRED";
-                display.style.color = "#7f8c8d";
-            } else {
-                const hours = Math.floor(distance / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                display.innerHTML = 
-                    (hours < 10 ? "0" + hours : hours) + ":" + 
-                    (minutes < 10 ? "0" + minutes : minutes) + ":" + 
-                    (seconds < 10 ? "0" + seconds : seconds);
-            }
-        });
-    };
-
-    updateTicker(); 
-    window.mapTimerInterval = setInterval(updateTicker, 1000);
-}
-    window.handleCancelFromMap = function(reservationId, parkingId) {
-    if (typeof window.cancelAnyReservation === "function") {
-        window.cancelAnyReservation(reservationId, parkingId);
-    } else {
-        console.error("Funcția de cancel nu este disponibilă.");
-    }
-};
-onSnapshot(collection(db, "parkings"), (snapshot) => {
-    window.latestParkings = snapshot.docs.map((d) => ({ ...d.data(), id: d.id }));
-
-    renderMarkers(window.latestParkings);
+  if (window.mapTimerInterval) clearInterval(window.mapTimerInterval);
+  const lang = i18n[currentLang];
+  
+  const updateTicker = () => {
+    const displays = document.querySelectorAll('.map-countdown');
     
-    if (typeof window.applyFiltersAndRender === "function") {
-        window.applyFiltersAndRender();
+    if (displays.length === 0) {
+      clearInterval(window.mapTimerInterval);
+      window.mapTimerInterval = null;
+      return;
     }
 
-    if (typeof window.refreshSelectedParkingFromLive === "function") {
-        window.refreshSelectedParkingFromLive(window.latestParkings);
-    }
+    displays.forEach(display => {
+      const endTimeStr = display.getAttribute('data-endtime');
+      if (!endTimeStr) return;
+      
+      const endTime = new Date(endTimeStr).getTime();
+      const now = new Date().getTime();
+      const distance = endTime - now;
+
+      if (distance < 0) {
+        display.innerHTML = lang.map_expired || "EXPIRED";
+        display.style.color = "#7f8c8d";
+      } else {
+        const hours = Math.floor(distance / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        display.innerHTML = 
+          (hours < 10 ? "0" + hours : hours) + ":" + 
+          (minutes < 10 ? "0" + minutes : minutes) + ":" + 
+          (seconds < 10 ? "0" + seconds : seconds);
+      }
+    });
+  };
+
+  updateTicker();
+  window.mapTimerInterval = setInterval(updateTicker, 1000);
+}
+
+// Handler pentru anularea din hartă
+window.handleCancelFromMap = function(reservationId, parkingId) {
+  if (typeof window.cancelAnyReservation === "function") {
+    window.cancelAnyReservation(reservationId, parkingId);
+  } else {
+    console.error("Funcția de cancel nu este disponibilă.");
+  }
+};
+
+
+window.renderMarkers = renderMarkers;
+window.applyFiltersAndRender = applyFiltersAndRender;
+
+onSnapshot(collection(db, "parkings"), (snapshot) => {
+  window.latestParkings = snapshot.docs.map((d) => ({ ...d.data(), id: d.id }));
+
+
+  if (!auth.currentUser) {
+    localStorage.removeItem('myBookingsList');
+    localStorage.removeItem('activeReservationId');
+  }
+
+  renderMarkers(window.latestParkings);
+  
+
+  if (typeof window.applyFiltersAndRender === "function") {
+    window.applyFiltersAndRender();
+  }
+
+  if (typeof window.refreshSelectedParkingFromLive === "function") {
+    window.refreshSelectedParkingFromLive(window.latestParkings);
+  }
 }, (err) => {
-  alert(i18n[currentLang].map_load_error || "Error loading map data.");
+  const lang = i18n[currentLang];
+  console.error("Error loading parkings:", err);
+  alert(lang.map_load_error || "Error loading map data.");
 });

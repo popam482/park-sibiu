@@ -93,8 +93,20 @@ if (googleBtn) {
 if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
         try {
+            localStorage.removeItem('myBookingsList');
+            localStorage.removeItem('activeReservationId');
+            localStorage.removeItem('myBooking');
+            localStorage.removeItem('myBookingStatus');
+            localStorage.removeItem('myBookingName');
+            localStorage.removeItem('myBookingEndTime');
+
             await signOut(auth);
+<<<<<<< HEAD
             alert(i18n[currentLang].alert_logout_success);
+=======
+            alert("Logged out successfully!");
+             window.location.href = "login.html"; 
+>>>>>>> 0a1f7fcbb148e3c2461069dce0a2d8eafe1c60a7
         } catch (e) {
             alert(i18n[currentLang].alert_logout_error + e.message);
         }
@@ -112,9 +124,27 @@ onAuthStateChanged(auth, (user) => {
   if (logoutBtn) logoutBtn.style.display = user ? "block" : "none";
 
   if (user) {
-    console.log("User is already logged in, redirecting...");
+    console.log("User is already logged in, redirecting...", user.uid);
+    
+    const currentLocalUser = localStorage.getItem('lastLoggedUid');
+    if (currentLocalUser && currentLocalUser !== user.uid) {
+        console.log("New account detected! Cleaning up old session data from the previous user:", currentLocalUser);
+        localStorage.removeItem('myBookingsList');
+        localStorage.removeItem('activeReservationId');
+        localStorage.removeItem('myBooking');
+        localStorage.removeItem('myBookingStatus');
+        localStorage.removeItem('myBookingName');
+        localStorage.removeItem('myBookingEndTime');
+    }
+    localStorage.setItem('lastLoggedUid', user.uid);
+    
+  } else {
+    localStorage.removeItem('lastLoggedUid');
+    localStorage.removeItem('myBookingsList');
+    localStorage.removeItem('activeReservationId');
   }
 });
+<<<<<<< HEAD
 function updateLoginPageLanguage(lang) {
     document.querySelectorAll("[data-i18n]").forEach(element => {
         const key = element.getAttribute("data-i18n");
@@ -132,3 +162,5 @@ function updateLoginPageLanguage(lang) {
 }
 
 updateLoginPageLanguage(currentLang);
+=======
+>>>>>>> 0a1f7fcbb148e3c2461069dce0a2d8eafe1c60a7

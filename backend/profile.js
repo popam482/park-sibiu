@@ -414,6 +414,84 @@ async function loadBookingHistory(userId) {
                 </div>
             `;
 
+            const actionContainer = document.createElement("div");
+            actionContainer.style.cssText = "display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;";
+
+            if (status === 'paid') {
+                const pdfBtn = document.createElement("button");
+                pdfBtn.innerText = "📄 Receipt";
+                pdfBtn.className = "btn-download";
+                pdfBtn.onclick = () => {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    doc.setFillColor(44, 62, 80);
+                    doc.rect(0, 0, 210, 40, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(22);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("PARK SIBIU", 105, 20, { align: "center" });
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    doc.text("OFFICIAL DIGITAL RECEIPT", 105, 30, { align: "center" });
+                    doc.setTextColor(44, 62, 80);
+                    doc.setFontSize(12);
+                    doc.text(`Receipt ID: #${reservationId.substring(0, 8).toUpperCase()}`, 20, 55);
+                    doc.text(`Date: ${new Date().toLocaleDateString('ro-RO')}`, 140, 55);
+                    doc.setDrawColor(200, 200, 200);
+                    doc.line(20, 60, 190, 60);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("DESCRIPTION", 20, 75);
+                    doc.text("DETAILS", 100, 75);
+                    doc.setFont("helvetica", "normal");
+                    doc.line(20, 78, 190, 78);
+                    const rows = [
+                        ["Parking Zone:", data.parkingName || "Public Parking"],
+                        ["License Plate:", data.plateNumber],
+                        ["Time of Entry:", dateStr],
+                        ["Duration:", data.durationHours ? `${data.durationHours}h` : "N/A"],
+                        ["Payment Status:", "PAID / SUCCESSFUL"]
+                    ];
+                    let y = 88;
+                    rows.forEach(row => {
+                        doc.text(row[0], 20, y);
+                        doc.text(row[1], 100, y);
+                        y += 10;
+                    });
+                    doc.setFillColor(248, 249, 250);
+                    doc.rect(20, y + 5, 170, 20, 'F');
+                    doc.setFontSize(16);
+                    doc.setFont("helvetica", "bold");
+                    doc.setTextColor(52, 152, 219);
+                    doc.text(`TOTAL PAID: ${data.totalCost} RON`, 105, y + 18, { align: "center" });
+                    doc.setFontSize(9);
+                    doc.setTextColor(150, 150, 150);
+                    doc.setFont("helvetica", "italic");
+                    doc.text("Thank you for using Park Sibiu. Safe travels!", 105, 280, { align: "center" });
+                    doc.save(`ParkSibiu_Receipt_${data.plateNumber}.pdf`);
+                };
+                actionContainer.appendChild(pdfBtn);
+            }
+
+            if (status !== 'cancelled') {
+                const cancelBtn = document.createElement("button");
+                cancelBtn.innerText = "🚫 Cancel";
+                cancelBtn.className = "btn-cancel";
+                cancelBtn.onclick = async () => {
+                    if (confirm("Are you sure you want to cancel this booking?")) {
+                        try {
+                            await updateDoc(doc(db, "reservations", reservationId), { status: 'cancelled' });
+                            loadBookingHistory(userId);
+                        } catch (err) {
+                            console.error(err);
+                            alert("Error cancelling booking.");
+                        }
+                    }
+                };
+                actionContainer.appendChild(cancelBtn);
+            }
+
+            card.querySelector('div').appendChild(actionContainer);
+
             const deleteBtn = document.createElement("button");
             deleteBtn.innerHTML = "&times;";
             deleteBtn.title = lang === "ro" ? "Șterge din istoric" : "Delete from history";
@@ -457,7 +535,6 @@ async function loadBookingHistory(userId) {
             card.appendChild(deleteBtn);
             container.appendChild(card);
         });
-
     } catch (err) {
         console.error("Error loading history:", err);
         container.innerHTML = `<p>${i18n[lang].error_history}</p>`;

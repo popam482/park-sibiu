@@ -8,11 +8,14 @@ import {
     getDocs, 
     orderBy 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { i18n } from "./translations.js";
+const currentLang = localStorage.getItem('preferredLang') || (navigator.language.startsWith('ro') ? 'ro' : 'en');
 
 const formatDate = (timestamp) => {
     if (!timestamp) return "N/A";
     const date = timestamp.toDate();
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const locale = currentLang === "ro" ? "ro-RO" : "en-US";
+    return date.toLocaleDateString(locale) + " " + date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 };
 
 export async function getHistory(userId) {
@@ -31,7 +34,7 @@ export async function getHistory(userId) {
         let html = "";
 
         if (querySnapshot.empty) {
-            historyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No parking sessions found.</td></tr>`;
+            historyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">${i18n[currentLang].history_no_sessions}</td></tr>`;
             return [];
         }
 
@@ -52,21 +55,26 @@ export async function getHistory(userId) {
     
     const statusClass = (data.status === "paid" || data.status === "completed") ? "status-paid" : "status-pending";
 
+    const statusKey = `status_${data.status}`;
+            const statusText = (i18n[currentLang] && i18n[currentLang][statusKey]) 
+                ? i18n[currentLang][statusKey] 
+                : data.status.toUpperCase();
+
     html += `
-        <tr>
-            <td>${formatDate(data.startTime)}</td>
-            <td>${data.parkingName || "Unknown"}</td>
-            <td>${data.durationHours} h</td>
-            <td>${data.plateNumber}</td>
-            <td>${(data.totalCost || 0).toFixed(2)} RON</td>
-            <td>
-                <span class="${statusClass}">${data.status.toUpperCase()}</span>
-                ${isStillActive ? 
-                    `<button class="btn-cancel-small" onclick="cancelActiveReservation('${id}', '${data.parkingId}')">Cancel & Release</button>` 
-                    : ''}
-            </td>
-        </tr>
-    `;
+                <tr>
+                    <td>${formatDate(data.startTime)}</td>
+                    <td>${data.parkingName || (currentLang === "ro" ? "Necunoscută" : "Unknown")}</td>
+                    <td>${data.durationHours} h</td>
+                    <td>${data.plateNumber}</td>
+                    <td>${(data.totalCost || 0).toFixed(2)} RON</td>
+                    <td>
+                        <span class="${statusClass}">${statusText}</span>
+                        ${isStillActive ? 
+                            `<button class="btn-cancel-small" onclick="cancelActiveReservation('${id}', '${data.parkingId}')">${i18n[currentLang].history_btn_cancel}</button>` 
+                            : ''}
+                    </td>
+                </tr>
+            `;
 });
 
         historyTableBody.innerHTML = html;
@@ -76,7 +84,7 @@ export async function getHistory(userId) {
 
     } catch (error) {
         console.error("Error fetching history:", error);
-        historyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Error loading history.</td></tr>`;
+        historyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">${i18n[currentLang].history_error}</td></tr>`;
     }
 }
 
@@ -264,7 +272,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 window.cancelActiveReservation = async (reservationId, parkingId) => {
-    if (!confirm("Your parking session is still active. Do you want to cancel it and release the spot now?")) return;
+    if (!confirm(i18n[currentLang].alert_cancel_confirm)) return;
 
     try {
         const reservationRef = doc(db, "reservations", reservationId);
@@ -290,10 +298,10 @@ window.cancelActiveReservation = async (reservationId, parkingId) => {
             }
         });
 
-        alert("Reservation cancelled and spot is now free!");
+        alert(i18n[currentLang].alert_cancel_success);
         location.reload(); 
     } catch (err) {
         console.error("Error during cancellation:", err);
-        alert("Failed to cancel: " + err.message);
+        alert(i18n[currentLang].alert_cancel_failed + err.message);
     }
 };

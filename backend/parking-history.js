@@ -107,25 +107,134 @@ function loadLogoDataUrl() {
 export async function generatePDF(sessions, total) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+    const logoDataUrl = await loadLogoDataUrl();
+    const user = auth.currentUser;
+    const customerName = user?.displayName || user?.email || "Park Sibiu user";
+    const invoiceDate = new Date();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 18;
+    const tableWidth = pageWidth - margin * 2;
+    const brand = [47, 111, 70];
+    const brandDark = [16, 24, 20];
+    const soft = [244, 248, 240];
+    const border = [214, 224, 216];
+    const muted = [82, 97, 90];
 
-    doc.setFontSize(20);
-    doc.text("Monthly Parking Invoice - Park Sibiu", 20, 20);
-    
-    doc.setFontSize(12);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 30);
-    doc.text(`Total Amount: ${total.toFixed(2)} RON`, 20, 40);
-    
-    doc.line(20, 45, 190, 45); 
+    function drawHeader() {
+        doc.setFillColor(...brandDark);
+        doc.rect(0, 0, pageWidth, 42, "F");
 
-    let y = 55;
-    doc.text("Details:", 20, y);
-    y += 10;
+        doc.setFillColor(...brand);
+        doc.rect(0, 36, pageWidth, 6, "F");
 
-    sessions.forEach((s) => {
-        if (y > 270) { doc.addPage(); y = 20; }
-        const text = `${formatDate(s.startTime)} - ${s.parkingName}: ${s.totalCost.toFixed(2)} RON`;
-        doc.text(text, 25, y);
-        y += 7;
+        if (logoDataUrl) {
+            doc.addImage(logoDataUrl, "PNG", pageWidth - 34, 10, 16, 16);
+        }
+
+        doc.setTextColor(248, 250, 247);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+        doc.text("Park Sibiu", pageWidth / 2, 17, { align: "center" });
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.text("Monthly Parking Invoice", pageWidth / 2, 27, { align: "center" });
+    }
+
+    function drawFooter(pageNumber) {
+        doc.setDrawColor(...border);
+        doc.line(margin, pageHeight - 18, pageWidth - margin, pageHeight - 18);
+        doc.setTextColor(...muted);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text("Park Sibiu - Smart city parking", margin, pageHeight - 11);
+        doc.text(`Page ${pageNumber}`, pageWidth - margin, pageHeight - 11, { align: "right" });
+    }
+
+    function drawInfoCard() {
+        doc.setFillColor(...soft);
+        doc.roundedRect(margin, 52, tableWidth, 34, 3, 3, "F");
+
+        doc.setTextColor(...brandDark);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("BILLED TO", margin + 8, 63);
+        doc.text("INVOICE DATE", pageWidth / 2 + 2, 63);
+        doc.text("TOTAL AMOUNT", pageWidth - margin - 8, 63, { align: "right" });
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.text(customerName, margin + 8, 73, { maxWidth: 70 });
+        doc.text(invoiceDate.toLocaleDateString(currentLang === "ro" ? "ro-RO" : "en-US"), pageWidth / 2 + 2, 73);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(15);
+        doc.setTextColor(...brand);
+        doc.text(`${total.toFixed(2)} RON`, pageWidth - margin - 8, 74, { align: "right" });
+    }
+
+    function drawTableHeader(y) {
+        doc.setFillColor(...brand);
+        doc.roundedRect(margin, y, tableWidth, 11, 2, 2, "F");
+        doc.setTextColor(248, 250, 247);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.text("Date", margin + 4, y + 7);
+        doc.text("Location", margin + 44, y + 7);
+        doc.text("Duration", margin + 101, y + 7);
+        doc.text("Plate", margin + 128, y + 7);
+        doc.text("Cost", pageWidth - margin - 4, y + 7, { align: "right" });
+    }
+
+    function drawTableRow(session, y, index) {
+        const rowHeight = 12;
+        if (index % 2 === 0) {
+            doc.setFillColor(250, 252, 248);
+            doc.rect(margin, y, tableWidth, rowHeight, "F");
+        }
+
+        doc.setDrawColor(...border);
+        doc.line(margin, y + rowHeight, pageWidth - margin, y + rowHeight);
+
+        doc.setTextColor(...brandDark);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.text(formatDate(session.startTime), margin + 4, y + 7.5, { maxWidth: 37 });
+        doc.text(session.parkingName || "Unknown", margin + 44, y + 7.5, { maxWidth: 52 });
+        doc.text(`${session.durationHours || 0} h`, margin + 101, y + 7.5);
+        doc.text(session.plateNumber || "N/A", margin + 128, y + 7.5, { maxWidth: 28 });
+
+        doc.setFont("helvetica", "bold");
+        doc.text(`${(session.totalCost || 0).toFixed(2)} RON`, pageWidth - margin - 4, y + 7.5, { align: "right" });
+    }
+
+    drawHeader();
+    drawInfoCard();
+
+    doc.setTextColor(...brandDark);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text("Parking Session Details", pageWidth / 2, 103, { align: "center" });
+
+    let pageNumber = 1;
+    let y = 112;
+    drawTableHeader(y);
+    y += 11;
+
+    sessions.forEach((session, index) => {
+        if (y > 265) {
+            drawFooter(pageNumber);
+            doc.addPage();
+            pageNumber += 1;
+            drawHeader();
+            y = 54;
+            drawTableHeader(y);
+            y += 11;
+        }
+
+        drawTableRow(session, y, index);
+        y += 12;
     });
 
     y += 9;

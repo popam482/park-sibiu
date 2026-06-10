@@ -69,24 +69,27 @@ body {
 .page-shell {
     min-height: 100vh;
     padding: 24px;
+    padding-top: 104px;
 }
 
 .profile-container {
-    position: sticky;
-    top: 16px;
-    z-index: 10;
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    z-index: 1200;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
     width: 100%;
     max-width: 1180px;
-    margin: 0 auto;
+    margin: 0;
     padding: 12px 16px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 8px;
     background: rgba(16, 24, 20, 0.52);
     backdrop-filter: blur(16px);
+    transform: translateX(-50%);
 }
 
 .brand {
@@ -107,6 +110,8 @@ body {
 .header-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
@@ -405,10 +410,40 @@ ul {
 @media (max-width: 720px) {
     .page-shell {
         padding: 16px;
+        padding-top: 80px;
     }
 
     .profile-container {
-        top: 12px;
+        top: 8px;
+        width: min(calc(100% - 16px), 1180px);
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .profile-container .brand span {
+        display: none;
+    }
+
+    .profile-container .brand img {
+        width: 24px;
+        height: 24px;
+    }
+
+    .header-actions {
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
+
+    .header-actions button {
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 36px;
+        padding: 7px 8px;
+        font-size: 0.78rem;
+        line-height: 1.1;
+        white-space: normal;
     }
 
     .form-grid,
@@ -429,16 +464,16 @@ ul {
 
 @media (max-width: 560px) {
     .profile-container {
-        align-items: stretch;
-        flex-direction: column;
+        align-items: center;
+        flex-direction: row;
     }
 
     .header-actions {
-        width: 100%;
+        width: auto;
     }
 
     .header-actions button {
-        flex: 1;
+        flex: 1 1 0;
     }
 
     .section-card,

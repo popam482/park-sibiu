@@ -121,7 +121,6 @@ function scheduleSpotRelease(reservationId, parkingId, endTime) {
   console.log(`Reservation ${reservationId} auto-releases in ${Math.round(delayMs / 1000)}s.`);
 }
 
-
 async function pollMyExpiredReservations(userId) {
   try {
     const snap = await getDocs(query(

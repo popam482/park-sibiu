@@ -121,13 +121,12 @@ function scheduleSpotRelease(reservationId, parkingId, endTime) {
   console.log(`Reservation ${reservationId} auto-releases in ${Math.round(delayMs / 1000)}s.`);
 }
 
-// CORECTIE: Polling pentru rezervări expirate
 async function pollMyExpiredReservations(userId) {
   try {
     const snap = await getDocs(query(
       collection(db, "reservations"),
       where("userId",  "==", userId),
-      where("status",  "==", "paid"),
+      where("status", "in", ["paid", "pending_payment"]),
       where("endTime", "<=", Timestamp.now())
     ));
     if (!snap.empty) {

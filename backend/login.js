@@ -143,7 +143,7 @@ function updateLoginPageLanguage(lang) {
     document.querySelectorAll("[data-i18n]").forEach(element => {
         const key = element.getAttribute("data-i18n");
         if (i18n[lang] && i18n[lang][key]) {
-            element.innerText = i18n[lang][key];
+            element.textContent = i18n[lang][key];
         }
     });
 
@@ -155,4 +155,8 @@ function updateLoginPageLanguage(lang) {
     }
 }
 
-updateLoginPageLanguage(currentLang);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => updateLoginPageLanguage(currentLang));
+} else {
+  updateLoginPageLanguage(currentLang);
+}

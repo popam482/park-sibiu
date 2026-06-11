@@ -20,10 +20,10 @@
 
         <main class="login-layout">
             <section class="hero-panel" aria-labelledby="page-title">
-                <p class="eyebrow">Smart city parking</p>
-                <h1 id="page-title">Car Park Sibiu</h1>
-                <h2>Fast parking for your travel experience.</h2>
-                <p class="hero-copy">
+                <p class="eyebrow" data-i18n="login_eyebrow_smart">Smart city parking</p>
+                <h1 id="page-title" data-i18n="main_title">Car Park Sibiu</h1>
+                <h2 data-i18n="sub_title">Fast parking for your travel experience.</h2>
+                <p class="hero-copy" data-i18n="login_hero_copy">
                     Find nearby parking, manage reservations, and keep your trips through Sibiu simple from the first click.
                 </p>
             </section>
@@ -31,46 +31,46 @@
             <section id="login-container" class="login-container" aria-label="Authentication">
                 <div class="auth-panel">
                     <div class="form-heading">
-                        <p class="eyebrow">Welcome</p>
-                        <h3>Sign in to continue</h3>
+                        <p class="eyebrow" data-i18n="login_eyebrow_welcome">Welcome</p>
+                        <h3 data-i18n="login_signin_title">Sign in to continue</h3>
                     </div>
 
-                    <label for="email">Email address</label>
+                    <label for="email" data-i18n="label_email">Email address</label>
                     <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
 
-                    <label for="password">Password</label>
+                    <label for="password" data-i18n="label_password">Password</label>
                     <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" />
 
                     <div class="button-group">
-                        <button id="signinBtn" class="primary-button">Sign In</button>
-                        <button id="signupBtn" class="secondary-button">Sign Up</button>
-                        <button id="googleBtn" class="google-button">Login with Google</button>
+                        <button id="signinBtn" class="primary-button" data-i18n="btn_signin">Sign In</button>
+                        <button id="signupBtn" class="secondary-button" data-i18n="btn_signup">Sign Up</button>
+                        <button id="googleBtn" class="google-button" data-i18n="btn_google">Login with Google</button>
                     </div>
                 </div>
 
                 <div class="logged-in-menu" aria-label="Account menu">
                     <div class="form-heading">
-                        <p class="eyebrow">Dashboard</p>
-                        <h3>Where would you like to go?</h3>
+                        <p class="eyebrow" data-i18n="login_eyebrow_dashboard">Dashboard</p>
+                        <h3 data-i18n="login_dashboard_title">Where would you like to go?</h3>
                     </div>
 
                     <nav class="menu-grid" aria-label="Logged in navigation">
                         <a class="menu-card" href="profile.html">
-                            <span class="menu-label">Profile</span>
-                            <span class="menu-copy">Account settings and saved plates</span>
+                            <span class="menu-label" data-i18n="login_menu_profile">Profile</span>
+                            <span class="menu-copy" data-i18n="login_menu_profile_desc">Account settings and saved plates</span>
                         </a>
                         <a class="menu-card" href="index.html">
-                            <span class="menu-label">Map</span>
-                            <span class="menu-copy">Find available parking nearby</span>
+                            <span class="menu-label" data-i18n="login_menu_map">Map</span>
+                            <span class="menu-copy" data-i18n="login_menu_map_desc">Find available parking nearby</span>
                         </a>
                         <a class="menu-card" href="parking-history.html">
-                            <span class="menu-label">Payment History</span>
-                            <span class="menu-copy">Reservations, costs, and invoices</span>
+                            <span class="menu-label" data-i18n="login_menu_history">Payment History</span>
+                            <span class="menu-copy" data-i18n="login_menu_history_desc">Reservations, costs, and invoices</span>
                         </a>
                     </nav>
 
                     <div class="button-group menu-actions">
-                        <button id="logoutBtn" class="secondary-button">Logout</button>
+                        <button id="logoutBtn" class="secondary-button" data-i18n="btn_logout_login_page">Logout</button>
                     </div>
                 </div>
             </section>

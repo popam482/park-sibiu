@@ -100,7 +100,7 @@ async function releaseExpiredSpot(reservationId, parkingId) {
   }
 }
 
-// CORECTIE: Scheduler pentru eliberarea spoturilor
+
 function scheduleSpotRelease(reservationId, parkingId, endTime) {
   if (scheduledReleases.has(reservationId)) return;
 
@@ -138,7 +138,6 @@ async function pollMyExpiredReservations(userId) {
   }
 }
 
-// CORECTIE: Inițializare auto-release
 function initAutoRelease(user) {
   if (autoReleaseInitialized) return;
   autoReleaseInitialized = true;
@@ -147,7 +146,7 @@ function initAutoRelease(user) {
     query(
       collection(db, "reservations"),
       where("userId", "==", user.uid),
-      where("status", "==", "paid")
+      where("status", "in", ["paid", "pending_payment"]),
     ),
     (snapshot) => {
       snapshot.docs.forEach((docSnap) => {
@@ -275,7 +274,7 @@ function getMaxHours(startTimeValue, openHours) {
   return Math.max(1, Math.floor(diffHours));
 }
 
-// CORECTIE: Actualizare previzualizare cost
+
 function updateCostPreview() {
   const preview = document.getElementById("costPreview");
   const allDayCheck = document.getElementById("allDayCheck");
@@ -346,7 +345,7 @@ async function openBookingPanel(parking) {
   refreshMax();
 }
 
-// CORECTIE: Afișare listă parcare
+
 function renderParkingList(parkings) {
   const listElement = document.getElementById("parkingList");
   const lang = i18n[currentLang];
@@ -381,7 +380,6 @@ export function refreshSelectedParkingFromLive(parkings) {
   if (updated && parkingDetailsView.style.display !== "none") showParkingDetails(updated);
 }
 
-// CORECTIE: Afișare detalii parcare
 function showParkingDetails(parking) {
   selectedParking     = parking;
   currentPricePerHour = parking.pricePerHour;
@@ -418,7 +416,7 @@ function showParkingDetails(parking) {
   }
 }
 
-// CORECTIE: Event listeners pentru control panouri
+
 openParkingListBtn?.addEventListener("click", () => {
   parkingPanel.style.display       = "block";
   parkingListView.style.display    = "block";
@@ -445,7 +443,7 @@ window.showParkingDetailsFromMap = function (parking) {
   showParkingDetails(parking);
 };
 
-// CORECTIE: Anulare rezervare
+
 document.getElementById("cancelBtn")?.addEventListener("click", async () => {
   const resId = activeReservationId || localStorage.getItem('activeReservationId');
   const parkId = activeReservationParkingId || localStorage.getItem('myBooking');
@@ -505,7 +503,7 @@ document.getElementById("editBtn")?.addEventListener("click", () => {
   setCurrentTimeDefault();
 });
 
-// CORECTIE: Confirmare și creare rezervare
+
 document.getElementById("confirmBooking")?.addEventListener("click", async () => {
   const parkingId = String(selectedParking?.id || "").trim();
   const lang = i18n[currentLang];
@@ -635,7 +633,6 @@ document.getElementById("confirmBooking")?.addEventListener("click", async () =>
   }
 });
 
-// CORECTIE: Simulare plată
 document.getElementById("payBtn")?.addEventListener("click", async () => {
   try {
     const lang = i18n[currentLang];
@@ -658,7 +655,7 @@ document.getElementById("payBtn")?.addEventListener("click", async () => {
   }
 });
 
-// CORECTIE: Inițializare la încărcarea paginii
+
 window.addEventListener('load', async () => {
   activeReservationId = localStorage.getItem('activeReservationId');
   activeReservationParkingId = localStorage.getItem('myBooking');
@@ -705,7 +702,6 @@ window.addEventListener('load', async () => {
   }, 1000); 
 });
 
-// CORECTIE: Filtrare și sortare
 export function applyFiltersAndRender() {
   const searchInput = document.getElementById('searchInput');
   const availableOnlyFilter = document.getElementById('availableOnlyFilter');
@@ -742,7 +738,6 @@ export function applyFiltersAndRender() {
   renderParkingList(filteredParkings);
 }
 
-// CORECTIE: Anulare orice rezervare
 window.cancelAnyReservation = async function(resId, parkId) {
   if (!confirm(i18n[currentLang].confirm_cancel_specific || "Are you sure?")) return;
 
@@ -778,5 +773,5 @@ window.cancelAnyReservation = async function(resId, parkId) {
   }
 };
 
-// Inițializare
+// Initialization 
 setCurrentTimeDefault();

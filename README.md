@@ -3,6 +3,9 @@
 ### Overview
 Park Sibiu is a prototype parking management website for users in Sibiu. It lets registered users search and book parking spaces on an interactive map, manage their license plates and profile, review parking history, and generate monthly invoice summaries.
 
+### Live page
+View the live page at: https://popam482.github.io/park-sibiu/frontend/
+
 ### How it should work
 
 1. User Authentication

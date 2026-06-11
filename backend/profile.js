@@ -569,12 +569,12 @@ async function loadBookingHistory(userId) {
 // }
 function showGreeting(name) {
     const lang = langSelect.value || "en";
+    const hello = i18n[lang].greeting_hello || "Hello";
     nameInputArea.style.display = "none";
-    greetingArea.innerText = `Hello, ${name}!`;
+    greetingArea.innerText = `${hello}, ${name}!`;
     greetingArea.style.display = "block";
 
     const selectedMessage = i18n[lang][`cute_msg_${currentMessageIndex}`] || i18n[lang][`cute_msg_0`];
-    
     subGreetingtext.innerText = selectedMessage;
     subGreetingtext.style.display = "block";
 }
@@ -592,24 +592,36 @@ if (newPlateInput) {
 
 function updatePageLanguage(lang) {
   localStorage.setItem('preferredLang', lang);
-  
+
+  const t = i18n[lang];
+  if (!t) return;
+
   document.querySelectorAll("[data-i18n]").forEach(element => {
     const key = element.getAttribute("data-i18n");
-    if (i18n[lang] && i18n[lang][key]) {
-      element.innerText = i18n[lang][key];
-    }
+    if (t[key]) element.textContent = t[key];
   });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
+    const key = element.getAttribute("data-i18n-placeholder");
+    if (t[key]) element.placeholder = t[key];
+  });
+
   if (newPlateInput) {
     const countrySelect = document.getElementById('countryProfileSelect');
     const currentCountry = countrySelect ? countrySelect.value : "RO";
-    
-    newPlateInput.placeholder = (currentCountry === "RO") 
-        ? i18n[lang].placeholder_ro 
-        : i18n[lang].placeholder_en;
+    newPlateInput.placeholder = (currentCountry === "RO") ? t.placeholder_ro : t.placeholder_en;
   }
-  const currentName = nameInput.value.trim();
-  if (currentName && greetingArea.style.display === "block") {
-      showGreeting(currentName);
+
+  if (t.page_title) document.title = t.page_title;
+
+  const currentName = nameInput?.value?.trim();
+  if (currentName && greetingArea && greetingArea.style.display === "block") {
+    showGreeting(currentName);
   }
 }
-updatePageLanguage("en");
+const _initLang = localStorage.getItem('preferredLang') || (navigator.language.startsWith('ro') ? 'ro' : 'en');
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => updatePageLanguage(_initLang));
+} else {
+  updatePageLanguage(_initLang);
+}

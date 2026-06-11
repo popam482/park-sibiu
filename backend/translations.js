@@ -1,8 +1,7 @@
 export const i18n = {
 
-   
   en: {
- //profile.js
+    // profile.js
     pref_title: "Preferences",
     pref_language: "Language:",
     pref_dark_mode: "Dark Mode:",
@@ -11,10 +10,11 @@ export const i18n = {
     btn_reset: "Reset Password",
     view_plates: "View Saved Plates ▼",
     hide_plates: "Hide Saved Plates ▲",
-    btn_save_favorite: "Select a plate first!", 
-    
+    btn_save_favorite: "Select a plate first!",
+
     placeholder_ro: "Ex: B123ABC",
     placeholder_en: "Enter plate number",
+    placeholder_display_name: "Enter your name",
 
     no_plates: "No license plates added yet.",
     no_bookings: "No bookings found.",
@@ -35,7 +35,7 @@ export const i18n = {
     alert_plate_length: "Plate number is too short or too long (3-14 characters).",
     alert_confirm_delete_booking: "Are you sure you want to delete this booking from your history?",
     alert_delete_booking_failed: "Could not delete the reservation.",
-    
+
     history_plate: "Plate",
     history_time: "Time",
     history_cost: "Cost",
@@ -49,34 +49,43 @@ export const i18n = {
     cute_msg_4: "Let's make parking easy for you.",
     cute_msg_5: "Glad to see you back!",
     cute_msg_6: "Stay awesome!",
-    cute_msg_7: "Drive safely out there!",                  
-    cute_msg_8: "The city is yours today!",                  
-    cute_msg_9: "No traffic can ruin your vibe!",            
-    cute_msg_10: "Your parking spot is waiting for you!", 
-    
- //profile.html
+    cute_msg_7: "Drive safely out there!",
+    cute_msg_8: "The city is yours today!",
+    cute_msg_9: "No traffic can ruin your vibe!",
+    cute_msg_10: "Your parking spot is waiting for you!",
+
+    // profile.html
     page_title: "User Profile - Park Sibiu",
     nav_map: "Map",
+    nav_history: "History",
     nav_logout: "Logout",
+    aside_dashboard_eyebrow: "Your dashboard",
     profile_settings_title: "Profile Settings",
-    section_personal_info: "Personal & Vehicle Information",
-    label_display_name: "Display Name:",
+    profile_settings_desc: "Manage your account, saved plates, preferences, and parking history in one place.",
+    section_account_eyebrow: "Account",
+    section_personal_info: "Personal Information",
+    label_display_name: "Display Name",
     btn_save_name: "Save Name",
+    section_vehicles_eyebrow: "Vehicles",
     title_manage_plates: "Manage License Plates",
-    title_add_plate: "Add New License Plate",
-    label_country: "Country:",
+    title_add_plate: "License Plate",
+    label_country: "Country",
     opt_country_ro: "Romania (Strict Format)",
     opt_country_other: "Other Country",
     btn_save_plate: "Save Plate",
     title_favorite_plate: "Favorite License Plate",
+    opt_select_favorite: "Select Favorite Plate",
     btn_set_favorite: "Set as Favorite",
+    section_activity_eyebrow: "Activity",
     section_history: "Reservation History",
     loading_history: "Loading history...",
-    section_security: "Security",
+    section_settings_eyebrow: "Settings",
+    section_preferences: "Preferences",
+    section_security_eyebrow: "Security",
+    section_security: "Password Access",
     btn_reset_password: "Send Password Reset Email",
 
-
-//login.js
+    // login.js
     login_title: "Welcome to Park Sibiu",
     label_email: "Email Address",
     label_password: "Password",
@@ -94,33 +103,44 @@ export const i18n = {
     status_logged_in: "Logged in as: ",
     status_logged_out: "Not logged in",
 
-//login.html
+    // login.html
     btn_google: "Login with Google",
     btn_logout_login_page: "Logout",
     main_title: "Car Park Sibiu",
     sub_title: "Fast Parking For Your Travel Experience",
+    login_eyebrow_welcome: "Welcome",
+    login_signin_title: "Sign in to continue",
+    login_eyebrow_dashboard: "Dashboard",
+    login_dashboard_title: "Where would you like to go?",
+    login_menu_profile: "Profile",
+    login_menu_profile_desc: "Account settings and saved plates",
+    login_menu_map: "Map",
+    login_menu_map_desc: "Find available parking nearby",
+    login_menu_history: "Payment History",
+    login_menu_history_desc: "Reservations, costs, and invoices",
+    login_eyebrow_smart: "Smart city parking",
+    login_hero_copy: "Find nearby parking, manage reservations, and keep your trips through Sibiu simple from the first click.",
 
-//parking-history.js
+    // parking-history.js
     history_no_sessions: "No parking sessions found.",
     history_error: "Error loading history.",
     history_btn_cancel: "Cancel & Release",
-    alert_cancel_confirm: "Are you sure you want to cancel this active reservation?",
-    alert_cancel_success: "Reservation cancelled and spot released successfully!",
+    alert_cancel_confirm: "Your parking session is still active. Do you want to cancel it and release the spot now?",
+    alert_cancel_success: "Reservation cancelled and spot is now free!",
+    alert_cancel_failed: "Failed to cancel: ",
     alert_cancel_error: "Error cancelling reservation: ",
     pdf_invoice_title: "Monthly Parking Invoice - Park Sibiu",
     pdf_date: "Date: ",
     pdf_total_amount: "Total Amount: ",
     pdf_details: "Details:",
     pdf_invoice_file_name: "Invoice_ParkSibiu_",
-    alert_cancel_confirm: "Your parking session is still active. Do you want to cancel it and release the spot now?",
-    alert_cancel_success: "Reservation cancelled and spot is now free!",
-    alert_cancel_failed: "Failed to cancel: ",
     status_paid: "PAID",
     status_completed: "COMPLETED",
     status_pending: "PENDING",
+    status_pending_payment: "PENDING PAYMENT",
     status_cancelled: "CANCELLED",
 
-//parking-history.html
+    // parking-history.html
     history_back: "← Back to Map",
     history_title: "Parking & Billing History",
     history_billing_summary: "Monthly Billing Summary",
@@ -135,7 +155,8 @@ export const i18n = {
     history_th_status: "Status",
     history_loading: "Loading your history...",
 
-//script.js
+    // script.js
+    map_my_reservation: "MY RESERVATION",
     map_time_remaining: "TIME REMAINING",
     map_remaining_label: "Remaining:",
     map_btn_cancel: "Cancel Reservation",
@@ -144,13 +165,11 @@ export const i18n = {
     map_occupied: "Occupied",
     map_available: "Available",
     map_expired: "EXPIRED",
-    map_time_remaining: "TIME REMAINING",
     map_load_error: "Error loading live parking data!",
 
-//parking.js
+    // parking.js
     alert_no_reservation: "No active reservation found to cancel.",
     confirm_cancel: "Are you sure you want to cancel your booking?",
-    alert_cancel_success: "Reservation cancelled successfully.",
     alert_cancel_failed: "Cancel failed: ",
     parking_other_plate: "-- Type a different plate --",
     preview_total: "Total",
@@ -158,6 +177,7 @@ export const i18n = {
     preview_max_hours: "max {maxH}h from chosen time",
     panel_book_title: "Book a spot",
     panel_parking_label: "Parking: ",
+    panel_edit_title: "Edit your time",
     list_no_match: "No parkings match your criteria.",
     list_status_label: "Status",
     list_status_full: "Full",
@@ -173,7 +193,6 @@ export const i18n = {
     details_hours_label: "Hours",
     details_btn_full: "Parking Full",
     details_btn_book: "Book Now",
-    panel_edit_title: "Edit your time",
     alert_invalid_parking: "Invalid parking — select one from the list.",
     alert_login_required: "Please login first.",
     alert_choose_start_time: "Please choose a start time.",
@@ -183,17 +202,19 @@ export const i18n = {
     error_parking_not_found: "Parking not found.",
     error_no_free_spots: "No free spots available.",
     manage_total_to_pay: "Total to pay",
+    manage_parking_label: "Parking",
     manage_status_label: "Status",
     status_not_paid: "NOT PAID",
     alert_booking_failed: "Booking failed.",
     confirm_cancel_specific: "Are you sure you want to cancel this specific booking?",
     alert_cancel_specific_failed: "Could not cancel: ",
-    error_parking_not_found: "Parking not found.",
     alert_payment_success: "Payment processed successfully!",
-    alert_payment_failed: "An error occurred while processing the payment."
+    alert_payment_failed: "An error occurred while processing the payment.",
+    confirm_new_over_unpaid: "You have an unpaid reservation. Making a new one will replace it in this view. Continue?"
   },
+
   ro: {
- //profile.js
+    // profile.js
     pref_title: "Preferințe",
     pref_language: "Limbă:",
     pref_dark_mode: "Mod Întunecat:",
@@ -206,6 +227,7 @@ export const i18n = {
 
     placeholder_ro: "Ex: B123ABC",
     placeholder_en: "Introdu numărul plăcuței",
+    placeholder_display_name: "Introdu numele tău",
 
     no_plates: "Nu ai adăugat nicio plăcuță de înmatriculare.",
     no_bookings: "Nu au fost găsite rezervări.",
@@ -240,34 +262,42 @@ export const i18n = {
     cute_msg_4: "Hai să facem parcarea mai simplă pentru tine.",
     cute_msg_5: "Ne bucurăm să te revedem!",
     cute_msg_6: "Rămâi genial!",
-    cute_msg_7: "Condu în siguranță!",                       
-    cute_msg_8: "Orașul este al tău astăzi!",               
-    cute_msg_9: "Niciun trafic nu îți poate strica ziua!",   
-    cute_msg_10: "Locul tău de parcare te așteaptă!",   
-    
- //profile.html
+    cute_msg_7: "Condu în siguranță!",
+    cute_msg_8: "Orașul este al tău astăzi!",
+    cute_msg_9: "Niciun trafic nu îți poate strica ziua!",
+    cute_msg_10: "Locul tău de parcare te așteaptă!",
+
+    // profile.html
     page_title: "Profil Utilizator - Park Sibiu",
     nav_map: "Hartă",
+    nav_history: "Istoric",
     nav_logout: "Deconectare",
     profile_settings_title: "Setări Profil",
-    section_personal_info: "Informații Personale & Vehicul",
-    label_display_name: "Nume Afișat:",
+    profile_settings_desc: "Gestionează contul, plăcuțele salvate, preferințele și istoricul de parcare.",
+    section_account_eyebrow: "Cont",
+    section_personal_info: "Informații Personale",
+    label_display_name: "Nume Afișat",
     btn_save_name: "Salvează Numele",
+    section_vehicles_eyebrow: "Vehicule",
     title_manage_plates: "Gestionare Plăcuțe Înmatriculare",
-    title_add_plate: "Adaugă Plăcuță Nouă",
-    label_country: "Țară:",
+    title_add_plate: "Număr de Înmatriculare",
+    label_country: "Țară",
     opt_country_ro: "România (Format Strict)",
     opt_country_other: "Altă Țară",
     btn_save_plate: "Salvează Plăcuța",
     title_favorite_plate: "Plăcuță Înmatriculare Favorită",
+    opt_select_favorite: "Selectează Plăcuța Favorită",
     btn_set_favorite: "Setează ca Favorită",
+    section_activity_eyebrow: "Activitate",
     section_history: "Istoric Rezervări",
     loading_history: "Se încarcă istoricul...",
-    section_security: "Securitate",
+    section_settings_eyebrow: "Setări",
+    section_preferences: "Preferințe",
+    section_security_eyebrow: "Securitate",
+    section_security: "Acces cu Parolă",
     btn_reset_password: "Trimite Email Resetare Parolă",
 
-
-    //login.js
+    // login.js
     login_title: "Bun venit la Park Sibiu",
     label_email: "Adresă de Email",
     label_password: "Parolă",
@@ -285,33 +315,44 @@ export const i18n = {
     status_logged_in: "Conectat ca: ",
     status_logged_out: "Neconectat",
 
-    //login.html
+    // login.html
     btn_google: "Conectare cu Google",
     btn_logout_login_page: "Deconectare",
     main_title: "Parcare Auto Sibiu",
     sub_title: "Parcare rapidă pentru o călătorie fără griji",
+    login_eyebrow_welcome: "Bun venit",
+    login_signin_title: "Autentifică-te pentru a continua",
+    login_eyebrow_dashboard: "Panou de control",
+    login_dashboard_title: "Unde vrei să mergi?",
+    login_menu_profile: "Profil",
+    login_menu_profile_desc: "Setări cont și plăcuțe salvate",
+    login_menu_map: "Hartă",
+    login_menu_map_desc: "Găsește parcări disponibile în apropiere",
+    login_menu_history: "Istoric Plăți",
+    login_menu_history_desc: "Rezervări, costuri și facturi",
+    login_eyebrow_smart: "Parcare inteligentă în oraș",
+    login_hero_copy: "Găsește parcări în apropiere, gestionează rezervările și simplifică-ți călătoriile prin Sibiu de la primul click.",
 
-//parking-history.js
+    // parking-history.js
     history_no_sessions: "Nu au fost găsite sesiuni de parcare.",
     history_error: "Eroare la încărcarea istoricului.",
     history_btn_cancel: "Anulează & Eliberează",
-    alert_cancel_confirm: "Ești sigur că vrei să anulezi această rezervare activă?",
-    alert_cancel_success: "Rezervarea a fost anulată și locul a fost eliberat!",
+    alert_cancel_confirm: "Sesiunea de parcare este încă activă. Vrei să o anulezi și să eliberezi locul acum?",
+    alert_cancel_success: "Rezervarea a fost anulată, iar locul este acum liber!",
+    alert_cancel_failed: "Eroare la anulare: ",
     alert_cancel_error: "Eroare la anularea rezervării: ",
     pdf_invoice_title: "Factură Lunară Parcare - Park Sibiu",
     pdf_date: "Data: ",
     pdf_total_amount: "Sumă Totală: ",
     pdf_details: "Detalii:",
     pdf_invoice_file_name: "Factura_ParkSibiu_",
-    alert_cancel_confirm: "Sesiunea de parcare este încă activă. Vrei să o anulezi și să eliberezi locul acum?",
-    alert_cancel_success: "Rezervarea a fost anulată, iar locul este acum liber!",
-    alert_cancel_failed: "Eroare la anulare: ",
     status_paid: "PLĂTITĂ",
     status_completed: "FINALIZATĂ",
     status_pending: "ÎN AȘTEPTARE",
+    status_pending_payment: "NEPLĂTITĂ",
     status_cancelled: "ANULATĂ",
 
-//parking-history.html
+    // parking-history.html
     history_back: "← Înapoi la Hartă",
     history_title: "Istoric Parcări & Facturare",
     history_billing_summary: "Sumar Facturare Lunară",
@@ -326,7 +367,8 @@ export const i18n = {
     history_th_status: "Status",
     history_loading: "Se încarcă istoricul...",
 
-//script.js
+    // script.js
+    map_my_reservation: "REZERVAREA MEA",
     map_time_remaining: "TIMP RĂMAS",
     map_remaining_label: "Rămas:",
     map_btn_cancel: "Anulează Rezervarea",
@@ -337,10 +379,9 @@ export const i18n = {
     map_expired: "EXPIRAT",
     map_load_error: "Eroare la încărcarea datelor în timp real!",
 
-//parking.js
+    // parking.js
     alert_no_reservation: "Nu a fost găsită nicio rezervare activă pentru a fi anulată.",
     confirm_cancel: "Ești sigur că vrei să anulezi rezervarea?",
-    alert_cancel_success: "Rezervarea a fost anulată cu succes.",
     alert_cancel_failed: "Anularea a eșuat: ",
     parking_other_plate: "-- Introdu un alt număr --",
     preview_total: "Total",
@@ -348,6 +389,7 @@ export const i18n = {
     preview_max_hours: "maxim {maxH}h de la ora aleasă",
     panel_book_title: "Rezervă un loc",
     panel_parking_label: "Parcare: ",
+    panel_edit_title: "Modifică perioada",
     list_no_match: "Nicio parcare nu corespunde criteriilor.",
     list_status_label: "Status",
     list_status_full: "Plin",
@@ -363,7 +405,6 @@ export const i18n = {
     details_hours_label: "Program",
     details_btn_full: "Parcare Plină",
     details_btn_book: "Rezervă Acum",
-    panel_edit_title: "Modifică perioada",
     alert_invalid_parking: "Parcare invalidă — selectează una din listă.",
     alert_login_required: "Te rugăm să te autentifici mai întâi.",
     alert_choose_start_time: "Te rugăm să alegi o oră de început.",
@@ -373,14 +414,15 @@ export const i18n = {
     error_parking_not_found: "Parcarea nu a fost găsită.",
     error_no_free_spots: "Nu mai sunt locuri libere disponibile.",
     manage_total_to_pay: "Total de plată",
+    manage_parking_label: "Parcare",
     manage_status_label: "Status",
     status_not_paid: "NEPLĂTITĂ",
     alert_booking_failed: "Rezervarea a eșuat.",
     confirm_cancel_specific: "Ești sigur că vrei să anulezi această rezervare specifică?",
     alert_cancel_specific_failed: "Nu s-a putut anula: ",
-    error_parking_not_found: "Parcarea nu a fost găsită.",
     alert_payment_success: "Plata a fost procesată cu succes!",
-    alert_payment_failed: "A apărut o eroare la procesarea plății."
+    alert_payment_failed: "A apărut o eroare la procesarea plății.",
+    confirm_new_over_unpaid: "Ai o rezervare neplătită. O rezervare nouă o va înlocui în acest panou. Continui?"
   }
 
 };

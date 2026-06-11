@@ -16,33 +16,33 @@
                 <span>Park Sibiu</span>
             </a>
             <nav class="header-actions" aria-label="Profile navigation">
-                <button id="mapBtn" class="secondary-button"><a href="index.html">Map</a></button>
-                <button id="historyBtn" class="secondary-button"><a href="parking-history.html">History</a></button>
-                <button id="logoutBtn" class="primary-button">Logout</button>
+                <button id="mapBtn" class="secondary-button"><a href="index.html" data-i18n="nav_map">Map</a></button>
+                <button id="historyBtn" class="secondary-button"><a href="parking-history.html" data-i18n="nav_history">History</a></button>
+                <button id="logoutBtn" class="primary-button" data-i18n="nav_logout">Logout</button>
             </nav>
         </header>
 
         <main class="profile-main">
             <aside class="image-panel" aria-label="Parking preview">
                 <div class="image-card">
-                    <p class="eyebrow">Your dashboard</p>
-                    <h1>Profile Settings</h1>
-                    <p>Manage your account, saved plates, preferences, and parking history in one place.</p>
+                    <p class="eyebrow" data-i18n="aside_dashboard_eyebrow">Your dashboard</p>
+                    <h1 data-i18n="profile_settings_title">Profile Settings</h1>
+                    <p data-i18n="profile_settings_desc">Manage your account, saved plates, preferences, and parking history in one place.</p>
                 </div>
             </aside>
 
             <div class="information-container">
                 <section class="section-card">
                     <div class="section-heading">
-                        <p class="eyebrow">Account</p>
-                        <h2>Personal Information</h2>
+                        <p class="eyebrow" data-i18n="section_account_eyebrow">Account</p>
+                        <h2 data-i18n="section_personal_info">Personal Information</h2>
                     </div>
                     <div id="nameInputArea" class="form-grid">
                         <div class="field-group">
-                            <label for="displayName">Display Name</label>
-                            <input type="text" id="displayName" placeholder="Enter your name">
+                            <label for="displayName" data-i18n="label_display_name">Display Name</label>
+                            <input type="text" id="displayName" data-i18n-placeholder="placeholder_display_name" placeholder="Enter your name">
                         </div>
-                        <button id="saveNameBtn" class="primary-button">Save Name</button>
+                        <button id="saveNameBtn" class="primary-button" data-i18n="btn_save_name">Save Name</button>
                     </div>
                     <div class="greeting-block">
                         <h2 id="greetingArea" style="display: none;"></h2>
@@ -52,12 +52,12 @@
 
                 <section class="section-card">
                     <div class="section-heading">
-                        <p class="eyebrow">Vehicles</p>
-                        <h2>Manage License Plates</h2>
+                        <p class="eyebrow" data-i18n="section_vehicles_eyebrow">Vehicles</p>
+                        <h2 data-i18n="title_manage_plates">Manage License Plates</h2>
                     </div>
 
                     <div id="platesSection" class="stacked-panel">
-                        <button id="togglePlatesBtn" class="secondary-button">View Saved Plates</button>
+                        <button id="togglePlatesBtn" class="secondary-button" data-i18n="view_plates">View Saved Plates</button>
                         <div id="platesAccordion" class="plates-accordion" style="display:none;">
                             <ul id="savedPlatesList"></ul>
                         </div>
@@ -65,55 +65,45 @@
 
                     <div id="addPlateForm" class="form-grid two-columns">
                         <div class="field-group">
-                            <label for="countryProfileSelect">Country</label>
+                            <label for="countryProfileSelect" data-i18n="label_country">Country</label>
                             <select id="countryProfileSelect">
-                                <option value="RO">Romania (Strict Format)</option>
-                                <option value="OTHER">Other Country</option>
+                                <option value="RO" data-i18n="opt_country_ro">Romania (Strict Format)</option>
+                                <option value="OTHER" data-i18n="opt_country_other">Other Country</option>
                             </select>
                         </div>
                         <div class="field-group">
-                            <label for="newPlateNumber">License Plate</label>
+                            <label for="newPlateNumber" data-i18n="title_add_plate">License Plate</label>
                             <input type="text" id="newPlateNumber" placeholder="Ex: B123ABC">
                         </div>
-                        <button id="savePlateBtn" class="primary-button">Save Plate</button>
+                        <button id="savePlateBtn" class="primary-button" data-i18n="btn_save_plate">Save Plate</button>
                     </div>
 
                     <div class="form-grid favorite-grid">
                         <div class="field-group">
-                            <label for="favoritePlateSelect">Favorite License Plate</label>
+                            <label for="favoritePlateSelect" data-i18n="title_favorite_plate">Favorite License Plate</label>
                             <select id="favoritePlateSelect">
-                                <option value="">Select Favorite Plate</option>
+                                <option value="" data-i18n="opt_select_favorite">Select Favorite Plate</option>
                             </select>
                         </div>
-                        <button id="saveFavoriteBtn" class="secondary-button">Set as Favorite</button>
+                        <button id="saveFavoriteBtn" class="secondary-button" data-i18n="btn_set_favorite">Set as Favorite</button>
                     </div>
                 </section>
 
                 <section class="section-card">
                     <div class="section-heading">
-                        <p class="eyebrow">Activity</p>
-                        <h2>Reservation History</h2>
-                    </div>
-                    <ul id="reservationHistoryList" class="history-list">
-                        <li>Loading history...</li>
-                    </ul>
-                </section>
-
-                <section class="section-card">
-                    <div class="section-heading">
-                        <p class="eyebrow">Settings</p>
-                        <h2>Preferences</h2>
+                        <p class="eyebrow" data-i18n="section_settings_eyebrow">Settings</p>
+                        <h2 data-i18n="section_preferences">Preferences</h2>
                     </div>
                     <div class="preferences-grid">
                         <div class="field-group">
-                            <label for="languageSelect">Language</label>
+                            <label for="languageSelect" data-i18n="pref_language">Language</label>
                             <select id="languageSelect">
                                 <option value="en">English</option>
-                                <option value="ro">Romanian</option>
+                                <option value="ro">Română</option>
                             </select>
                         </div>
                         <label class="toggle-row" for="darkModeToggle">
-                            <span>Dark Mode</span>
+                            <span data-i18n="pref_dark_mode">Dark Mode</span>
                             <input type="checkbox" id="darkModeToggle">
                         </label>
                     </div>
@@ -121,10 +111,10 @@
 
                 <section class="section-card security-card">
                     <div class="section-heading">
-                        <p class="eyebrow">Security</p>
-                        <h2>Password Access</h2>
+                        <p class="eyebrow" data-i18n="section_security_eyebrow">Security</p>
+                        <h2 data-i18n="section_security">Password Access</h2>
                     </div>
-                    <button id="resetPasswordBtn" class="secondary-button">Send Password Reset Email</button>
+                    <button id="resetPasswordBtn" class="secondary-button" data-i18n="btn_reset_password">Send Password Reset Email</button>
                 </section>
             </div>
         </main>

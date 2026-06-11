@@ -110,6 +110,15 @@ if (data.displayName) {
 });
 
 function applyTheme(isDark) {
+  const theme = isDark ? "dark" : "light";
+
+  if (window.applyParkSibiuTheme) {
+    window.applyParkSibiuTheme(theme);
+    return;
+  }
+
+  localStorage.setItem("parkSibiuTheme", theme);
+  document.documentElement.dataset.theme = theme;
   document.body.classList.toggle("dark-theme", isDark);
   document.body.classList.toggle("light-theme", !isDark);
 }
@@ -561,7 +570,7 @@ async function loadBookingHistory(userId) {
 function showGreeting(name) {
     const lang = langSelect.value || "en";
     nameInputArea.style.display = "none";
-    greetingArea.innerText = `${i18n[lang].greeting_hello}, ${name}! 👋`;
+    greetingArea.innerText = `Hello, ${name}!`;
     greetingArea.style.display = "block";
 
     const selectedMessage = i18n[lang][`cute_msg_${currentMessageIndex}`] || i18n[lang][`cute_msg_0`];

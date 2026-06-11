@@ -101,12 +101,10 @@ if (logoutBtn) {
             localStorage.removeItem('myBookingEndTime');
 
             await signOut(auth);
-<<<<<<< HEAD
+
             alert(i18n[currentLang].alert_logout_success);
-=======
-            alert("Logged out successfully!");
              window.location.href = "login.html"; 
->>>>>>> 0a1f7fcbb148e3c2461069dce0a2d8eafe1c60a7
+
         } catch (e) {
             alert(i18n[currentLang].alert_logout_error + e.message);
         }
@@ -144,7 +142,6 @@ onAuthStateChanged(auth, (user) => {
     localStorage.removeItem('activeReservationId');
   }
 });
-<<<<<<< HEAD
 function updateLoginPageLanguage(lang) {
     document.querySelectorAll("[data-i18n]").forEach(element => {
         const key = element.getAttribute("data-i18n");
@@ -162,5 +159,4 @@ function updateLoginPageLanguage(lang) {
 }
 
 updateLoginPageLanguage(currentLang);
-=======
->>>>>>> 0a1f7fcbb148e3c2461069dce0a2d8eafe1c60a7
+
